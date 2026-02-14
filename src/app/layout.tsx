@@ -26,6 +26,7 @@ function getBgImages(): string[] {
 }
 
 export const metadata: Metadata = {
+  metadataBase: new URL(siteConfig.seo.siteUrl),
   title: siteConfig.seo.title,
   description: siteConfig.seo.description,
   keywords: siteConfig.seo.keywords,
