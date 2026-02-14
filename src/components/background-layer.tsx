@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+
 
 /** Shuffle array using Fisher-Yates */
 function shuffle<T>(arr: T[]): T[] {
@@ -46,7 +46,7 @@ export function BackgroundLayer({ images }: BackgroundLayerProps) {
         if (shuffled.length <= 1) return;
         const nextIdx = (index + 1) % shuffled.length;
         const img = new Image();
-        img.src = `${basePath}/bg/${shuffled[nextIdx]}`;
+        img.src = `/bg/${shuffled[nextIdx]}`;
     }, [index, shuffled]);
 
     const currentImage = shuffled.length > 0 ? shuffled[index] : images[0];
@@ -63,7 +63,7 @@ export function BackgroundLayer({ images }: BackgroundLayerProps) {
                     exit={{ opacity: 0 }}
                     transition={{ duration: 2, ease: "easeInOut" }}
                     style={{
-                        backgroundImage: `url('${basePath}/bg/${currentImage}')`,
+                        backgroundImage: `url('/bg/${currentImage}')`,
                         backgroundSize: "cover",
                         backgroundPosition: "center",
                         backgroundRepeat: "no-repeat",

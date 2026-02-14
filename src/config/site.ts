@@ -147,7 +147,7 @@ export const siteConfig: SiteConfig = {
             "个人主页", "portfolio",
         ],
         ogImage: "/og-image.png",
-        siteUrl: "https://erocat.github.io/erocat-homepage",
+        siteUrl: "https://iacg.moe",
     },
 
     theme: {

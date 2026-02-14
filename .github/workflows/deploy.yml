@@ -44,7 +44,7 @@ jobs:
   deploy:
     environment:
       name: github-pages
-      url: ${{ github.event.repository.html_url }}
+      url: https://iacg.moe
     runs-on: ubuntu-latest
     needs: build
     steps:

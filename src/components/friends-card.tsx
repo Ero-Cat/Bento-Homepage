@@ -6,9 +6,8 @@ import { GlassCard } from "@/components/glass-card";
 import { SPRING_GENTLE } from "@/lib/motion";
 
 /**
- * Resolve asset paths for GitHub Pages basePath compatibility.
+ * Resolve asset paths.
  */
-const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
 export function FriendsCard() {
     const { friends } = siteConfig;
@@ -35,7 +34,7 @@ export function FriendsCard() {
                     >
                         <div className="relative w-14 h-14 rounded-full overflow-hidden border-2 border-white/20 group-hover:border-tint/50 transition-colors duration-300 shadow-md">
                             <img
-                                src={friend.avatar.startsWith("http") ? friend.avatar : `${basePath}${friend.avatar}`}
+                                src={friend.avatar}
                                 alt={friend.name}
                                 className="object-cover w-full h-full"
                             />
