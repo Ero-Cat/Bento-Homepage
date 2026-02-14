@@ -2,8 +2,6 @@
 
 > 配置驱动、液态玻璃风格的个人主页，基于 Next.js 16 + Tailwind CSS 4 + Framer Motion 构建，支持 GitHub Pages 全静态部署。
 
-[![Deploy to GitHub Pages](https://github.com/Ero-Cat/erocat-homepage/actions/workflows/deploy.yml/badge.svg)](https://github.com/Ero-Cat/erocat-homepage/actions/workflows/deploy.yml)
-
 [English](./README_EN.md)
 
 ---

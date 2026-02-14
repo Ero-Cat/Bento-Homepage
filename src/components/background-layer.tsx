@@ -1,23 +1,75 @@
 "use client";
 
-/**
- * Resolve asset paths for GitHub Pages basePath compatibility.
- */
+import { useState, useEffect, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
-export function BackgroundLayer() {
+/** Shuffle array using Fisher-Yates */
+function shuffle<T>(arr: T[]): T[] {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+}
+
+const INTERVAL_MS = 10_000; // 10 seconds per image
+
+interface BackgroundLayerProps {
+    images: string[];
+}
+
+export function BackgroundLayer({ images }: BackgroundLayerProps) {
+    const [shuffled, setShuffled] = useState<string[]>([]);
+    const [index, setIndex] = useState(0);
+
+    // Shuffle on mount (client only) to avoid hydration mismatch
+    useEffect(() => {
+        setShuffled(shuffle(images));
+    }, [images]);
+
+    // Auto-advance
+    const advance = useCallback(() => {
+        setIndex((prev) => (prev + 1) % shuffled.length);
+    }, [shuffled.length]);
+
+    useEffect(() => {
+        if (shuffled.length <= 1) return;
+        const timer = setInterval(advance, INTERVAL_MS);
+        return () => clearInterval(timer);
+    }, [advance, shuffled.length]);
+
+    // Preload next image
+    useEffect(() => {
+        if (shuffled.length <= 1) return;
+        const nextIdx = (index + 1) % shuffled.length;
+        const img = new Image();
+        img.src = `${basePath}/bg/${shuffled[nextIdx]}`;
+    }, [index, shuffled]);
+
+    const currentImage = shuffled.length > 0 ? shuffled[index] : images[0];
+
     return (
         <div className="fixed inset-0 z-0" aria-hidden="true">
-            {/* Hero background image */}
-            <div
-                className="absolute inset-0 animate-[zoom-in_20s_ease-out_forwards]"
-                style={{
-                    backgroundImage: `url('${basePath}/bg/hero.jpg')`,
-                    backgroundSize: "cover",
-                    backgroundPosition: "center",
-                    backgroundRepeat: "no-repeat",
-                }}
-            />
+            {/* Crossfade background images */}
+            <AnimatePresence mode="sync">
+                <motion.div
+                    key={currentImage}
+                    className="absolute inset-0"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 2, ease: "easeInOut" }}
+                    style={{
+                        backgroundImage: `url('${basePath}/bg/${currentImage}')`,
+                        backgroundSize: "cover",
+                        backgroundPosition: "center",
+                        backgroundRepeat: "no-repeat",
+                    }}
+                />
+            </AnimatePresence>
 
             {/* Gradient overlay — adapts to light/dark via CSS vars */}
             <div
@@ -33,9 +85,9 @@ export function BackgroundLayer() {
                 }}
             />
 
-            {/* Floating color orbs — "Crystal Clarity" Edition (Subtle & Elegant) */}
+            {/* Floating color orbs — "Crystal Clarity" Edition */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                {/* Orb 1 — Jewel Rose/Tint (subtle accent) */}
+                {/* Orb 1 — Jewel Rose/Tint */}
                 <div
                     className="absolute w-[700px] h-[700px] rounded-full opacity-20"
                     style={{
@@ -46,7 +98,7 @@ export function BackgroundLayer() {
                         filter: "blur(120px)",
                     }}
                 />
-                {/* Orb 2 — Cool Blue/Slate (clarity) */}
+                {/* Orb 2 — Cool Blue/Slate */}
                 <div
                     className="absolute w-[600px] h-[600px] rounded-full opacity-15"
                     style={{
@@ -57,7 +109,7 @@ export function BackgroundLayer() {
                         filter: "blur(120px)",
                     }}
                 />
-                {/* Orb 3 — Warm Platinum/Gold (center depth) */}
+                {/* Orb 3 — Warm Platinum/Gold */}
                 <div
                     className="absolute w-[500px] h-[500px] rounded-full opacity-10"
                     style={{
@@ -71,7 +123,7 @@ export function BackgroundLayer() {
                 />
             </div>
 
-            {/* Noise grain texture (reduced opacity for clarity) */}
+            {/* Noise grain texture */}
             <div
                 className="absolute inset-0 opacity-[0.02] mix-blend-overlay pointer-events-none"
                 style={{

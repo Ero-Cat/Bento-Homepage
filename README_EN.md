@@ -2,8 +2,6 @@
 
 > A config-driven, liquid-glass styled personal homepage built with Next.js 16 + Tailwind CSS 4 + Framer Motion. Deployed as a fully static site on GitHub Pages.
 
-[![Deploy to GitHub Pages](https://github.com/Ero-Cat/erocat-homepage/actions/workflows/deploy.yml/badge.svg)](https://github.com/Ero-Cat/erocat-homepage/actions/workflows/deploy.yml)
-
 [中文](./README.md)
 
 ---

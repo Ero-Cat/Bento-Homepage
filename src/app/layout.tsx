@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Quicksand } from "next/font/google";
 import { siteConfig } from "@/config/site";
 import { BackgroundLayer } from "@/components/background-layer";
+import fs from "node:fs";
+import path from "node:path";
 import "./globals.css";
 
 const quicksand = Quicksand({
@@ -10,6 +12,18 @@ const quicksand = Quicksand({
   weight: ["400", "500", "600", "700"],
   display: "swap",
 });
+
+/** Scan public/bg/ at build time for all image files */
+function getBgImages(): string[] {
+  const bgDir = path.join(process.cwd(), "public", "bg");
+  try {
+    return fs
+      .readdirSync(bgDir)
+      .filter((f) => /\.(jpe?g|png|webp|avif)$/i.test(f));
+  } catch {
+    return [];
+  }
+}
 
 export const metadata: Metadata = {
   title: siteConfig.seo.title,
@@ -50,10 +64,12 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const bgImages = getBgImages();
+
   return (
     <html lang="en" suppressHydrationWarning style={themeVars}>
       <body className={`${quicksand.variable} antialiased`}>
-        <BackgroundLayer />
+        <BackgroundLayer images={bgImages} />
         {children}
       </body>
     </html>

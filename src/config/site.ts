@@ -92,7 +92,7 @@ export const siteConfig: SiteConfig = {
         { platform: "blog", url: "https://blog.iacg.moe", enabled: true },
 
         { platform: "twitter", url: "https://x.com/DokiEroCat", enabled: true },
-        { platform: "vrchat", url: "https://vrchat.com/home/user/usr_erocat", enabled: true },
+        { platform: "vrchat", url: "https://vrchat.com/home/user/usr_dcf7bc56-34d4-482a-b21f-fb2c05dcfb2f", enabled: true },
         { platform: "steam", url: "http://steamcommunity.com/id/233000", enabled: true },
         { platform: "discord", url: "https://discord.gg/erocat", enabled: false },
         { platform: "bilibili", url: "https://space.bilibili.com/791219", enabled: false },
