@@ -128,6 +128,11 @@ export const siteConfig: SiteConfig = {
             avatar: "https://avatars.githubusercontent.com/u/8012410",
             url: "https://tun.cat",
         },
+        {
+            name: "Alumi",
+            avatar: "https://lisek.cc/profile.png",
+            url: "https://lisek.cc",
+        },
     ],
 
     projects: [
