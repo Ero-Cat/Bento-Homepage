@@ -29,8 +29,6 @@ export default function Home() {
         <BentoGridItem className="md:col-span-1">
           <FriendsCard />
         </BentoGridItem>
-
-
       </BentoGrid>
 
     </main>

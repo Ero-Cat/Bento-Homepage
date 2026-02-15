@@ -123,6 +123,11 @@ export const siteConfig: SiteConfig = {
             avatar: "https://api.vrchat.cloud/api/1/file/file_c00911ce-3e53-4e98-a494-936811cc85a8/1/",
             url: "https://www.songzx.com/",
         },
+        {
+            name: "小路",
+            avatar: "https://avatars.githubusercontent.com/u/8012410",
+            url: "https://tun.cat",
+        },
     ],
 
     projects: [
@@ -131,6 +136,12 @@ export const siteConfig: SiteConfig = {
             description: "基于 Flutter 的跨平台 BLE 心率监控与推送工具，支持 HTTP/WS、OSC、MQTT 多协议实时推送，适用于 VRChat 模型联动。",
             url: "https://github.com/Ero-Cat/hr_push",
             tags: ["Flutter", "BLE", "OSC", "VRChat"],
+        },
+        {
+            name: "Bento Homepage",
+            description: "基于 Next.js 构建的 Bento Grid 风格个人主页，支持背景轮播、深色模式、响应式布局与一键部署至 GitHub Pages。",
+            url: "https://github.com/Ero-Cat/bento-Homepage",
+            tags: ["Next.js", "React", "TypeScript", "Bento Grid"],
         },
     ],
 
