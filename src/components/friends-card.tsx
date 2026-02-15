@@ -17,7 +17,7 @@ export function FriendsCard() {
     return (
         <GlassCard className="flex flex-col gap-4">
             <h2 className="text-xl font-semibold text-text-primary flex items-center gap-2">
-                🤝 Friends
+                 Friends
             </h2>
 
             <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-3 lg:grid-cols-4 gap-4">

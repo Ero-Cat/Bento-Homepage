@@ -1,6 +1,8 @@
-# 🏠 EroCat Bento Homepage
+# 🏠 Bento Homepage
 
 > 配置驱动、液态玻璃风格的个人主页，基于 Next.js 16 + Tailwind CSS 4 + Framer Motion 构建，支持 GitHub Pages 全静态部署。
+
+**🌐 在线预览 → [iacg.moe](https://iacg.moe)**
 
 [English](./README_EN.md)
 
@@ -11,10 +13,11 @@
 - **液态玻璃设计** — 毛玻璃卡片 (`backdrop-filter: blur()`)、半透明边框、弹簧物理动画
 - **Bento Grid 布局** — 响应式 CSS Grid（桌面 3 列 → 平板 2 列 → 移动端 1 列）
 - **配置驱动** — 所有个人信息集中在 `src/config/site.ts` 一个文件中，无需修改任何组件代码
-- **多语言问候** — 根据浏览器语言自动切换问候语（中/英/日/韩/西/法/德），带👋挥手动画
-- **打字机效果** — 名称/别名自动循环打字展示
+- **背景轮播** — 自动扫描 `public/bg/` 目录下所有图片，构建时生成列表，运行时随机顺序交叉淡入轮播
+- **多语言问候** — 根据浏览器语言自动切换问候语（中/英/日/韩/西/法/德），带 👋 挥手动画
+- **打字机效果** — 名称 / 别名自动循环打字展示
 - **明暗自动切换** — 跟随系统 `prefers-color-scheme`，双套设计令牌
-- **沉浸式背景** — 全屏背景图 + 渐变遮罩 + 噪点纹理
+- **GitHub 实时数据** — 项目卡片自动拉取 ⭐ Stars 和 🍴 Forks 数据
 - **入场动画** — 交错 fade-in + slide-up，弹簧物理驱动
 - **SEO 就绪** — Open Graph、Twitter Card、`<meta>` 标签全部从配置生成
 - **全静态导出** — `next build` 输出纯 HTML/CSS/JS，无需服务器
@@ -30,7 +33,7 @@
 | 🔗 社交链接 | `social-card.tsx` | GitHub / Telegram / Twitter / VRChat 等平台图标 |
 | ✨ 兴趣标签 | `skills-card.tsx` | 胶囊式 Pill Tag，明暗双色自适应 |
 | 🖥️ 硬件清单 | `hardware-card.tsx` | 分类展示硬件设备 |
-| 🚀 项目展示 | `projects-card.tsx` | 项目名称、描述、标签、外链 |
+| 🚀 项目展示 | `projects-card.tsx` | 项目名称、描述、标签、外链、GitHub Stars/Forks |
 | 🤝 友链 | `friends-card.tsx` | 好友头像网格，hover 动效 |
 
 ---
@@ -52,25 +55,27 @@
 ## 📁 项目结构
 
 ```
-erocat-homepage/
+Bento-Homepage/
 ├── public/
 │   ├── cat.png                   # 头像
-│   └── bg/
-│       └── hero.jpg              # 全屏背景图
+│   ├── CNAME                     # 自定义域名配置
+│   └── bg/                       # 背景图目录（支持多张轮播）
+│       ├── image1.jpg
+│       └── image2.webp
 ├── src/
 │   ├── app/
 │   │   ├── globals.css           # 设计令牌（明/暗）、玻璃样式、动画关键帧
-│   │   ├── layout.tsx            # 根布局、SEO 元数据、主题注入
+│   │   ├── layout.tsx            # 根布局、SEO 元数据、主题注入、背景扫描
 │   │   └── page.tsx              # 首页 — Bento Grid 组装
 │   ├── components/
-│   │   ├── background-layer.tsx  # 全屏背景 + 渐变遮罩
+│   │   ├── background-layer.tsx  # 背景轮播 + 渐变遮罩 + 噪点纹理
 │   │   ├── bento-grid.tsx        # 响应式网格容器
 │   │   ├── glass-card.tsx        # 核心毛玻璃卡片
 │   │   ├── profile-card.tsx      # 头像 + 多语言问候 + 打字机
 │   │   ├── skills-card.tsx       # 兴趣 Pill Tags
 │   │   ├── social-card.tsx       # 社交图标
 │   │   ├── hardware-card.tsx     # 硬件清单
-│   │   ├── projects-card.tsx     # 项目展示
+│   │   ├── projects-card.tsx     # 项目展示（含 GitHub API）
 │   │   ├── friends-card.tsx      # 友情链接
 │   │   ├── typewriter.tsx        # 打字机效果组件
 │   │   ├── footer.tsx            # 版权信息
@@ -82,7 +87,7 @@ erocat-homepage/
 │       └── utils.ts              # cn() 类名合并工具
 ├── .github/workflows/
 │   └── deploy.yml                # GitHub Actions → Pages 流水线
-├── next.config.ts                # 静态导出 + basePath 配置
+├── next.config.ts                # 静态导出配置
 └── package.json
 ```
 
@@ -93,14 +98,14 @@ erocat-homepage/
 ### 前置要求
 
 - [Node.js](https://nodejs.org) ≥ 20
-- [pnpm](https://pnpm.io) ≥ 9
+- [pnpm](https://pnpm.io) ≥ 10
 
 ### 安装与运行
 
 ```bash
 # 克隆仓库
-git clone https://github.com/Ero-Cat/erocat-homepage.git
-cd erocat-homepage
+git clone https://github.com/Ero-Cat/Bento-Homepage.git
+cd Bento-Homepage
 
 # 安装依赖
 pnpm install
@@ -130,12 +135,12 @@ pnpm build
 
 ```typescript
 profile: {
-    name: "EroCat",
-    title: "Vibe Coding & Full-Stack Developer",
+    name: "YourName",
+    title: "Your Title",
     description: "你的个人简介...",
     avatar: "/cat.png",           // 将图片放入 public/
-    aliases: ["EroCat", "大黄猫"], // 打字机循环展示
-    location: "China | VRChat",
+    aliases: ["Name1", "Name2"],  // 打字机循环展示
+    location: "Your Location",
 }
 ```
 
@@ -163,9 +168,9 @@ hardware: [
 
 ```typescript
 socialLinks: [
-    { platform: "github",   url: "https://github.com/Ero-Cat",   enabled: true },
-    { platform: "telegram", url: "https://t.me/dokierocat",       enabled: true },
-    { platform: "blog",     url: "https://blog.iacg.moe",         enabled: true },
+    { platform: "github",   url: "https://github.com/your-name",   enabled: true },
+    { platform: "telegram", url: "https://t.me/your-name",         enabled: true },
+    { platform: "blog",     url: "https://your-blog.com",          enabled: true },
     ...
 ]
 ```
@@ -201,11 +206,11 @@ theme: {
 
 ```typescript
 seo: {
-    title: "EroCat — 大黄猫个人首页",
+    title: "你的网站标题",
     description: "...",
     keywords: ["developer", "portfolio", "full-stack"],
     ogImage: "/og-image.png",
-    siteUrl: "https://erocat.github.io/erocat-homepage",
+    siteUrl: "https://your-domain.com",
 }
 ```
 
@@ -215,10 +220,12 @@ seo: {
 
 ### 背景图
 
-替换 `public/bg/hero.jpg` 为你自己的图片。`BackgroundLayer` 组件会自动处理：
-- 全屏覆盖定位
+将图片放入 `public/bg/` 目录，支持 `.jpg`、`.png`、`.webp`、`.avif` 格式。`layout.tsx` 会在构建时自动扫描该目录，`BackgroundLayer` 组件处理：
+
+- **随机轮播** — 10 秒间隔交叉淡入切换
+- **预加载** — 自动预加载下一张图片
 - 渐变遮罩（自适应明暗模式）
-- 入场缩放动画
+- 浮动色彩光球
 - 噪点纹理叠加
 
 ### 头像
@@ -239,18 +246,20 @@ seo: {
 
 ### GitHub Pages（推荐）
 
-1. 将代码推送到 GitHub 仓库
+1. Fork 或克隆此仓库到你的 GitHub
 2. 进入 **Settings → Pages → Source** → 选择 **GitHub Actions**
 3. 推送到 `main` 分支 — `.github/workflows/deploy.yml` 将自动构建并部署
 
-> **注意**：如果仓库名不是 `erocat-homepage`，需要修改 `next.config.ts` 中的 `basePath`：
-> ```typescript
-> const basePath = isProd ? "/你的仓库名" : "";
-> ```
+#### 使用自定义域名
+
+1. 修改 `public/CNAME` 为你的域名
+2. 在 DNS 提供商添加 CNAME 记录指向 `<username>.github.io`
+3. 在 GitHub **Settings → Pages → Custom domain** 填入你的域名
+4. 等待 SSL 证书自动颁发，勾选 **Enforce HTTPS**
 
 ### 其他静态托管
 
-运行 `pnpm build` 后，将 `./out` 目录部署到任意静态服务器（Vercel、Netlify、Cloudflare Pages 等）。使用自定义域名时，将 `basePath` 设为 `""`。
+运行 `pnpm build` 后，将 `./out` 目录部署到任意静态服务器（Vercel、Netlify、Cloudflare Pages 等）。
 
 ---
 

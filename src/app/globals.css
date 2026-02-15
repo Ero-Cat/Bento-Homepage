@@ -46,10 +46,9 @@
   /* Slate 500 - Balanced Gray */
 
   /* Background overlay for bg image — Light */
-  --bg-overlay: rgba(248, 250, 252, 0.65);
-  --bg-overlay-gradient-top: rgba(241, 245, 249, 0.94);
-  --bg-overlay-gradient-bottom: rgba(248, 250, 252, 0.9);
-
+  --bg-overlay: rgba(248, 250, 252, 0.4);
+  --bg-overlay-gradient-top: rgba(241, 245, 249, 0.85);
+  --bg-overlay-gradient-bottom: rgba(248, 250, 252, 0.8);
 
   /* Scrollbar */
   --scrollbar-thumb: rgba(0, 0, 0, 0.2);
@@ -112,9 +111,9 @@
     /* Slate 400 - Readable Mid-Gray */
 
     /* Background overlay for bg image — Dark */
-    --bg-overlay: rgba(2, 6, 23, 0.7);
-    --bg-overlay-gradient-top: rgba(2, 6, 23, 0.95);
-    --bg-overlay-gradient-bottom: rgba(15, 23, 42, 0.9);
+    --bg-overlay: rgba(2, 6, 23, 0.5);
+    --bg-overlay-gradient-top: rgba(2, 6, 23, 0.85);
+    --bg-overlay-gradient-bottom: rgba(15, 23, 42, 0.8);
 
     /* Scrollbar */
     --scrollbar-thumb: rgba(255, 255, 255, 0.1);

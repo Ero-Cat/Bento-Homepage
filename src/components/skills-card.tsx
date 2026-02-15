@@ -10,7 +10,7 @@ export function SkillsCard() {
 
     return (
         <GlassCard className="flex flex-col gap-5">
-            <h2 className="text-xl font-semibold text-text-primary">✨ Interests</h2>
+            <h2 className="text-xl font-semibold text-text-primary">Interests</h2>
             <div className="flex flex-wrap gap-2.5">
                 {interests.map((item) => (
                     <motion.span
