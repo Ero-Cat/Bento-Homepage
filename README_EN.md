@@ -10,15 +10,22 @@
 
 ## ✨ Features
 
-- **Liquid Glass Design** — Frosted glass cards with `backdrop-filter: blur()`, translucent borders, and spring-physics animations
-- **Bento Grid Layout** — Responsive CSS Grid (3 → 2 → 1 columns) for desktop / tablet / mobile
+- **Liquid Glass Design** — Frosted glass cards with `backdrop-filter: blur()`, translucent borders, 3D tilt + glare overlay
+- **Bento Grid Layout** — Responsive CSS Grid (4 → 1 columns) for desktop / mobile
 - **Config-Driven** — All personal info lives in a single `src/config/site.ts`; zero component edits needed
-- **Background Carousel** — Auto-scans `public/bg/` at build time, crossfades through images with random shuffle and preloading
-- **Multilingual Greeting** — Auto-detects browser locale and switches greeting (EN / ZH / JA / KO / ES / FR / DE) with a 👋 wave animation
+- **🎵 NetEase Music Player** — Real audio playback with play/pause, skip, seekable progress bar, volume control, auto-loop
+- **🎮 VRChat Live Status** — Real-time online status via VRCX-Cloud API with 15s polling, trust rank, badges
+- **📊 GitHub Contribution Heatmap** — No token needed, loads past year's contribution data
+- **📝 Blog Card** — Halo 2.x Content API integration, shows recent posts (optional)
+- **Multi-Avatar Carousel** — 3D rotating avatar switch animation
+- **Photo Stack** — Interactive click-to-expand/collapse photo stack card
+- **Background Carousel** — Auto-scans `public/bg/` at build time, crossfades through images with random shuffle
+- **Multilingual Greeting & Bio** — Auto-detects browser locale for greeting and description (ZH / EN / JA etc.)
 - **Typewriter Effect** — Cycles through name aliases with a blinking cursor
 - **Light / Dark Auto** — Follows system `prefers-color-scheme` with dual-mode design tokens
-- **Live GitHub Stats** — Project cards auto-fetch ⭐ Stars and 🍴 Forks from the GitHub API
+- **Live GitHub Stats** — Project cards auto-fetch ⭐ Stars and 🍴 Forks from GitHub API
 - **Entrance Animations** — Staggered fade-in + slide-up with spring physics via Framer Motion
+- **Performance Optimized** — rAF-driven zero-render progress bar, consolidated `useTransform` chains
 - **SEO Ready** — Open Graph, Twitter Card, and `<meta>` tags driven from config
 - **Static Export** — `next build` outputs pure HTML/CSS/JS; no server required
 - **GitHub Pages CI/CD** — Auto-deploy on push to `main` via GitHub Actions
@@ -29,7 +36,12 @@
 
 | Card | Component | Description |
 |---|---|---|
-| 👤 Profile | `profile-card.tsx` | Avatar, multilingual greeting, typewriter name, location, bio |
+| 👤 Profile | `profile-card.tsx` | Multi-avatar 3D carousel, multilingual greeting, typewriter, i18n bio |
+| 🎵 Now Playing | `now-playing-card.tsx` | NetEase Music player, iPhone lock-screen glass style |
+| 📸 Photo Stack | `photo-stack-card.tsx` | Interactive photo stack with click-to-expand |
+| 🎮 VRChat | `vrchat-status-card.tsx` | Live online status, avatar, trust rank, badges |
+| 📊 Heatmap | `github-heatmap-card.tsx` | GitHub contribution heatmap (past year) |
+| 📝 Blog | `blog-card.tsx` | Recent blog posts from Halo 2.x |
 | 🔗 Social | `social-card.tsx` | GitHub / Telegram / Twitter / VRChat / Blog icons |
 | ✨ Interests | `skills-card.tsx` | Pill-style tags with adaptive light/dark colors |
 | 🖥️ Hardware | `hardware-card.tsx` | Categorized hardware inventory |
@@ -47,7 +59,7 @@
 | Styling | [Tailwind CSS 4](https://tailwindcss.com) |
 | Animation | [Framer Motion 12](https://motion.dev) |
 | Icons | [lucide-react](https://lucide.dev) + Custom SVGs |
-| Package Manager | [pnpm](https://pnpm.io) |
+| Package Manager | [pnpm 10](https://pnpm.io) |
 | Deployment | GitHub Pages + GitHub Actions |
 
 ---
@@ -57,25 +69,31 @@
 ```
 Bento-Homepage/
 ├── public/
-│   ├── cat.png                   # Profile avatar
+│   ├── cat.png                   # Default avatar
 │   ├── CNAME                     # Custom domain config
-│   └── bg/                       # Background images (multi-image carousel)
-│       ├── image1.jpg
-│       └── image2.webp
+│   ├── avatar/                   # Multi-avatar directory (3D carousel)
+│   ├── bg/                       # Background images (multi-image carousel)
+│   └── photos/                   # Photo stack directory
 ├── src/
 │   ├── app/
 │   │   ├── globals.css           # Design tokens (light/dark), glass styles, keyframes
-│   │   ├── layout.tsx            # Root layout, SEO metadata, theme injection, bg scan
-│   │   └── page.tsx              # Homepage — Bento Grid assembly
+│   │   ├── layout.tsx            # Root layout, SEO metadata, bg scan
+│   │   └── page.tsx              # Homepage — Bento Grid assembly + data fetch
 │   ├── components/
-│   │   ├── background-layer.tsx  # Background carousel + gradient overlay + noise grain
-│   │   ├── bento-grid.tsx        # Responsive grid container
-│   │   ├── glass-card.tsx        # Core glassmorphism card
-│   │   ├── profile-card.tsx      # Avatar + multilingual greeting + typewriter
-│   │   ├── skills-card.tsx       # Interest pill tags
+│   │   ├── glass-card.tsx        # Core glassmorphism card (3D tilt + glare + spring)
+│   │   ├── bento-grid.tsx        # 4-column responsive grid container
+│   │   ├── background-layer.tsx  # Bg carousel + gradient overlay + orbs + noise
+│   │   ├── profile-card.tsx      # Avatar carousel + greeting + typewriter + i18n bio
+│   │   ├── avatar-carousel.tsx   # Multi-avatar 3D rotating carousel
+│   │   ├── now-playing-card.tsx  # NetEase Music player (rAF progress bar)
+│   │   ├── photo-stack-card.tsx  # Photo stack (click to expand/collapse)
+│   │   ├── github-heatmap-card.tsx # GitHub contribution heatmap
+│   │   ├── vrchat-status-card.tsx  # VRChat live status
+│   │   ├── blog-card.tsx         # Blog recent posts (Halo 2.x)
 │   │   ├── social-card.tsx       # Social link icons
+│   │   ├── skills-card.tsx       # Interest pill tags
 │   │   ├── hardware-card.tsx     # Hardware inventory
-│   │   ├── projects-card.tsx     # Featured projects (with GitHub API)
+│   │   ├── projects-card.tsx     # Featured projects (GitHub Stars/Forks)
 │   │   ├── friends-card.tsx      # Friend links
 │   │   ├── typewriter.tsx        # Typewriter animation component
 │   │   ├── footer.tsx            # Copyright
@@ -137,66 +155,80 @@ All personal content is managed through **a single file**: `src/config/site.ts`
 profile: {
     name: "YourName",
     title: "Your Title",
-    description: "Your bio here...",
-    avatar: "/cat.png",             // Place in public/
-    aliases: ["Name1", "Name2"],    // Typewriter cycling names
+    description: {
+        zh: "你的中文简介...",
+        en: "Your English bio...",
+        ja: "日本語の自己紹介...",
+    },
+    avatar: "/cat.png",
+    aliases: ["Name1", "Name2"],
     location: "Your Location",
 }
 ```
 
-### Interests
+> `description` uses `Record<string, string>` — auto-matches browser language with `en` as fallback.
+
+### 🎵 NetEase Music
 
 ```typescript
-interests: [
-    "Vibe Coding", "Spring Boot", "3D Print", "VRChat", "Unity", ...
-]
+netease: {
+    songIds: [1814460094, 1408944670, 1854700148],
+}
 ```
 
-### Hardware
+> Song IDs can be found in the URL when opening a song on NetEase Cloud Music web.
+> **Note**: VIP-only songs cannot play via public URLs.
+
+### 📊 GitHub Contribution Heatmap
 
 ```typescript
-hardware: [
-    { category: "🍎 Apple", items: ["MacBook Pro M5", "Air Pods 3 Pro"] },
-    { category: "🖥️ PC", items: ["R7-9800X3D", "RTX 3090 24G"] },
-    ...
-]
+github: {
+    username: "your-github-username",
+}
+```
+
+> Uses a public API — no GitHub Token needed.
+
+### 🎮 VRChat Live Status
+
+```typescript
+vrchat: {
+    apiBase: "https://your-vrcx-cloud-api.com",
+    userId: "usr_xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+    bioLines: 5,
+}
+```
+
+### 📝 Blog Integration
+
+```typescript
+blog: {
+    url: "https://your-blog.com",   // Halo 2.x blog URL
+    size: 5,                        // Number of recent posts
+}
 ```
 
 ### Social Links
 
-Toggle visibility with `enabled: true/false` — no need to delete entries.
+Toggle visibility with `enabled: true/false`.
 
 ```typescript
 socialLinks: [
     { platform: "github",   url: "https://github.com/your-name",   enabled: true },
     { platform: "telegram", url: "https://t.me/your-name",         enabled: true },
-    { platform: "blog",     url: "https://your-blog.com",          enabled: true },
     ...
 ]
 ```
 
 **Supported platforms**: `github` · `telegram` · `discord` · `email` · `twitter` · `linkedin` · `youtube` · `bilibili` · `vrchat` · `steam` · `blog`
 
-### Friends
-
-```typescript
-friends: [
-    {
-        name: "Friend Name",
-        avatar: "https://example.com/avatar.png",
-        url: "https://example.com",
-        description: "Optional description",
-    },
-]
-```
-
 ### Theme Colors
 
 ```typescript
 theme: {
-    tintColor: "#fb7185",           // Accent color for links, tags, hover
-    tintColorRGB: "251, 113, 133",  // RGB format for rgba()
-    gradientFrom: "#020617",        // Dark mode background gradient
+    tintColor: "#fb7185",
+    tintColorRGB: "251, 113, 133",
+    gradientFrom: "#020617",
     gradientVia: "#0f172a",
     gradientTo: "#1e293b",
 }
@@ -220,25 +252,19 @@ seo: {
 
 ### Background Images
 
-Drop images into `public/bg/`. Supported formats: `.jpg`, `.png`, `.webp`, `.avif`. `layout.tsx` auto-scans the directory at build time. The `BackgroundLayer` component provides:
+Drop images into `public/bg/`. Supported: `.jpg`, `.png`, `.webp`, `.avif`. Auto-scanned at build time, random carousel at runtime (10s crossfade + preload).
 
-- **Random carousel** — 10-second crossfade transitions
-- **Preloading** — Automatically preloads the next image
-- Gradient overlay (adapts to light/dark mode)
-- Floating color orbs
-- Noise grain texture
+### Multi-Avatar
 
-### Avatar
+Drop avatar images into `public/avatar/` for the 3D rotating carousel in the Profile card.
 
-Replace `public/cat.png`. Supported formats: `.webp`, `.png`, `.jpg`.
+### Photo Stack
+
+Drop photos into `public/photos/` for the interactive photo stack card.
 
 ### Light / Dark Mode
 
-Automatically follows system preference. Design tokens in `src/app/globals.css`:
-- **Light mode**: White frosted glass cards, dark text
-- **Dark mode**: Dark translucent cards, light text, dimmed background
-
-No toggle button — fully automatic.
+Automatically follows system preference. Design tokens in `src/app/globals.css`. No toggle button — fully automatic.
 
 ---
 
@@ -248,7 +274,7 @@ No toggle button — fully automatic.
 
 1. Fork or clone this repo to your GitHub
 2. Go to **Settings → Pages → Source** → select **GitHub Actions**
-3. Push to `main` — the workflow at `.github/workflows/deploy.yml` auto-builds and deploys
+3. Push to `main` — the workflow auto-builds and deploys
 
 #### Custom Domain
 

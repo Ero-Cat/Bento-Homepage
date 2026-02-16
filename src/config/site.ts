@@ -170,7 +170,7 @@ export const siteConfig: SiteConfig = {
         },
         {
             name: "Bento Homepage",
-            description: "基于 Next.js 构建的 Bento Grid 风格个人主页，支持背景轮播、深色模式、响应式布局与一键部署至 GitHub Pages。",
+            description: "配置驱动的液态玻璃风格个人主页，集成网易云播放器、VRChat 实时状态、GitHub 热力图、3D Tilt 毛玻璃卡片、背景轮播、多头像轮播、多语言 i18n，支持 GitHub Pages 全静态部署。",
             url: "https://github.com/Ero-Cat/bento-Homepage",
             tags: ["Next.js", "React", "TypeScript", "Bento Grid"],
         },
@@ -207,7 +207,7 @@ export const siteConfig: SiteConfig = {
             "DIY", "Home Assistant", "OpenWrt", "ESXi",
             "个人主页", "portfolio",
         ],
-        ogImage: "/og-image.png",
+        ogImage: "/cat.png",
         siteUrl: "https://iacg.moe",
     },
 

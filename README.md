@@ -11,13 +11,16 @@
 ## ✨ 特性
 
 - **液态玻璃设计** — 毛玻璃卡片 (`backdrop-filter: blur()`)、半透明边框、3D tilt 倾斜 + 光晕反射
-- **Bento Grid 布局** — 响应式 CSS Grid（桌面 4 列 → 平板 2 列 → 移动端 1 列）
+- **Bento Grid 布局** — 响应式 CSS Grid（桌面 4 列 → 移动端 1 列）
 - **配置驱动** — 所有个人信息集中在 `src/config/site.ts` 一个文件中，无需修改任何组件代码
 - **🎵 网易云音乐播放器** — 真实音频播放，支持播放/暂停、切歌、进度条拖拽、音量控制、自动循环
+- **🎮 VRChat 实时状态** — 通过 VRCX-Cloud API 15 秒轮询，展示在线状态、头像、信任等级、徽章
+- **📊 GitHub 贡献热力图** — 无需 Token，自动加载过去一年的贡献数据
+- **📝 博客卡片** — 集成 Halo 2.x Content API，展示最近博文（可选启用）
 - **多头像轮播** — 3D 旋转动画的头像切换效果
 - **照片堆叠** — 点击展开/收起的交互式照片堆叠卡片
 - **背景轮播** — 自动扫描 `public/bg/` 目录下所有图片，随机顺序交叉淡入轮播
-- **多语言问候** — 根据浏览器语言自动切换问候语（中/英/日/韩/西/法/德），带 👋 挥手动画
+- **多语言问候 & 简介** — 根据浏览器语言自动切换问候语和个人简介（中/英/日等）
 - **打字机效果** — 名称 / 别名自动循环打字展示
 - **明暗自动切换** — 跟随系统 `prefers-color-scheme`，双套设计令牌
 - **GitHub 实时数据** — 项目卡片自动拉取 ⭐ Stars 和 🍴 Forks 数据
@@ -33,9 +36,12 @@
 
 | 卡片 | 组件 | 说明 |
 |---|---|---|
-| 👤 个人资料 | `profile-card.tsx` | 多头像 3D 轮播、多语言问候、打字机名称、地点、简介 |
-| 📸 照片堆叠 | `photo-stack-card.tsx` | 可交互的照片堆叠展示，点击展开/收起 |
+| 👤 个人资料 | `profile-card.tsx` | 多头像 3D 轮播、多语言问候、打字机名称、i18n 简介 |
 | 🎵 正在播放 | `now-playing-card.tsx` | 网易云音乐真实播放器，iPhone 锁屏玻璃风格 |
+| 📸 照片堆叠 | `photo-stack-card.tsx` | 可交互的照片堆叠展示，点击展开/收起 |
+| 🎮 VRChat | `vrchat-status-card.tsx` | 实时在线状态、头像、信任等级、徽章 |
+| 📊 贡献图 | `github-heatmap-card.tsx` | GitHub 过去一年贡献热力图 |
+| 📝 博客 | `blog-card.tsx` | Halo 2.x 最近博文列表 |
 | 🔗 社交链接 | `social-card.tsx` | GitHub / Telegram / Twitter / VRChat 等平台图标 |
 | ✨ 兴趣标签 | `skills-card.tsx` | 胶囊式 Pill Tag，明暗双色自适应 |
 | 🖥️ 硬件清单 | `hardware-card.tsx` | 分类展示硬件设备 |
@@ -53,7 +59,7 @@
 | 样式 | [Tailwind CSS 4](https://tailwindcss.com) |
 | 动画 | [Framer Motion 12](https://motion.dev) |
 | 图标 | [lucide-react](https://lucide.dev) + 自定义 SVG |
-| 包管理 | [pnpm](https://pnpm.io) |
+| 包管理 | [pnpm 10](https://pnpm.io) |
 | 部署 | GitHub Pages + GitHub Actions |
 
 ---
@@ -63,28 +69,33 @@
 ```
 Bento-Homepage/
 ├── public/
-│   ├── cat.png                   # 头像
+│   ├── cat.png                   # 默认头像
 │   ├── CNAME                     # 自定义域名配置
-│   └── bg/                       # 背景图目录（支持多张轮播）
+│   ├── avatar/                   # 多头像目录（3D 轮播）
+│   ├── bg/                       # 背景图目录（多张自动轮播）
+│   └── photos/                   # 照片堆叠目录
 ├── src/
 │   ├── app/
 │   │   ├── globals.css           # 设计令牌（明/暗）、玻璃样式、动画关键帧
 │   │   ├── layout.tsx            # 根布局、SEO 元数据、背景图扫描
-│   │   └── page.tsx              # 首页 — Bento Grid 组装 + 网易云数据 fetch
+│   │   └── page.tsx              # 首页 — Bento Grid 组装 + 数据 fetch
 │   ├── components/
 │   │   ├── glass-card.tsx        # 核心毛玻璃卡片（3D tilt + 光晕 + spring 物理）
-│   │   ├── bento-grid.tsx        # 响应式网格容器
-│   │   ├── background-layer.tsx  # 背景轮播 + 渐变遮罩 + 噪点纹理
-│   │   ├── profile-card.tsx      # 头像轮播 + 多语言问候 + 打字机
+│   │   ├── bento-grid.tsx        # 4 列响应式网格容器
+│   │   ├── background-layer.tsx  # 背景轮播 + 渐变遮罩 + 浮动光球 + 噪点纹理
+│   │   ├── profile-card.tsx      # 头像轮播 + 多语言问候 + 打字机 + i18n 简介
 │   │   ├── avatar-carousel.tsx   # 多头像旋转 3D 轮播组件
-│   │   ├── typewriter.tsx        # 打字机效果组件
-│   │   ├── photo-stack-card.tsx  # 照片堆叠卡片（点击展开/收起）
-│   │   ├── now-playing-card.tsx  # 网易云音乐播放器（真实音频 + rAF 进度条）
+│   │   ├── now-playing-card.tsx  # 网易云音乐播放器（rAF 进度条）
+│   │   ├── photo-stack-card.tsx  # 照片堆叠（点击展开/收起）
+│   │   ├── github-heatmap-card.tsx # GitHub 贡献热力图
+│   │   ├── vrchat-status-card.tsx  # VRChat 实时状态
+│   │   ├── blog-card.tsx         # 博客最新文章（Halo 2.x）
 │   │   ├── social-card.tsx       # 社交图标链接
 │   │   ├── skills-card.tsx       # 兴趣 Pill Tags
 │   │   ├── hardware-card.tsx     # 硬件清单
-│   │   ├── projects-card.tsx     # 项目展示（含 GitHub Stars/Forks API）
+│   │   ├── projects-card.tsx     # 项目展示（GitHub Stars/Forks）
 │   │   ├── friends-card.tsx      # 友情链接
+│   │   ├── typewriter.tsx        # 打字机效果组件
 │   │   ├── footer.tsx            # 版权信息
 │   │   └── icons/                # 自定义图标（VRChat、Steam）
 │   ├── config/
@@ -147,6 +158,7 @@ profile: {
     description: {
         zh: "你的中文简介...",
         en: "Your English bio...",
+        ja: "日本語の自己紹介...",
     },
     avatar: "/cat.png",           // 将图片放入 public/
     aliases: ["Name1", "Name2"],  // 打字机循环展示
@@ -154,9 +166,11 @@ profile: {
 }
 ```
 
+> `description` 使用 `Record<string, string>` 格式，根据浏览器语言自动匹配，`en` 为默认 fallback。
+
 ### 🎵 网易云音乐
 
-在 `netease.songIds` 中填入歌曲 ID，播放器将随机选择一首展示。支持真实音频播放、自动循环切歌。
+在 `netease.songIds` 中填入歌曲 ID，播放器将随机选择一首展示。
 
 ```typescript
 netease: {
@@ -166,6 +180,37 @@ netease: {
 
 > 歌曲 ID 获取方式：在网易云音乐网页版打开歌曲，URL 中的 `id=` 后的数字即为歌曲 ID。
 > **注意**：VIP 歌曲无法通过公开外链播放，请使用免费歌曲。
+
+### 📊 GitHub 贡献热力图
+
+```typescript
+github: {
+    username: "your-github-username",
+}
+```
+
+> 使用公开 API，无需配置 GitHub Token。
+
+### 🎮 VRChat 实时状态
+
+```typescript
+vrchat: {
+    apiBase: "https://your-vrcx-cloud-api.com",
+    userId: "usr_xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+    bioLines: 5,
+}
+```
+
+> 需要部署 [VRCX-Cloud](https://github.com/) 服务提供 VRChat 状态 API。
+
+### 📝 博客集成
+
+```typescript
+blog: {
+    url: "https://your-blog.com",   // Halo 2.x 博客地址
+    size: 5,                        // 显示最近几篇
+}
+```
 
 ### 兴趣标签
 
@@ -217,9 +262,9 @@ friends: [
 
 ```typescript
 theme: {
-    tintColor: "#fb7185",           // 强调色（链接、标签、悬停）
-    tintColorRGB: "251, 113, 133",  // RGB 格式用于 rgba()
-    gradientFrom: "#020617",        // 暗色模式背景渐变
+    tintColor: "#fb7185",
+    tintColorRGB: "251, 113, 133",
+    gradientFrom: "#020617",
     gradientVia: "#0f172a",
     gradientTo: "#1e293b",
 }
@@ -243,17 +288,15 @@ seo: {
 
 ### 背景图
 
-将图片放入 `public/bg/` 目录，支持 `.jpg`、`.png`、`.webp`、`.avif` 格式。`layout.tsx` 会在构建时自动扫描该目录，`BackgroundLayer` 组件处理：
+将图片放入 `public/bg/` 目录，支持 `.jpg`、`.png`、`.webp`、`.avif` 格式。构建时自动扫描，运行时随机轮播（10 秒间隔交叉淡入 + 自动预加载）。
 
-- **随机轮播** — 10 秒间隔交叉淡入切换
-- **预加载** — 自动预加载下一张图片
-- 渐变遮罩（自适应明暗模式）
-- 浮动色彩光球
-- 噪点纹理叠加
+### 多头像
 
-### 头像
+将头像图片放入 `public/avatar/` 目录，Profile 卡片将自动展示 3D 旋转轮播。
 
-替换 `public/cat.png`，支持 `.webp`、`.png`、`.jpg` 格式。
+### 照片堆叠
+
+将照片放入 `public/photos/` 目录，PhotoStack 卡片将以堆叠形式展示，点击可展开。
 
 ### 明暗模式
 
