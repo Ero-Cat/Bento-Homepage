@@ -41,6 +41,24 @@ export interface SiteConfig {
         /** 网易云歌曲 ID 列表，卡片将随机展示其中一首 */
         songIds: number[];
     };
+    github?: {
+        /** GitHub 用户名，用于贡献热力图 */
+        username: string;
+    };
+    blog?: {
+        /** 博客地址（Halo 2.x） */
+        url: string;
+        /** 显示最近几篇博文，默认 5 */
+        size?: number;
+    };
+    vrchat?: {
+        /** VRCX-Cloud API 地址 */
+        apiBase: string;
+        /** VRChat User ID */
+        userId: string;
+        /** Bio 展示行数，默认 3 */
+        bioLines?: number;
+    };
     seo: {
         title: string;
         description: string;
@@ -160,6 +178,21 @@ export const siteConfig: SiteConfig = {
 
     netease: {
         songIds: [1814460094, 1408944670, 1854700148],
+    },
+
+    github: {
+        username: "Ero-Cat",
+    },
+
+    blog: {
+        url: "https://blog.iacg.moe",
+        size: 5,
+    },
+
+    vrchat: {
+        apiBase: "https://vrcx-cloud.iacg.moe",
+        userId: "usr_dcf7bc56-34d4-482a-b21f-fb2c05dcfb2f",
+        bioLines: 5,
     },
 
     seo: {

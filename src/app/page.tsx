@@ -9,6 +9,9 @@ import { HardwareCard } from "@/components/hardware-card";
 import { FriendsCard } from "@/components/friends-card";
 import { PhotoStackCard } from "@/components/photo-stack-card";
 import { NowPlayingCard, type NeteaseTrack } from "@/components/now-playing-card";
+import { GitHubHeatmapCard } from "@/components/github-heatmap-card";
+import { BlogCard } from "@/components/blog-card";
+import { VRChatStatusCard } from "@/components/vrchat-status-card";
 import { siteConfig } from "@/config/site";
 
 const IMAGE_RE = /\.(jpe?g|png|webp|avif)$/i;
@@ -87,13 +90,31 @@ export default async function Home() {
           </div>
         </BentoGridItem>
 
-        <BentoGridItem className="md:col-span-2">
+        {/* ── VRChat Status ── */}
+        <BentoGridItem className="md:col-span-1">
+          <VRChatStatusCard />
+        </BentoGridItem>
+
+
+        <BentoGridItem className="md:col-span-1">
           <FriendsCard />
         </BentoGridItem>
 
         <BentoGridItem className="md:col-span-4 md:row-span-2">
           <PhotoStackCard photos={photoImages} />
         </BentoGridItem>
+
+        {/* ── GitHub Heatmap (full width) ── */}
+        <BentoGridItem className="md:col-span-4">
+          <GitHubHeatmapCard />
+        </BentoGridItem>
+
+        {/* ── Blog + PhotoStack ── */}
+        {/* <BentoGridItem className="md:col-span-2">
+          <BlogCard />
+        </BentoGridItem> */}
+
+
 
       </BentoGrid>
     </main>
