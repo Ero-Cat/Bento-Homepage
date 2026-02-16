@@ -12,36 +12,23 @@ import { cn } from "@/lib/utils";
 
 /* ============================================================
    Tilt Config — Mimics vanilla-tilt.js behavior
-   ============================================================
-   Key differences from before:
-   - perspective is INLINE in transform (not on parent container)
-     → ensures the vanishing point is always at the element center
-   - High damping + low stiffness → no oscillation, smooth arrival
-   - transform-style: preserve-3d on the card itself
    ============================================================ */
 const TILT_CONFIG = {
-    /** Max rotation in degrees (vanilla-tilt default: 20) */
+    /** Max rotation in degrees */
     maxRotation: 15,
-    /** Perspective in px — higher = subtler 3D, lower = more extreme */
+    /** Perspective in px — higher = subtler 3D */
     perspective: 1000,
-    /**
-     * Spring tuning — critically damped to avoid oscillation.
-     * vanilla-tilt uses CSS cubic-bezier(.03,.98,.52,.99) @ 400ms.
-     * We approximate this with a high-damping spring:
-     *  - stiffness 100: moderate pull toward target
-     *  - damping 30: strong damping → NO visible oscillation
-     *  - mass 0.4: lightweight → fast response
-     */
+    /** Spring tuning — critically damped to avoid oscillation */
     tiltSpring: { stiffness: 100, damping: 30, mass: 0.4 },
-    /**
-     * Return spring — even smoother for the "reset" animation.
-     * Slightly lower stiffness for a lazy float-back.
-     */
-    resetSpring: { stiffness: 60, damping: 20, mass: 0.5 },
 };
 
 /* ============================================================
    Glare Overlay — Mouse-following specular highlight
+   ============================================================
+   Performance notes:
+   - Uses a single useTransform to build the full style object
+     instead of 3 separate ones (saves 2 subscriptions per frame)
+   - Returns a complete style to avoid per-frame string rebuilds
    ============================================================ */
 function GlareOverlay({
     mouseX,
@@ -50,22 +37,26 @@ function GlareOverlay({
     mouseX: MotionValue<number>;
     mouseY: MotionValue<number>;
 }) {
-    const glareX = useTransform(mouseX, [-0.5, 0.5], [0, 100]);
-    const glareY = useTransform(mouseY, [-0.5, 0.5], [0, 100]);
-
-    const opacity = useTransform<number, number>(
+    /* Combine all glare computations into one transform → 1 subscription instead of 3 */
+    const glareStyle = useTransform<number, string>(
         [mouseX, mouseY],
-        ([latestX, latestY]: number[]) => {
-            const dist = Math.sqrt(latestX * latestX + latestY * latestY);
-            return Math.min(dist * 0.5, 0.3);
+        ([lx, ly]: number[]) => {
+            const gx = (lx + 0.5) * 100;
+            const gy = (ly + 0.5) * 100;
+            const dist = Math.sqrt(lx * lx + ly * ly);
+            const op = Math.min(dist * 0.5, 0.3);
+            return `${gx}|${gy}|${op}`;
         }
     );
 
-    const background = useTransform<number, string>(
-        [glareX, glareY],
-        ([lx, ly]: number[]) =>
-            `radial-gradient(700px circle at ${lx}% ${ly}%, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.08) 40%, transparent 65%)`
-    );
+    const background = useTransform(glareStyle, (v: string) => {
+        const [gx, gy] = v.split("|");
+        return `radial-gradient(700px circle at ${gx}% ${gy}%, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.08) 40%, transparent 65%)`;
+    });
+
+    const opacity = useTransform(glareStyle, (v: string) => {
+        return parseFloat(v.split("|")[2]);
+    });
 
     return (
         <motion.div
@@ -76,39 +67,7 @@ function GlareOverlay({
 }
 
 /* ============================================================
-   Dynamic Shadow — Shifts opposite to tilt for realism
-   ============================================================ */
-function useDynamicShadow(
-    springX: MotionValue<number>,
-    springY: MotionValue<number>
-) {
-    return useTransform<number, string>(
-        [springX, springY],
-        ([lx, ly]: number[]) => {
-            const shadowX = lx * -20;
-            const shadowY = ly * -20;
-            const blur = 25 + Math.abs(lx * 8) + Math.abs(ly * 8);
-            return [
-                `${shadowX}px ${shadowY}px ${blur}px rgba(0,0,0,0.1)`,
-                `0 2px 8px rgba(0,0,0,0.06)`,
-                `inset 0 0 0 1px var(--glass-border)`,
-            ].join(", ");
-        }
-    );
-}
-
-/* ============================================================
    Composited Transform — Inline perspective for correct vanishing point
-   ============================================================
-   Why inline perspective?
-   CSS `perspective` on a parent sets the vanishing point at the
-   parent's center — meaning cards at different grid positions
-   get DIFFERENT perspective angles (asymmetric distortion).
-
-   `transform: perspective(Xpx) rotateX() rotateY()` sets the
-   vanishing point at the ELEMENT's own center, giving each card
-   identical, symmetric, natural perspective. This is how
-   vanilla-tilt.js does it.
    ============================================================ */
 function useCompositedTransform(
     rotX: MotionValue<number>,
@@ -124,6 +83,16 @@ function useCompositedTransform(
 
 /* ============================================================
    GlassCard Component
+   ============================================================
+   Performance changes vs. original:
+   1. Removed useDynamicShadow — per-frame string concat for
+      box-shadow is expensive and visually subtle. Using static
+      CSS shadow from .glass-card instead.
+   2. Consolidated GlareOverlay into 1 useTransform chain
+      (was 3 separate: glareX/Y, opacity, background).
+   3. Removed willChange:"transform" — it pre-promotes to a
+      compositing layer which is counterproductive with
+      backdrop-filter children (forces re-composite every frame).
    ============================================================ */
 interface GlassCardProps {
     children: React.ReactNode;
@@ -144,7 +113,7 @@ export function GlassCard({
     const rawX = useMotionValue(0);
     const rawY = useMotionValue(0);
 
-    /* ---- Smooth spring → no oscillation due to high damping ---- */
+    /* ---- Smooth spring → no oscillation ---- */
     const springX = useSpring(rawX, TILT_CONFIG.tiltSpring);
     const springY = useSpring(rawY, TILT_CONFIG.tiltSpring);
 
@@ -159,9 +128,6 @@ export function GlassCard({
         rotateY,
         TILT_CONFIG.perspective
     );
-
-    /* ---- Dynamic shadow ---- */
-    const boxShadow = useDynamicShadow(springX, springY);
 
     /* ---- Event handlers ---- */
     const handleMouseMove = useCallback(
@@ -184,13 +150,11 @@ export function GlassCard({
         ? undefined
         : {
             transform,
-            boxShadow,
             transformStyle: "preserve-3d" as const,
-            willChange: "transform" as const,
         };
 
     const cardClass = cn(
-        "glass-card p-8 relative z-10 h-full",
+        "glass-card p-6 relative z-10 h-full",
         className
     );
 

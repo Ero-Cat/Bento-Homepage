@@ -10,15 +10,19 @@
 
 ## ✨ 特性
 
-- **液态玻璃设计** — 毛玻璃卡片 (`backdrop-filter: blur()`)、半透明边框、弹簧物理动画
-- **Bento Grid 布局** — 响应式 CSS Grid（桌面 3 列 → 平板 2 列 → 移动端 1 列）
+- **液态玻璃设计** — 毛玻璃卡片 (`backdrop-filter: blur()`)、半透明边框、3D tilt 倾斜 + 光晕反射
+- **Bento Grid 布局** — 响应式 CSS Grid（桌面 4 列 → 平板 2 列 → 移动端 1 列）
 - **配置驱动** — 所有个人信息集中在 `src/config/site.ts` 一个文件中，无需修改任何组件代码
-- **背景轮播** — 自动扫描 `public/bg/` 目录下所有图片，构建时生成列表，运行时随机顺序交叉淡入轮播
+- **🎵 网易云音乐播放器** — 真实音频播放，支持播放/暂停、切歌、进度条拖拽、音量控制、自动循环
+- **多头像轮播** — 3D 旋转动画的头像切换效果
+- **照片堆叠** — 点击展开/收起的交互式照片堆叠卡片
+- **背景轮播** — 自动扫描 `public/bg/` 目录下所有图片，随机顺序交叉淡入轮播
 - **多语言问候** — 根据浏览器语言自动切换问候语（中/英/日/韩/西/法/德），带 👋 挥手动画
 - **打字机效果** — 名称 / 别名自动循环打字展示
 - **明暗自动切换** — 跟随系统 `prefers-color-scheme`，双套设计令牌
 - **GitHub 实时数据** — 项目卡片自动拉取 ⭐ Stars 和 🍴 Forks 数据
 - **入场动画** — 交错 fade-in + slide-up，弹簧物理驱动
+- **性能优化** — rAF 驱动零渲染进度条、合并 `useTransform` 链、消除 `backdrop-filter` 叠加
 - **SEO 就绪** — Open Graph、Twitter Card、`<meta>` 标签全部从配置生成
 - **全静态导出** — `next build` 输出纯 HTML/CSS/JS，无需服务器
 - **GitHub Pages CI/CD** — 推送到 `main` 分支即自动构建部署
@@ -29,7 +33,9 @@
 
 | 卡片 | 组件 | 说明 |
 |---|---|---|
-| 👤 个人资料 | `profile-card.tsx` | 头像、多语言问候、打字机名称、地点、简介 |
+| 👤 个人资料 | `profile-card.tsx` | 多头像 3D 轮播、多语言问候、打字机名称、地点、简介 |
+| 📸 照片堆叠 | `photo-stack-card.tsx` | 可交互的照片堆叠展示，点击展开/收起 |
+| 🎵 正在播放 | `now-playing-card.tsx` | 网易云音乐真实播放器，iPhone 锁屏玻璃风格 |
 | 🔗 社交链接 | `social-card.tsx` | GitHub / Telegram / Twitter / VRChat 等平台图标 |
 | ✨ 兴趣标签 | `skills-card.tsx` | 胶囊式 Pill Tag，明暗双色自适应 |
 | 🖥️ 硬件清单 | `hardware-card.tsx` | 分类展示硬件设备 |
@@ -60,24 +66,25 @@ Bento-Homepage/
 │   ├── cat.png                   # 头像
 │   ├── CNAME                     # 自定义域名配置
 │   └── bg/                       # 背景图目录（支持多张轮播）
-│       ├── image1.jpg
-│       └── image2.webp
 ├── src/
 │   ├── app/
 │   │   ├── globals.css           # 设计令牌（明/暗）、玻璃样式、动画关键帧
-│   │   ├── layout.tsx            # 根布局、SEO 元数据、主题注入、背景扫描
-│   │   └── page.tsx              # 首页 — Bento Grid 组装
+│   │   ├── layout.tsx            # 根布局、SEO 元数据、背景图扫描
+│   │   └── page.tsx              # 首页 — Bento Grid 组装 + 网易云数据 fetch
 │   ├── components/
-│   │   ├── background-layer.tsx  # 背景轮播 + 渐变遮罩 + 噪点纹理
+│   │   ├── glass-card.tsx        # 核心毛玻璃卡片（3D tilt + 光晕 + spring 物理）
 │   │   ├── bento-grid.tsx        # 响应式网格容器
-│   │   ├── glass-card.tsx        # 核心毛玻璃卡片
-│   │   ├── profile-card.tsx      # 头像 + 多语言问候 + 打字机
-│   │   ├── skills-card.tsx       # 兴趣 Pill Tags
-│   │   ├── social-card.tsx       # 社交图标
-│   │   ├── hardware-card.tsx     # 硬件清单
-│   │   ├── projects-card.tsx     # 项目展示（含 GitHub API）
-│   │   ├── friends-card.tsx      # 友情链接
+│   │   ├── background-layer.tsx  # 背景轮播 + 渐变遮罩 + 噪点纹理
+│   │   ├── profile-card.tsx      # 头像轮播 + 多语言问候 + 打字机
+│   │   ├── avatar-carousel.tsx   # 多头像旋转 3D 轮播组件
 │   │   ├── typewriter.tsx        # 打字机效果组件
+│   │   ├── photo-stack-card.tsx  # 照片堆叠卡片（点击展开/收起）
+│   │   ├── now-playing-card.tsx  # 网易云音乐播放器（真实音频 + rAF 进度条）
+│   │   ├── social-card.tsx       # 社交图标链接
+│   │   ├── skills-card.tsx       # 兴趣 Pill Tags
+│   │   ├── hardware-card.tsx     # 硬件清单
+│   │   ├── projects-card.tsx     # 项目展示（含 GitHub Stars/Forks API）
+│   │   ├── friends-card.tsx      # 友情链接
 │   │   ├── footer.tsx            # 版权信息
 │   │   └── icons/                # 自定义图标（VRChat、Steam）
 │   ├── config/
@@ -137,12 +144,28 @@ pnpm build
 profile: {
     name: "YourName",
     title: "Your Title",
-    description: "你的个人简介...",
+    description: {
+        zh: "你的中文简介...",
+        en: "Your English bio...",
+    },
     avatar: "/cat.png",           // 将图片放入 public/
     aliases: ["Name1", "Name2"],  // 打字机循环展示
     location: "Your Location",
 }
 ```
+
+### 🎵 网易云音乐
+
+在 `netease.songIds` 中填入歌曲 ID，播放器将随机选择一首展示。支持真实音频播放、自动循环切歌。
+
+```typescript
+netease: {
+    songIds: [1814460094, 1408944670, 1854700148],
+}
+```
+
+> 歌曲 ID 获取方式：在网易云音乐网页版打开歌曲，URL 中的 `id=` 后的数字即为歌曲 ID。
+> **注意**：VIP 歌曲无法通过公开外链播放，请使用免费歌曲。
 
 ### 兴趣标签
 

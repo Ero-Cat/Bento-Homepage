@@ -9,7 +9,8 @@ export interface SiteConfig {
     profile: {
         name: string;
         title: string;
-        description: string;
+        /** Keyed by language prefix: "zh", "en", "ja", etc. "en" is the fallback. */
+        description: Record<string, string>;
         avatar: string;
         aliases?: string[];  // Typewriter cycling names
         location?: string;
@@ -36,6 +37,10 @@ export interface SiteConfig {
         url: string;
         tags?: string[];
     }[];
+    netease?: {
+        /** 网易云歌曲 ID 列表，卡片将随机展示其中一首 */
+        songIds: number[];
+    };
     seo: {
         title: string;
         description: string;
@@ -56,8 +61,11 @@ export const siteConfig: SiteConfig = {
     profile: {
         name: "EroCat",
         title: "Vibe Coding & Full-Stack Developer",
-        description:
-            "非常欢迎交流一些产品创意或用户角度上需求探讨。要永远对任何事物与逻辑抱有底层问题思考和吸收转化。带有批判性思维触及问题的核心。做爱做并且能持续满足自我的事情。",
+        description: {
+            zh: "非常欢迎交流一些产品创意或用户角度上需求探讨。要永远对任何事物与逻辑抱有底层问题思考和吸收转化。带有批判性思维触及问题的核心。做爱做并且能持续满足自我的事情。",
+            en: "Always open to discussing product ideas and exploring user-centric needs. Think critically, get to the core of every problem, and do what you love.",
+            ja: "プロダクトのアイデアやユーザー視点のニーズについて、ぜひ交流しましょう。常に本質的な問い掛けを大切にしています。",
+        },
         avatar: "/cat.png",
         aliases: ["EroCat", "DoKiDoKi", "大黄猫", "老王"],
         location: "China | VRChat",
@@ -113,7 +121,7 @@ export const siteConfig: SiteConfig = {
             description: "男科大糕手荟荟",
         },
         {
-            name: "Lee",
+            name: "李老板",
             avatar: "https://leetfs.com/logo.png",
             url: "https://leetfs.com/",
             description: "木桶饭糕手李老板",
@@ -149,6 +157,10 @@ export const siteConfig: SiteConfig = {
             tags: ["Next.js", "React", "TypeScript", "Bento Grid"],
         },
     ],
+
+    netease: {
+        songIds: [1814460094, 1408944670, 1854700148],
+    },
 
     seo: {
         title: "EroCat — 大黄猫个人首页",

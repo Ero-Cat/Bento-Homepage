@@ -13,9 +13,9 @@ export function BentoGrid({ children, className }: BentoGridProps) {
     return (
         <motion.div
             className={cn(
-                "grid w-full max-w-5xl gap-5 px-5",
+                "grid w-full max-w-7xl gap-5 px-8 mx-auto",
                 "grid-cols-1",
-                "md:grid-cols-3",
+                "md:grid-cols-4",
                 "auto-rows-auto",
                 className
             )}

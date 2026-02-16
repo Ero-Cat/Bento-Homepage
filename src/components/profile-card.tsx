@@ -3,54 +3,67 @@
 import { useState, useEffect } from "react";
 import { siteConfig } from "@/config/site";
 import { GlassCard } from "@/components/glass-card";
+import { AvatarCarousel } from "@/components/avatar-carousel";
 import { Typewriter } from "@/components/typewriter";
 import { MapPin } from "lucide-react";
 
-function useGreeting() {
-    const [text, setText] = useState({ hello: "Hi", iam: "I'm" });
+function useLocalized() {
+    const [result, setResult] = useState({
+        hello: "Hi",
+        iam: "I'm",
+        langPrefix: "en",
+    });
 
     useEffect(() => {
         const lang = navigator.language;
-        if (lang.startsWith("zh")) setText({ hello: "你好", iam: "我是" });
-        else if (lang.startsWith("ja")) setText({ hello: "こんにちは", iam: "私は" });
-        else if (lang.startsWith("ko")) setText({ hello: "안녕하세요", iam: "저는" });
-        else if (lang.startsWith("es")) setText({ hello: "Hola", iam: "soy" });
-        else if (lang.startsWith("fr")) setText({ hello: "Bonjour", iam: "je suis" });
-        else if (lang.startsWith("de")) setText({ hello: "Hallo", iam: "ich bin" });
-        else setText({ hello: "Hi", iam: "I'm" });
+        if (lang.startsWith("zh")) setResult({ hello: "你好", iam: "我是", langPrefix: "zh" });
+        else if (lang.startsWith("ja")) setResult({ hello: "こんにちは", iam: "私は", langPrefix: "ja" });
+        else if (lang.startsWith("ko")) setResult({ hello: "안녕하세요", iam: "저는", langPrefix: "ko" });
+        else if (lang.startsWith("es")) setResult({ hello: "Hola", iam: "soy", langPrefix: "es" });
+        else if (lang.startsWith("fr")) setResult({ hello: "Bonjour", iam: "je suis", langPrefix: "fr" });
+        else if (lang.startsWith("de")) setResult({ hello: "Hallo", iam: "ich bin", langPrefix: "de" });
+        else setResult({ hello: "Hi", iam: "I'm", langPrefix: "en" });
     }, []);
 
-    return text;
+    return result;
 }
 
-export function ProfileCard() {
-    const { name, title, description, avatar, aliases, location } = siteConfig.profile;
-    const greeting = useGreeting();
+interface ProfileCardProps {
+    avatarImages?: string[];
+}
+
+export function ProfileCard({ avatarImages }: ProfileCardProps) {
+    const { name, title, description, aliases, location } = siteConfig.profile;
+    const { hello, iam, langPrefix } = useLocalized();
+
+    // Resolve description by browser language, fallback to "en", then first available
+    const localizedDesc =
+        description[langPrefix] ??
+        description["en"] ??
+        Object.values(description)[0] ??
+        "";
+
+    // Build avatar image paths
+    const images =
+        avatarImages && avatarImages.length > 0
+            ? avatarImages.map((f) => `/avatar/${f}`)
+            : [siteConfig.profile.avatar];
 
     return (
-        <GlassCard className="flex flex-col items-center text-center gap-6 p-10 md:flex-row md:text-left md:items-start md:gap-8">
-            {/* Avatar */}
-            <div className="shrink-0">
-                <img
-                    src={avatar}
-                    alt={name}
-                    width={140}
-                    height={140}
-                    className="rounded-full border-2 object-cover"
-                    style={{ width: 140, height: 140, borderColor: "var(--glass-border)" }}
-                />
-            </div>
+        <GlassCard className="flex flex-col items-center text-center gap-5 p-8 md:flex-row md:text-left md:items-start md:gap-6">
+            {/* Avatar Carousel */}
+            <AvatarCarousel images={images} alt={name} />
 
             {/* Info */}
             <div className="flex flex-col gap-2">
                 {/* Line 1: Hello 👋 */}
                 <p className="text-2xl font-medium text-text-secondary animate-fade-in">
-                    {greeting.hello}{" "}
+                    {hello}{" "}
                     <span className="inline-block animate-wave origin-[70%_70%]">👋</span>
                 </p>
                 {/* Line 2: I'm + Name */}
                 <h1 className="text-4xl font-bold tracking-tight text-text-primary">
-                    <span className="text-text-secondary font-medium">{greeting.iam}</span>{" "}
+                    <span className="text-text-secondary font-medium">{iam}</span>{" "}
                     {aliases && aliases.length > 0 ? (
                         <Typewriter aliases={aliases} />
                     ) : (
@@ -65,7 +78,7 @@ export function ProfileCard() {
                     </p>
                 )}
                 <p className="mt-1 text-base leading-relaxed text-text-secondary max-w-lg">
-                    {description}
+                    {localizedDesc}
                 </p>
             </div>
         </GlassCard>
