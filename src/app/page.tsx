@@ -69,53 +69,48 @@ export default async function Home() {
   return (
     <main className="relative z-10 flex min-h-dvh flex-col items-center justify-center py-12 md:py-16">
       <BentoGrid>
-        {/* ── Row 1 ── Profile(3) + Social(1) = 4 */}
+        {/* ── Row 1: Profile(3) + NowPlaying(1) ── */}
         <BentoGridItem className="md:col-span-3">
           <ProfileCard avatarImages={avatarImages} />
         </BentoGridItem>
         <BentoGridItem className="md:col-span-1">
           <NowPlayingCard tracks={neteaseTracks} />
         </BentoGridItem>
-        <BentoGridItem className="md:col-span-2">
-          <SocialCard />
-        </BentoGridItem>
 
-        <BentoGridItem className="md:col-span-2 md:row-span-2">
-          <HardwareCard />
-        </BentoGridItem>
-        <BentoGridItem className="md:col-span-2 md:row-span-2">
+        {/* ── Row 2: [Connect + Interests](2) + [VRChat + Friends](2) ── */}
+        <BentoGridItem className="md:col-span-2">
           <div className="flex flex-col gap-5 h-full">
+            <SocialCard />
             <SkillsCard />
-            <ProjectsCard />
+          </div>
+        </BentoGridItem>
+        <BentoGridItem className="md:col-span-2">
+          <div className="flex flex-col gap-5 h-full">
+            <VRChatStatusCard />
+            <FriendsCard />
           </div>
         </BentoGridItem>
 
-        {/* ── VRChat Status ── */}
-        <BentoGridItem className="md:col-span-1">
-          <VRChatStatusCard />
+        {/* ── Row 3–4: Projects(2) → Blog(2) + Hardware(2, row-span-2) ── */}
+        <BentoGridItem className="md:col-span-2">
+          <ProjectsCard />
+        </BentoGridItem>
+        <BentoGridItem className="md:col-span-2 md:row-span-2">
+          <HardwareCard />
+        </BentoGridItem>
+        <BentoGridItem className="md:col-span-2">
+          <BlogCard />
         </BentoGridItem>
 
-
-        <BentoGridItem className="md:col-span-1">
-          <FriendsCard />
-        </BentoGridItem>
-
-        <BentoGridItem className="md:col-span-4 md:row-span-2">
+        {/* ── Row 5: PhotoStack (full width) ── */}
+        <BentoGridItem className="md:col-span-4">
           <PhotoStackCard photos={photoImages} />
         </BentoGridItem>
 
-        {/* ── GitHub Heatmap (full width) ── */}
+        {/* ── Row 6: GitHub Heatmap (full width) ── */}
         <BentoGridItem className="md:col-span-4">
           <GitHubHeatmapCard />
         </BentoGridItem>
-
-        {/* ── Blog + PhotoStack ── */}
-        {/* <BentoGridItem className="md:col-span-2">
-          <BlogCard />
-        </BentoGridItem> */}
-
-
-
       </BentoGrid>
     </main>
   );

@@ -227,6 +227,7 @@ export function VRChatStatusCard() {
                                     display: "-webkit-box",
                                     WebkitLineClamp: bioLines,
                                     WebkitBoxOrient: "vertical",
+                                    whiteSpace: "pre-line",
                                 }}
                             >
                                 {data.bio}
