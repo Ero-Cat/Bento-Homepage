@@ -55,7 +55,7 @@ export function ProfileCard({ avatarImages }: ProfileCardProps) {
             <AvatarCarousel images={images} alt={name} />
 
             {/* Info */}
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2 flex-1 min-w-0">
                 {/* Line 1: Hello 👋 */}
                 <p className="text-2xl font-medium text-text-secondary animate-fade-in">
                     {hello}{" "}
@@ -77,7 +77,7 @@ export function ProfileCard({ avatarImages }: ProfileCardProps) {
                         {location}
                     </p>
                 )}
-                <p className="mt-1 text-base leading-relaxed text-text-secondary max-w-lg">
+                <p className="mt-1 text-base leading-relaxed text-text-secondary">
                     {localizedDesc}
                 </p>
             </div>
