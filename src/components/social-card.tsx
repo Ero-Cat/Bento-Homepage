@@ -53,7 +53,7 @@ export function SocialCard() {
                             aria-label={`Visit ${link.platform}`}
                             className="flex items-center justify-center w-12 h-12 rounded-2xl border text-text-secondary hover:text-tint transition-colors"
                             style={{ background: "var(--icon-bg)", borderColor: "var(--icon-border)" }}
-                            whileHover={{ y: -4, scale: 1.1 }}
+                            whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
                             transition={SPRING_INTERACTIVE}
                         >

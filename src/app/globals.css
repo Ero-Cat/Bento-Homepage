@@ -274,6 +274,28 @@ body {
 }
 
 /* ============================================================
+   App Icon Tile — frosted glass micro-tile for Software Card
+   ============================================================ */
+.app-icon-tile {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transition: background 0.25s ease, box-shadow 0.25s ease;
+}
+
+@media (prefers-color-scheme: dark) {
+  .app-icon-tile {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow:
+      0 2px 8px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+}
+
+/* ============================================================
    Pill Tag Component
    ============================================================ */
 .pill-tag {

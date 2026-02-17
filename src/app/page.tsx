@@ -6,6 +6,7 @@ import { SkillsCard } from "@/components/skills-card";
 import { SocialCard } from "@/components/social-card";
 import { ProjectsCard } from "@/components/projects-card";
 import { HardwareCard } from "@/components/hardware-card";
+import { SoftwareCard } from "@/components/software-card";
 import { FriendsCard } from "@/components/friends-card";
 import { PhotoStackCard } from "@/components/photo-stack-card";
 import { NowPlayingCard, type NeteaseTrack } from "@/components/now-playing-card";
@@ -91,7 +92,7 @@ export default async function Home() {
           </div>
         </BentoGridItem>
 
-        {/* ── Row 3–4: Projects(2) → Blog(2) + Hardware(2, row-span-2) ── */}
+        {/* ── Row 3–4: Projects(2) + Software(2) → Blog(2) + Hardware(2, row-span-2) ── */}
         <BentoGridItem className="md:col-span-2">
           <ProjectsCard />
         </BentoGridItem>
@@ -99,8 +100,11 @@ export default async function Home() {
           <HardwareCard />
         </BentoGridItem>
         <BentoGridItem className="md:col-span-2">
-          <BlogCard />
+          <SoftwareCard />
         </BentoGridItem>
+        {/* <BentoGridItem className="md:col-span-2">
+          <BlogCard />
+        </BentoGridItem> */}
 
         {/* ── Row 5: PhotoStack (full width) ── */}
         <BentoGridItem className="md:col-span-4">

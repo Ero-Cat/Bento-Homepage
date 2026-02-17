@@ -20,6 +20,10 @@ export interface SiteConfig {
         category: string;
         items: string[];
     }[];
+    software: {
+        name: string;
+        icon: string;   // filename = /icons/software/{name}.svg | URL = CDN | "" = letter fallback
+    }[];
     socialLinks: {
         platform: "github" | "telegram" | "discord" | "email" | "twitter" | "linkedin" | "youtube" | "bilibili" | "vrchat" | "steam" | "blog";
         url: string;
@@ -112,110 +116,137 @@ export const siteConfig: SiteConfig = {
         { category: "🌐🛜 Network", items: ["GL·iNet AX1800", "GL·iNet MT3000", "N5105"] },
     ],
 
-    socialLinks: [
-        { platform: "github", url: "https://github.com/Ero-Cat", enabled: true },
-        { platform: "telegram", url: "https://t.me/dokierocat", enabled: true },
-        { platform: "blog", url: "https://blog.iacg.moe", enabled: true },
+  
+        software: [
+            // IDE & Game Engine
+            { name: "VS Code", icon: "vscode" },
+            { name: "IntelliJ IDEA", icon: "intellij" },
+            { name: "Unity", icon: "unity" },
 
-        { platform: "twitter", url: "https://x.com/DokiEroCat", enabled: true },
-        { platform: "vrchat", url: "https://vrchat.com/home/user/usr_dcf7bc56-34d4-482a-b21f-fb2c05dcfb2f", enabled: true },
-        { platform: "steam", url: "http://steamcommunity.com/id/233000", enabled: true },
-        { platform: "discord", url: "https://discord.gg/erocat", enabled: false },
-        { platform: "bilibili", url: "https://space.bilibili.com/791219", enabled: false },
-        { platform: "email", url: "mailto:admin@iacg.moe", enabled: true },
-    ],
+            // AI & Productivity
+            { name: "Antigravity", icon: "antigravity" },
+            { name: "Codex", icon: "ChatGPT" },
+            { name: "Notion", icon: "notion" },
 
-    friends: [
-        {
-            name: "郭老师",
-            avatar: "https://chaosgoo.com/images/Logo_Sketch.webp",
-            url: "https://chaosgoo.com/",
-            description: "郭老师 TQL",
-        },
-        {
-            name: "荟荟",
-            avatar: "https://nhui.top/content/uploadfile/202503/ad7b1741690461.jpg",
-            url: "https://nhui.top/",
-            description: "男科大糕手荟荟",
-        },
-        {
-            name: "李老板",
-            avatar: "https://leetfs.com/logo.png",
-            url: "https://leetfs.com/",
-            description: "木桶饭糕手李老板",
-        },
-        {
-            name: "光水",
-            avatar: "https://api.vrchat.cloud/api/1/file/file_c00911ce-3e53-4e98-a494-936811cc85a8/1/",
-            url: "https://www.songzx.com/",
-        },
-        {
-            name: "小路",
-            avatar: "https://avatars.githubusercontent.com/u/8012410",
-            url: "https://tun.cat",
-        },
-        {
-            name: "Alumi",
-            avatar: "https://lisek.cc/profile.png",
-            url: "https://lisek.cc",
-        },
-    ],
+            // DevOps & Terminal
+            { name: "Docker", icon: "docker" },
+            { name: "Homebrew", icon: "homebrew" },
+            { name: "Tmux", icon: "tmux" },
 
-    projects: [
-        {
-            name: "心率推送",
-            description: "基于 Flutter 的跨平台 BLE 心率监控与推送工具，支持 HTTP/WS、OSC、MQTT 多协议实时推送，适用于 VRChat 模型联动。",
-            url: "https://github.com/Ero-Cat/hr_push",
-            tags: ["Flutter", "BLE", "OSC", "VRChat"],
-        },
-        {
-            name: "Bento Homepage",
-            description: "配置驱动的液态玻璃风格个人主页，集成网易云播放器、VRChat 实时状态、GitHub 热力图、3D Tilt 毛玻璃卡片、背景轮播、多头像轮播、多语言 i18n，支持 GitHub Pages 全静态部署。",
-            url: "https://github.com/Ero-Cat/bento-Homepage",
-            tags: ["Next.js", "React", "TypeScript", "Bento Grid"],
-        },
-    ],
+            // Network & Proxy
 
-    netease: {
-        songIds: [1814460094, 1408944670, 1854700148],
-    },
+            { name: "OpenVPN", icon: "OpenVPN" },
+            { name: "Shadowsocks", icon: "Shadowsocks" },
+            { name: "WireGuard", icon: "wireguard" },
 
-    github: {
-        username: "Ero-Cat",
-    },
-
-    blog: {
-        url: "https://blog.iacg.moe",
-        size: 5,
-    },
-
-    vrchat: {
-        apiBase: "https://vrcx-cloud.iacg.moe",
-        userId: "usr_dcf7bc56-34d4-482a-b21f-fb2c05dcfb2f",
-        bioLines: 5,
-    },
-
-    seo: {
-        title: "EroCat — 大黄猫个人首页",
-        description:
-            "EroCat（大黄猫）的个人主页 — Full-Stack Developer & Vibe Coder。热衷 Spring Boot、Unity、3D 打印、DIY、VRChat、Home Assistant 智能家居，以及各种折腾服务器与网络。欢迎交流产品创意与技术探讨。",
-        keywords: [
-            "EroCat", "大黄猫", "DoKiDoKi",
-            "全栈开发", "Full-Stack Developer", "Vibe Coding",
-            "Spring Boot", "Next.js", "React", "TypeScript",
-            "Unity", "VRChat", "3D Print",
-            "DIY", "Home Assistant", "OpenWrt", "ESXi",
-            "个人主页", "portfolio",
+            // Media
+            { name: "网易云", icon: "netEase-cloud-music" },
         ],
-        ogImage: "/cat.png",
-        siteUrl: "https://iacg.moe",
-    },
 
-    theme: {
-        tintColor: "#fb7185",
-        tintColorRGB: "251, 113, 133",
-        gradientFrom: "#020617",
-        gradientVia: "#0f172a",
-        gradientTo: "#1e293b",
-    },
+        socialLinks: [
+            { platform: "github", url: "https://github.com/Ero-Cat", enabled: true },
+            { platform: "telegram", url: "https://t.me/dokierocat", enabled: true },
+            { platform: "blog", url: "https://blog.iacg.moe", enabled: true },
+
+            { platform: "twitter", url: "https://x.com/DokiEroCat", enabled: true },
+            { platform: "vrchat", url: "https://vrchat.com/home/user/usr_dcf7bc56-34d4-482a-b21f-fb2c05dcfb2f", enabled: true },
+            { platform: "steam", url: "http://steamcommunity.com/id/233000", enabled: true },
+            { platform: "discord", url: "https://discord.gg/erocat", enabled: false },
+            { platform: "bilibili", url: "https://space.bilibili.com/791219", enabled: false },
+            { platform: "email", url: "mailto:admin@iacg.moe", enabled: true },
+        ],
+
+        friends: [
+            {
+                name: "郭老师",
+                avatar: "https://chaosgoo.com/images/Logo_Sketch.webp",
+                url: "https://chaosgoo.com/",
+                description: "郭老师 TQL",
+            },
+            {
+                name: "荟荟",
+                avatar: "https://nhui.top/content/uploadfile/202503/ad7b1741690461.jpg",
+                url: "https://nhui.top/",
+                description: "男科大糕手荟荟",
+            },
+            {
+                name: "李老板",
+                avatar: "https://leetfs.com/logo.png",
+                url: "https://leetfs.com/",
+                description: "木桶饭糕手李老板",
+            },
+            {
+                name: "光水",
+                avatar: "https://api.vrchat.cloud/api/1/file/file_c00911ce-3e53-4e98-a494-936811cc85a8/1/",
+                url: "https://www.songzx.com/",
+            },
+            {
+                name: "小路",
+                avatar: "https://avatars.githubusercontent.com/u/8012410",
+                url: "https://tun.cat",
+            },
+            {
+                name: "Alumi",
+                avatar: "https://lisek.cc/profile.png",
+                url: "https://lisek.cc",
+            },
+        ],
+
+        projects: [
+            {
+                name: "心率推送",
+                description: "基于 Flutter 的跨平台 BLE 心率监控与推送工具，支持 HTTP/WS、OSC、MQTT 多协议实时推送，适用于 VRChat 模型联动。",
+                url: "https://github.com/Ero-Cat/hr_push",
+                tags: ["Flutter", "BLE", "OSC", "VRChat"],
+            },
+            {
+                name: "Bento Homepage",
+                description: "配置驱动的液态玻璃风格个人主页，集成网易云播放器、VRChat 实时状态、GitHub 热力图、3D Tilt 毛玻璃卡片、背景轮播、多头像轮播、多语言 i18n，支持 GitHub Pages 全静态部署。",
+                url: "https://github.com/Ero-Cat/bento-Homepage",
+                tags: ["Next.js", "React", "TypeScript", "Bento Grid"],
+            },
+        ],
+
+        netease: {
+            songIds: [1814460094, 1408944670, 1854700148],
+        },
+
+        github: {
+            username: "Ero-Cat",
+        },
+
+        blog: {
+            url: "https://blog.iacg.moe",
+            size: 5,
+        },
+
+        vrchat: {
+            apiBase: "https://vrcx-cloud.iacg.moe",
+            userId: "usr_dcf7bc56-34d4-482a-b21f-fb2c05dcfb2f",
+            bioLines: 5,
+        },
+
+        seo: {
+            title: "EroCat — 大黄猫个人首页",
+            description:
+                "EroCat（大黄猫）的个人主页 — Full-Stack Developer & Vibe Coder。热衷 Spring Boot、Unity、3D 打印、DIY、VRChat、Home Assistant 智能家居，以及各种折腾服务器与网络。欢迎交流产品创意与技术探讨。",
+            keywords: [
+                "EroCat", "大黄猫", "DoKiDoKi",
+                "全栈开发", "Full-Stack Developer", "Vibe Coding",
+                "Spring Boot", "Next.js", "React", "TypeScript",
+                "Unity", "VRChat", "3D Print",
+                "DIY", "Home Assistant", "OpenWrt", "ESXi",
+                "个人主页", "portfolio",
+            ],
+            ogImage: "/cat.png",
+            siteUrl: "https://iacg.moe",
+        },
+
+        theme: {
+            tintColor: "#fb7185",
+            tintColorRGB: "251, 113, 133",
+            gradientFrom: "#020617",
+            gradientVia: "#0f172a",
+            gradientTo: "#1e293b",
+        },
 };

@@ -139,20 +139,18 @@ export function NowPlayingCard({ tracks }: NowPlayingCardProps) {
         setCurrentIdx((i) => (i + 1) % tracks.length);
         if (barRef.current) barRef.current.style.width = "0%";
         if (timeRef.current) timeRef.current.textContent = "0:00";
-        // Will auto-play the new track after index change
-        if (isPlaying) {
-            // Defer to let state update
-            setTimeout(() => {
-                const a = audioRef.current;
-                if (a) {
-                    const newIdx = (currentIdx + 1) % tracks.length;
-                    a.src = getSongUrl(tracks[newIdx].songId);
-                    a.load();
-                    a.play().catch(() => { });
-                }
-            }, 50);
-        }
-    }, [tracks, isPlaying, currentIdx]);
+
+        setIsPlaying(true);
+        setTimeout(() => {
+            const a = audioRef.current;
+            if (a) {
+                const newIdx = (currentIdx + 1) % tracks.length;
+                a.src = getSongUrl(tracks[newIdx].songId);
+                a.load();
+                a.play().catch(() => { });
+            }
+        }, 50);
+    }, [tracks, currentIdx]);
 
     const prevTrack = useCallback(() => {
         if (tracks.length <= 1) return;
@@ -164,18 +162,18 @@ export function NowPlayingCard({ tracks }: NowPlayingCardProps) {
         setCurrentIdx((i) => (i - 1 + tracks.length) % tracks.length);
         if (barRef.current) barRef.current.style.width = "0%";
         if (timeRef.current) timeRef.current.textContent = "0:00";
-        if (isPlaying) {
-            setTimeout(() => {
-                const a = audioRef.current;
-                if (a) {
-                    const newIdx = (currentIdx - 1 + tracks.length) % tracks.length;
-                    a.src = getSongUrl(tracks[newIdx].songId);
-                    a.load();
-                    a.play().catch(() => { });
-                }
-            }, 50);
-        }
-    }, [tracks, isPlaying, currentIdx]);
+
+        setIsPlaying(true);
+        setTimeout(() => {
+            const a = audioRef.current;
+            if (a) {
+                const newIdx = (currentIdx - 1 + tracks.length) % tracks.length;
+                a.src = getSongUrl(tracks[newIdx].songId);
+                a.load();
+                a.play().catch(() => { });
+            }
+        }, 50);
+    }, [tracks, currentIdx]);
 
     /* Handle audio ended — auto-advance */
     useEffect(() => {

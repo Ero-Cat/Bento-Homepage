@@ -1,7 +1,9 @@
 "use client";
 
+import { motion } from "framer-motion";
 import { siteConfig } from "@/config/site";
 import { GlassCard } from "@/components/glass-card";
+import { SPRING_GENTLE } from "@/lib/motion";
 
 export function HardwareCard() {
     const { hardware } = siteConfig;
@@ -17,13 +19,17 @@ export function HardwareCard() {
                         </h3>
                         <div className="flex flex-wrap gap-2">
                             {group.items.map((item) => (
-                                <span
+                                <motion.span
                                     key={item}
-                                    className="text-sm font-medium text-text-secondary px-3 py-1.5 rounded-xl"
-                                    style={{ background: "var(--icon-bg)", border: "1px solid var(--icon-border)" }}
+                                    className="pill-tag"
+                                    whileHover={{
+                                        scale: 1.08,
+                                        boxShadow: `0 0 20px rgba(var(--tint-rgb), 0.25)`,
+                                    }}
+                                    transition={SPRING_GENTLE}
                                 >
                                     {item}
-                                </span>
+                                </motion.span>
                             ))}
                         </div>
                     </div>

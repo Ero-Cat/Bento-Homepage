@@ -57,7 +57,7 @@
 **Responsibilities**:
 - 维护 `GlassCard` 核心组件（毛玻璃 + 3D tilt + 光晕反射 + spring 物理）
 - 实现 Bento Grid 4 列布局容器
-- 实现各功能卡片（Profile、Social、Hardware、Projects、Friends、NowPlaying、PhotoStack、GitHubHeatmap、VRChatStatus、Blog）
+- 实现各功能卡片（Profile、Social、Hardware、Projects、Friends、NowPlaying、PhotoStack、GitHubHeatmap、VRChatStatus、Blog、Software）
 - 实现入场动画（stagger + spring）
 - 性能优化（rAF 驱动进度条、合并 `useTransform` 链、避免字符串拼接 boxShadow）
 - 确保触控目标 ≥ 44×44pt (Apple HIG)
@@ -133,11 +133,11 @@ Bento-Homepage/
 │   │   ├── github-heatmap-card.tsx # GitHub 贡献热力图（无需 Token）
 │   │   ├── vrchat-status-card.tsx  # VRChat 实时在线状态（VRCX-Cloud API）
 │   │   ├── blog-card.tsx         # 博客最新文章（Halo 2.x API）
-│   │   ├── social-card.tsx       # 社交图标链接
-│   │   ├── skills-card.tsx       # 兴趣 Pill Tags
-│   │   ├── hardware-card.tsx     # 硬件清单
+│   │   ├── social-card.tsx       # 社交图标链接（scale hover，无 y 位移避免 3D tilt 抖动）
+│   │   ├── skills-card.tsx       # 兴趣 Pill Tags（scale + boxShadow hover）
+│   │   ├── hardware-card.tsx     # 硬件清单（pill-tag 样式，与 Interests 一致）
 │   │   ├── projects-card.tsx     # 项目展示（含 GitHub Stars/Forks API）
-│   │   ├── friends-card.tsx      # 友情链接
+│   │   ├── friends-card.tsx      # 友情链接（hover 旋转漩涡特效）
 │   │   ├── footer.tsx            # 版权信息
 │   │   └── icons/                # 自定义图标（VRChat、Steam）
 │   ├── config/
@@ -199,3 +199,4 @@ Bento-Homepage/
 5. **Apple HIG Compliance**: 遵循 `.agent/rules/apple-designer-vibe-rules.md` 中的所有设计约束
 6. **i18n Description**: `profile.description` 使用 `Record<string, string>` 支持多语言简介
 7. **Zero-Dependency Data**: 所有外部 API 均为公开免认证接口，无需配置 Token
+8. **Docs Sync on Feature Completion**: 每次完成新功能后，必须同步更新 `AGENTS.md` 和 `README.md`，确保文档始终反映最新项目状态

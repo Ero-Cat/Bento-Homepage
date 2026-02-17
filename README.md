@@ -24,8 +24,10 @@
 - **打字机效果** — 名称 / 别名自动循环打字展示
 - **明暗自动切换** — 跟随系统 `prefers-color-scheme`，双套设计令牌
 - **GitHub 实时数据** — 项目卡片自动拉取 ⭐ Stars 和 🍴 Forks 数据
+- **友链漩涡特效** — 好友头像 hover 时 360° 旋转漩涡动画，与主头像轮播效果一致
+- **硬件标签一致性** — 硬件清单使用与兴趣标签相同的 Pill Tag 样式和 hover 动效
 - **入场动画** — 交错 fade-in + slide-up，弹簧物理驱动
-- **性能优化** — rAF 驱动零渲染进度条、合并 `useTransform` 链、消除 `backdrop-filter` 叠加
+- **性能优化** — rAF 驱动零渲染进度条、合并 `useTransform` 链、消除 `backdrop-filter` 叠加、消除 3D tilt 与子元素 hover 位移冲突
 - **SEO 就绪** — Open Graph、Twitter Card、`<meta>` 标签全部从配置生成
 - **全静态导出** — `next build` 输出纯 HTML/CSS/JS，无需服务器
 - **GitHub Pages CI/CD** — 推送到 `main` 分支即自动构建部署
@@ -43,10 +45,10 @@
 | 📊 贡献图 | `github-heatmap-card.tsx` | GitHub 过去一年贡献热力图 |
 | 📝 博客 | `blog-card.tsx` | Halo 2.x 最近博文列表 |
 | 🔗 社交链接 | `social-card.tsx` | GitHub / Telegram / Twitter / VRChat 等平台图标 |
-| ✨ 兴趣标签 | `skills-card.tsx` | 胶囊式 Pill Tag，明暗双色自适应 |
-| 🖥️ 硬件清单 | `hardware-card.tsx` | 分类展示硬件设备 |
+| ✨ 兴趣标签 | `skills-card.tsx` | 胶囊式 Pill Tag，scale + glow hover 动效 |
+| 🖥️ 硬件清单 | `hardware-card.tsx` | 分类展示硬件设备，Pill Tag 样式与兴趣标签一致 |
 | 🚀 项目展示 | `projects-card.tsx` | 项目名称、描述、标签、外链、GitHub Stars/Forks |
-| 🤝 友链 | `friends-card.tsx` | 好友头像网格，hover 动效 |
+| 🤝 友链 | `friends-card.tsx` | 好友头像网格，hover 360° 旋转漩涡特效 |
 
 ---
 
