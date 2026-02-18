@@ -236,9 +236,7 @@ export function NowPlayingCard({ tracks }: NowPlayingCardProps) {
             {/* Hidden audio element */}
             <audio ref={audioRef} preload="none" />
 
-            {/* Inner container with its own border-radius + overflow clip.
-                overflow:hidden on GlassCard doesn't work under preserve-3d,
-                so we enforce clipping here independently. */}
+            {/* Inner container with its own border-radius + overflow clip */}
             <div
                 className="relative w-full h-full min-h-[200px]"
                 style={{ background: 'rgb(30,30,30)', borderRadius: 'inherit', overflow: 'hidden' }}

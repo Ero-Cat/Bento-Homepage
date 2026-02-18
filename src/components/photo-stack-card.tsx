@@ -52,7 +52,7 @@ export function PhotoStackCard({ photos }: PhotoStackCardProps) {
 
     if (photos.length === 0) {
         return (
-            <GlassCard noTilt className="flex flex-col items-center justify-center gap-3 p-12">
+            <GlassCard className="flex flex-col items-center justify-center gap-3 p-12">
                 <ImageIcon size={40} className="text-text-tertiary" />
                 <p className="text-sm text-text-tertiary">
                     Place photos in <code className="text-xs px-1.5 py-0.5 rounded-md" style={{ background: "var(--icon-bg)" }}>public/photos/</code>
@@ -62,7 +62,7 @@ export function PhotoStackCard({ photos }: PhotoStackCardProps) {
     }
 
     return (
-        <GlassCard noTilt className="p-3 overflow-hidden">
+        <GlassCard className="p-3 overflow-hidden">
             {/* Stack area — maximized for 16:9 photos */}
             <div className="relative w-full" style={{ aspectRatio: "16 / 9" }}>
                 <ul className="absolute inset-2 flex justify-center items-center">

@@ -218,17 +218,18 @@ body {
    ============================================================ */
 .glass-card {
   position: relative;
-  /* overflow: hidden removed — conflicts with 3D rotation clipping */
+  overflow: hidden;
   background: var(--glass-bg);
   backdrop-filter: blur(var(--glass-blur)) saturate(1.8);
   -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.8);
   border: 1px solid var(--glass-border);
   border-radius: var(--glass-radius);
   box-shadow: var(--glass-shadow);
-  /* box-shadow removed from transition — Framer Motion controls it dynamically */
   transition:
-    background 0.4s ease,
-    border-color 0.4s ease;
+    background 0.35s ease,
+    border-color 0.35s ease,
+    box-shadow 0.35s ease,
+    transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 /* Top-edge refraction highlight */
@@ -270,7 +271,8 @@ body {
 .glass-card:hover {
   background: var(--glass-bg-hover);
   border-color: var(--glass-border-hover);
-  /* box-shadow removed — Framer Motion's useDynamicShadow handles it */
+  box-shadow: var(--glass-shadow-hover);
+  transform: translateY(-2px);
 }
 
 /* ============================================================
