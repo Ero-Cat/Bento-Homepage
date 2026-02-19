@@ -270,7 +270,7 @@ friends: [
 
 ```typescript
 map: {
-    accessToken: "pk.your-mapbox-token",  // Mapbox 公开 Token
+    accessToken: process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN, // 读取环境变量
     center: [118.0, 35.0],               // 地图中心 [经度, 纬度]
     zoom: 3.5,                           // 初始缩放级别
     markers: [
@@ -281,8 +281,25 @@ map: {
 }
 ```
 
-> 使用 Mapbox Standard 样式，自动根据浏览器语言切换地图地名。免费额度每月 50,000 次加载，个人主页完全足够。
-> Token 获取：[Mapbox Account](https://account.mapbox.com/)
+> **⚠️ 重要配置说明**
+> Mapbox Access Token 属于敏感信息，不应直接提交到代码仓库。本项目已通过环境变量进行管理。
+>
+> **1. 本地开发**
+> 在项目根目录创建 `.env.local` 文件，填入 Token：
+> ```bash
+> NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN=pk.your-mapbox-token
+> ```
+>
+> **2. GitHub Pages 部署**
+> 需要在 GitHub 仓库设置中添加 Secret，否则构建时地图无法加载：
+> - 进入仓库 **Settings** -> **Secrets and variables** -> **Actions**
+> - 点击 **New repository secret**
+> - Name: `NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN`
+> - Secret: `pk.your-mapbox-token`
+>
+> 提交代码后，GitHub Actions 会自动读取该 Secret 进行构建。
+
+> Token 获取：[Mapbox Account](https://account.mapbox.com/)，免费额度每月 50,000 次加载，个人主页完全足够。
 
 ### 主题色
 
