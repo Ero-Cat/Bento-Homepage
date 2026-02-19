@@ -39,7 +39,8 @@ function formatDate(dateStr: string): string {
 export function GitHubHeatmapCard() {
     const username = siteConfig.github?.username;
     const [data, setData] = useState<ContributionData | null>(null);
-    const [loading, setLoading] = useState(true);
+    // Initialize loading based on whether username exists to avoid immediate state change
+    const [loading, setLoading] = useState(!!username);
     const [tooltip, setTooltip] = useState<{
         x: number;
         y: number;
@@ -49,10 +50,8 @@ export function GitHubHeatmapCard() {
     const svgRef = useRef<SVGSVGElement>(null);
 
     useEffect(() => {
-        if (!username) {
-            setLoading(false);
-            return;
-        }
+        if (!username) return;
+
         fetch(`https://github-contributions-api.jogruber.de/v4/${username}?y=last`)
             .then((r) => r.json())
             .then((d: ContributionData) => {

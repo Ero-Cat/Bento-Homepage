@@ -59,13 +59,12 @@ function truncate(str: string, len: number): string {
 export function BlogCard() {
     const blogConfig = siteConfig.blog;
     const [posts, setPosts] = useState<HaloPost[]>([]);
-    const [loading, setLoading] = useState(true);
+    // Initialize loading based on config presence
+    const [loading, setLoading] = useState(!!blogConfig?.url);
 
     useEffect(() => {
-        if (!blogConfig?.url) {
-            setLoading(false);
-            return;
-        }
+        if (!blogConfig?.url) return;
+
         const size = blogConfig.size ?? 5;
         fetch(
             `${blogConfig.url}/apis/api.content.halo.run/v1alpha1/posts?size=${size}&sort=spec.publishTime%2Cdesc`
@@ -115,14 +114,14 @@ export function BlogCard() {
                             <div
                                 className="h-4 rounded-md animate-pulse"
                                 style={{
-                                    width: `${60 + Math.random() * 30}%`,
+                                    width: `${60 + ((i * 13) % 30)}%`,
                                     backgroundColor: "var(--glass-border)",
                                 }}
                             />
                             <div
                                 className="h-3 rounded-md animate-pulse"
                                 style={{
-                                    width: `${80 + Math.random() * 15}%`,
+                                    width: `${80 + ((i * 7) % 15)}%`,
                                     backgroundColor: "var(--glass-border)",
                                     opacity: 0.5,
                                 }}

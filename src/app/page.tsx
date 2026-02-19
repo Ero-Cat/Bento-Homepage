@@ -11,8 +11,8 @@ import { FriendsCard } from "@/components/friends-card";
 import { PhotoStackCard } from "@/components/photo-stack-card";
 import { NowPlayingCard, type NeteaseTrack } from "@/components/now-playing-card";
 import { GitHubHeatmapCard } from "@/components/github-heatmap-card";
-import { BlogCard } from "@/components/blog-card";
 import { VRChatStatusCard } from "@/components/vrchat-status-card";
+import { MapCard } from "@/components/map-card";
 import { siteConfig } from "@/config/site";
 
 const IMAGE_RE = /\.(jpe?g|png|webp|avif)$/i;
@@ -25,6 +25,14 @@ function scanImages(subdir: string): string[] {
   } catch {
     return [];
   }
+}
+
+interface RawNeteaseSong {
+  name: string;
+  artists?: { name: string }[];
+  album?: { name: string; picUrl: string };
+  duration?: number;
+  id: number;
 }
 
 /** Fetch song details from NetEase at build time */
@@ -49,9 +57,9 @@ async function fetchNeteaseTracks(): Promise<NeteaseTrack[]> {
     const data = await res.json();
     if (!data?.songs?.length) return [];
 
-    return data.songs.map((song: any) => ({
+    return data.songs.map((song: RawNeteaseSong) => ({
       name: song.name,
-      artist: song.artists?.map((a: { name: string }) => a.name).join(" / ") ?? "Unknown",
+      artist: song.artists?.map((a) => a.name).join(" / ") ?? "Unknown",
       album: song.album?.name ?? "Unknown",
       albumCover: song.album?.picUrl ?? "",
       duration: song.duration ?? 0,
@@ -105,13 +113,16 @@ export default async function Home() {
         {/* <BentoGridItem className="md:col-span-2">
           <BlogCard />
         </BentoGridItem> */}
+        {/* ── Row 6: Map Footprints (full width) ── */}
+        <BentoGridItem className="md:col-span-4">
+          <MapCard />
+        </BentoGridItem>
 
         {/* ── Row 5: PhotoStack (full width) ── */}
         <BentoGridItem className="md:col-span-4">
           <PhotoStackCard photos={photoImages} />
         </BentoGridItem>
-
-        {/* ── Row 6: GitHub Heatmap (full width) ── */}
+        {/* ── Row 7: GitHub Heatmap (full width) ── */}
         <BentoGridItem className="md:col-span-4">
           <GitHubHeatmapCard />
         </BentoGridItem>

@@ -13,7 +13,6 @@ import {
     Linkedin,
     Youtube,
     Tv,
-    Globe,
     BookText,
 } from "lucide-react";
 import { VRChatIcon } from "@/components/icons/vrchat-icon";

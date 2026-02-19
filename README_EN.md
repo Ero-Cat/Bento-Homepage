@@ -28,6 +28,7 @@
 - **Performance Optimized** — rAF-driven zero-render progress bar, consolidated `useTransform` chains
 - **SEO Ready** — Open Graph, Twitter Card, and `<meta>` tags driven from config
 - **Static Export** — `next build` outputs pure HTML/CSS/JS; no server required
+- **🗺️ Footprint Map** — Mapbox Standard interactive map marking visited cities, pulse markers + glassmorphism popups, auto-detects browser language for map labels
 - **GitHub Pages CI/CD** — Auto-deploy on push to `main` via GitHub Actions
 
 ---
@@ -47,6 +48,8 @@
 | 🖥️ Hardware | `hardware-card.tsx` | Categorized hardware inventory |
 | 🚀 Projects | `projects-card.tsx` | Project name, description, tags, links, GitHub Stars/Forks |
 | 🤝 Friends | `friends-card.tsx` | Friend avatar grid with hover effects |
+| 🗺️ Footprint Map | `map-card.tsx` | Mapbox interactive map marking visited cities, auto i18n labels |
+| 💻 Software | `software-card.tsx` | Frequently used software grid |
 
 ---
 
@@ -59,6 +62,7 @@
 | Styling | [Tailwind CSS 4](https://tailwindcss.com) |
 | Animation | [Framer Motion 12](https://motion.dev) |
 | Icons | [lucide-react](https://lucide.dev) + Custom SVGs |
+| Map | [Mapbox GL JS 3](https://docs.mapbox.com/mapbox-gl-js/) |
 | Package Manager | [pnpm 10](https://pnpm.io) |
 | Deployment | GitHub Pages + GitHub Actions |
 
@@ -95,6 +99,8 @@ Bento-Homepage/
 │   │   ├── hardware-card.tsx     # Hardware inventory
 │   │   ├── projects-card.tsx     # Featured projects (GitHub Stars/Forks)
 │   │   ├── friends-card.tsx      # Friend links
+│   │   ├── map-card.tsx          # Mapbox interactive map (footprints)
+│   │   ├── software-card.tsx     # Frequently used apps
 │   │   ├── typewriter.tsx        # Typewriter animation component
 │   │   ├── footer.tsx            # Copyright
 │   │   └── icons/                # Custom icons (VRChat, Steam)

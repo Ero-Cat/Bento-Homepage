@@ -30,6 +30,7 @@
 - **性能优化** — rAF 驱动零渲染进度条、合并 `useTransform` 链、消除 `backdrop-filter` 叠加、消除 3D tilt 与子元素 hover 位移冲突
 - **SEO 就绪** — Open Graph、Twitter Card、`<meta>` 标签全部从配置生成
 - **全静态导出** — `next build` 输出纯 HTML/CSS/JS，无需服务器
+- **🗺️ 足迹地图** — Mapbox Standard 互动地图，标记去过的城市，脉冲标记 + 毛玻璃弹窗，自动跟随浏览器语言切换地名
 - **GitHub Pages CI/CD** — 推送到 `main` 分支即自动构建部署
 
 ---
@@ -49,6 +50,8 @@
 | 🖥️ 硬件清单 | `hardware-card.tsx` | 分类展示硬件设备，Pill Tag 样式与兴趣标签一致 |
 | 🚀 项目展示 | `projects-card.tsx` | 项目名称、描述、标签、外链、GitHub Stars/Forks |
 | 🤝 友链 | `friends-card.tsx` | 好友头像网格，hover 360° 旋转漩涡特效 |
+| 🗺️ 足迹地图 | `map-card.tsx` | Mapbox 互动地图，标记去过的城市，自动 i18n 地名 |
+| 💻 应用清单 | `software-card.tsx` | 常用软件展示网格 |
 
 ---
 
@@ -61,6 +64,7 @@
 | 样式 | [Tailwind CSS 4](https://tailwindcss.com) |
 | 动画 | [Framer Motion 12](https://motion.dev) |
 | 图标 | [lucide-react](https://lucide.dev) + 自定义 SVG |
+| 地图 | [Mapbox GL JS 3](https://docs.mapbox.com/mapbox-gl-js/) |
 | 包管理 | [pnpm 10](https://pnpm.io) |
 | 部署 | GitHub Pages + GitHub Actions |
 
@@ -97,6 +101,8 @@ Bento-Homepage/
 │   │   ├── hardware-card.tsx     # 硬件清单
 │   │   ├── projects-card.tsx     # 项目展示（GitHub Stars/Forks）
 │   │   ├── friends-card.tsx      # 友情链接
+│   │   ├── map-card.tsx          # Mapbox 互动地图（足迹标记）
+│   │   ├── software-card.tsx     # 常用应用展示
 │   │   ├── typewriter.tsx        # 打字机效果组件
 │   │   ├── footer.tsx            # 版权信息
 │   │   └── icons/                # 自定义图标（VRChat、Steam）
@@ -259,6 +265,24 @@ friends: [
     },
 ]
 ```
+
+### 🗺️ 足迹地图
+
+```typescript
+map: {
+    accessToken: "pk.your-mapbox-token",  // Mapbox 公开 Token
+    center: [118.0, 35.0],               // 地图中心 [经度, 纬度]
+    zoom: 3.5,                           // 初始缩放级别
+    markers: [
+        { name: "上海", coordinates: [121.47, 31.23], emoji: "🌃" },
+        { name: "东京", coordinates: [139.69, 35.69], emoji: "🗼" },
+        // ...
+    ],
+}
+```
+
+> 使用 Mapbox Standard 样式，自动根据浏览器语言切换地图地名。免费额度每月 50,000 次加载，个人主页完全足够。
+> Token 获取：[Mapbox Account](https://account.mapbox.com/)
 
 ### 主题色
 

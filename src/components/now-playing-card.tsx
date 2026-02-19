@@ -48,7 +48,6 @@ export function NowPlayingCard({ tracks }: NowPlayingCardProps) {
     const [isMuted, setIsMuted] = useState(false);
 
     /* Refs for zero-render progress animation */
-    const progressRef = useRef(0);
     const barRef = useRef<HTMLDivElement>(null);
     const timeRef = useRef<HTMLSpanElement>(null);
     const rafRef = useRef<number>(0);
@@ -59,7 +58,9 @@ export function NowPlayingCard({ tracks }: NowPlayingCardProps) {
     /* Pick a random starting track on mount + set default volume */
     useEffect(() => {
         if (tracks.length > 1) {
-            setCurrentIdx(Math.floor(Math.random() * tracks.length));
+            setTimeout(() => {
+                setCurrentIdx(Math.floor(Math.random() * tracks.length));
+            }, 0);
         }
         if (audioRef.current) {
             audioRef.current.volume = 0.78;
@@ -69,40 +70,41 @@ export function NowPlayingCard({ tracks }: NowPlayingCardProps) {
     const track = tracks[currentIdx] ?? null;
 
     /* ── rAF-based progress — reads from audio element ── */
-    const animateProgress = useCallback(() => {
-        const audio = audioRef.current;
-        if (!audio || !track) {
-            rafRef.current = requestAnimationFrame(animateProgress);
+    /* ── rAF-based progress — reads from audio element ── */
+    useEffect(() => {
+        if (!isPlaying) {
+            cancelAnimationFrame(rafRef.current);
             return;
         }
 
-        const currentTime = audio.currentTime;
-        const duration = audio.duration || track.duration / 1000;
-        const progress = duration > 0 ? currentTime / duration : 0;
-
-        // Direct DOM writes — no setState, no re-render
-        if (barRef.current) {
-            barRef.current.style.width = `${progress * 100}%`;
-        }
-        if (timeRef.current) {
-            const newTime = formatTime(currentTime * 1000);
-            if (timeRef.current.textContent !== newTime) {
-                timeRef.current.textContent = newTime;
+        const tick = () => {
+            const audio = audioRef.current;
+            if (!audio || !track) {
+                rafRef.current = requestAnimationFrame(tick);
+                return;
             }
-        }
 
-        rafRef.current = requestAnimationFrame(animateProgress);
-    }, [track]);
+            const currentTime = audio.currentTime;
+            const duration = audio.duration || track.duration / 1000;
+            const progress = duration > 0 ? currentTime / duration : 0;
 
-    /* Start/stop rAF loop based on play state */
-    useEffect(() => {
-        if (isPlaying) {
-            rafRef.current = requestAnimationFrame(animateProgress);
-        } else {
-            cancelAnimationFrame(rafRef.current);
-        }
+            // Direct DOM writes — no setState, no re-render
+            if (barRef.current) {
+                barRef.current.style.width = `${progress * 100}%`;
+            }
+            if (timeRef.current) {
+                const newTime = formatTime(currentTime * 1000);
+                if (timeRef.current.textContent !== newTime) {
+                    timeRef.current.textContent = newTime;
+                }
+            }
+
+            rafRef.current = requestAnimationFrame(tick);
+        };
+
+        rafRef.current = requestAnimationFrame(tick);
         return () => cancelAnimationFrame(rafRef.current);
-    }, [isPlaying, animateProgress]);
+    }, [isPlaying, track]);
 
     /* ── Audio playback control ── */
     const togglePlay = useCallback(async () => {

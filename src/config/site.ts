@@ -64,6 +64,20 @@ export interface SiteConfig {
         /** Bio 展示行数，默认 3 */
         bioLines?: number;
     };
+    map?: {
+        /** Mapbox public access token (pk.xxx) */
+        accessToken: string;
+        /** Map center: [lng, lat] */
+        center: [number, number];
+        /** Initial zoom level (1-18) */
+        zoom: number;
+        /** City markers */
+        markers: {
+            name: string;
+            coordinates: [number, number]; // [lng, lat]
+            emoji?: string;
+        }[];
+    };
     seo: {
         title: string;
         description: string;
@@ -225,6 +239,31 @@ export const siteConfig: SiteConfig = {
         apiBase: "https://vrcx-cloud.iacg.moe",
         userId: "usr_dcf7bc56-34d4-482a-b21f-fb2c05dcfb2f",
         bioLines: 5,
+    },
+
+    map: {
+        accessToken: process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || "",
+        center: [118.0, 35.0],
+        zoom: 3.5,
+        markers: [
+            { name: "上海", coordinates: [121.4737, 31.2304], emoji: "🌃" },
+            { name: "婺源", coordinates: [117.8613, 29.2481], emoji: "🏡" },
+            { name: "成都", coordinates: [104.0657, 30.5723], emoji: "🐼" },
+            { name: "江西", coordinates: [115.8922, 28.6765], emoji: "🏔" },
+            { name: "东京", coordinates: [139.6917, 35.6895], emoji: "🗼" },
+            { name: "大阪", coordinates: [135.5023, 34.6937], emoji: "🏯" },
+            { name: "京都", coordinates: [135.7681, 35.0116], emoji: "⛩️" },
+            { name: "富士山", coordinates: [138.7274, 35.3606], emoji: "🗻" },
+            { name: "黄山", coordinates: [118.1694, 30.1333], emoji: "⛰️" },
+            { name: "镰仓", coordinates: [139.5467, 35.3192], emoji: "🌊" },
+            { name: "合肥", coordinates: [117.2272, 31.8206], emoji: "🏙" },
+            { name: "蚌埠", coordinates: [117.3890, 32.9160], emoji: "🚂" },
+            { name: "呼和浩特", coordinates: [111.7510, 40.8424], emoji: "🐎" },
+            { name: "通辽", coordinates: [122.2430, 43.6527], emoji: "🌾" },
+            { name: "阜阳", coordinates: [115.8140, 32.8908], emoji: "🌻" },
+            { name: "北京", coordinates: [116.4074, 39.9042], emoji: "🏛" },
+            { name: "南京", coordinates: [118.7969, 32.0603], emoji: "🏯" },
+        ],
     },
 
     seo: {

@@ -15,14 +15,16 @@ function useLocalized() {
     });
 
     useEffect(() => {
-        const lang = navigator.language;
-        if (lang.startsWith("zh")) setResult({ hello: "你好", iam: "我是", langPrefix: "zh" });
-        else if (lang.startsWith("ja")) setResult({ hello: "こんにちは", iam: "私は", langPrefix: "ja" });
-        else if (lang.startsWith("ko")) setResult({ hello: "안녕하세요", iam: "저는", langPrefix: "ko" });
-        else if (lang.startsWith("es")) setResult({ hello: "Hola", iam: "soy", langPrefix: "es" });
-        else if (lang.startsWith("fr")) setResult({ hello: "Bonjour", iam: "je suis", langPrefix: "fr" });
-        else if (lang.startsWith("de")) setResult({ hello: "Hallo", iam: "ich bin", langPrefix: "de" });
-        else setResult({ hello: "Hi", iam: "I'm", langPrefix: "en" });
+        setTimeout(() => {
+            const lang = navigator.language;
+            if (lang.startsWith("zh")) setResult({ hello: "你好", iam: "我是", langPrefix: "zh" });
+            else if (lang.startsWith("ja")) setResult({ hello: "こんにちは", iam: "私は", langPrefix: "ja" });
+            else if (lang.startsWith("ko")) setResult({ hello: "안녕하세요", iam: "저는", langPrefix: "ko" });
+            else if (lang.startsWith("es")) setResult({ hello: "Hola", iam: "soy", langPrefix: "es" });
+            else if (lang.startsWith("fr")) setResult({ hello: "Bonjour", iam: "je suis", langPrefix: "fr" });
+            else if (lang.startsWith("de")) setResult({ hello: "Hallo", iam: "ich bin", langPrefix: "de" });
+            else setResult({ hello: "Hi", iam: "I'm", langPrefix: "en" });
+        }, 0);
     }, []);
 
     return result;

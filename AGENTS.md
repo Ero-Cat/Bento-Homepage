@@ -138,6 +138,7 @@ Bento-Homepage/
 │   │   ├── hardware-card.tsx     # 硬件清单（pill-tag 样式，与 Interests 一致）
 │   │   ├── projects-card.tsx     # 项目展示（含 GitHub Stars/Forks API）
 │   │   ├── friends-card.tsx      # 友情链接（hover 旋转漩涡特效）
+│   │   ├── map-card.tsx          # Mapbox 互动地图（标记去过的城市，脉冲标记 + 弹窗）
 │   │   ├── footer.tsx            # 版权信息
 │   │   └── icons/                # 自定义图标（VRChat、Steam）
 │   ├── config/
@@ -187,6 +188,7 @@ Bento-Homepage/
 | `github-contributions-api.jogruber.de` | `github-heatmap-card.tsx` | None | 运行时获取贡献热力图 |
 | VRCX-Cloud API | `vrchat-status-card.tsx` | None | 运行时轮询 VRChat 在线状态 |
 | Halo 2.x Content API | `blog-card.tsx` | None | 运行时获取最近博文 |
+| Mapbox Tiles API | `map-card.tsx` | Public Token | 运行时加载地图瓦片与交互 |
 
 ---
 
