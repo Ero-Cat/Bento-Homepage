@@ -242,7 +242,7 @@ export const siteConfig: SiteConfig = {
     },
 
     map: {
-        accessToken: process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || "",
+        accessToken: "pk.eyJ1IjoiaXRzLWVyaWMtd3UiLCJhIjoiY2x4cXhpcWN1MTVxNDJqcHhrYm90dDlucyJ9.QIpbRn1bfgW2wBRgI2uT9A",
         center: [118.0, 35.0],
         zoom: 3.5,
         markers: [
