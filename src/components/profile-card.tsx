@@ -52,7 +52,7 @@ export function ProfileCard({ avatarImages }: ProfileCardProps) {
             : [siteConfig.profile.avatar];
 
     return (
-        <GlassCard className="flex flex-col items-center text-center gap-5 p-8 md:flex-row md:text-left md:items-start md:gap-6">
+        <GlassCard className="flex flex-col items-center text-center gap-4 p-5 md:p-6 md:flex-row md:text-left md:items-start md:gap-5 h-full">
             {/* Avatar Carousel */}
             <AvatarCarousel images={images} alt={name} />
 

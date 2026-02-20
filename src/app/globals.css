@@ -303,9 +303,9 @@ body {
 .pill-tag {
   display: inline-flex;
   align-items: center;
-  padding: 8px 18px;
+  padding: 6px 14px;
   border-radius: 9999px;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 500;
   letter-spacing: 0.01em;
 
@@ -424,7 +424,7 @@ body {
 
 .map-container {
   width: 100%;
-  height: 320px;
+  height: 100%;
   border-radius: var(--glass-radius);
 }
 
@@ -506,4 +506,104 @@ body {
 .map-card .mapboxgl-ctrl-logo,
 .map-card .mapboxgl-ctrl-attrib {
   display: none !important;
+}
+
+/* ============================================================
+   Map Card — Visitor Marker (Blue Pulse)
+   ============================================================ */
+.map-visitor-marker {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #3b82f6;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.6);
+  cursor: pointer;
+  position: relative;
+}
+
+.map-visitor-marker::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 2px solid rgba(59, 130, 246, 0.5);
+  animation: map-pulse 2s ease-out infinite;
+}
+
+/* ============================================================
+   Map Card — Distance Badge (Bottom Overlay)
+   ============================================================ */
+.map-distance-badge {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px) saturate(1.6);
+  -webkit-backdrop-filter: blur(12px) saturate(1.6);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  z-index: 10;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
+  pointer-events: none;
+  animation: fade-in 0.6s ease-out both;
+  animation-delay: 0.3s;
+}
+
+.map-distance-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #3b82f6;
+  box-shadow: 0 0 6px rgba(59, 130, 246, 0.5);
+  flex-shrink: 0;
+}
+
+.map-distance-sep {
+  color: var(--text-tertiary);
+  font-weight: 400;
+}
+
+.map-distance-km {
+  color: var(--tint-color);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================================================
+   Map Card — Arc Distance Label
+   ============================================================ */
+.map-arc-distance {
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: center;
+  padding: 4px 10px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(8px) saturate(1.6);
+  -webkit-backdrop-filter: blur(8px) saturate(1.6);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-primary);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  pointer-events: none;
+  font-family: var(--font-sans);
+}
+
+.map-arc-distance::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 4px;
+  border-style: solid;
+  border-color: var(--glass-border) transparent transparent transparent;
 }

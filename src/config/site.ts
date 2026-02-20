@@ -26,7 +26,7 @@ export interface SiteConfig {
         icon: string;   // filename = /icons/software/{name}.svg | URL = CDN | "" = letter fallback
     }[];
     socialLinks: {
-        platform: "github" | "telegram" | "discord" | "email" | "twitter" | "linkedin" | "youtube" | "bilibili" | "vrchat" | "steam" | "blog";
+        platform: "github" | "telegram" | "discord" | "email" | "twitter" | "linkedin" | "youtube" | "bilibili" | "vrchat" | "steam" | "blog" | "vrcx-cloud";
         url: string;
         enabled: boolean;
     }[];
@@ -77,6 +77,11 @@ export interface SiteConfig {
             coordinates: [number, number]; // [lng, lat]
             emoji?: string;
         }[];
+    };
+    weather?: {
+        city: string;
+        lat: number;
+        lon: number;
     };
     seo: {
         title: string;
@@ -162,7 +167,7 @@ export const siteConfig: SiteConfig = {
         { platform: "github", url: "https://github.com/Ero-Cat", enabled: true },
         { platform: "telegram", url: "https://t.me/dokierocat", enabled: true },
         { platform: "blog", url: "https://blog.iacg.moe", enabled: true },
-
+        { platform: "vrcx-cloud", url: "http://vrcx-cloud.iacg.moe", enabled: true },
         { platform: "twitter", url: "https://x.com/DokiEroCat", enabled: true },
         { platform: "vrchat", url: "https://vrchat.com/home/user/usr_dcf7bc56-34d4-482a-b21f-fb2c05dcfb2f", enabled: true },
         { platform: "steam", url: "http://steamcommunity.com/id/233000", enabled: true },
@@ -238,7 +243,7 @@ export const siteConfig: SiteConfig = {
     vrchat: {
         apiBase: "https://vrcx-cloud.iacg.moe",
         userId: "usr_dcf7bc56-34d4-482a-b21f-fb2c05dcfb2f",
-        bioLines: 5,
+        bioLines: 6,
     },
 
     map: {
@@ -264,6 +269,12 @@ export const siteConfig: SiteConfig = {
             { name: "北京", coordinates: [116.4074, 39.9042], emoji: "🏛" },
             { name: "南京", coordinates: [118.7969, 32.0603], emoji: "🏯" },
         ],
+    },
+
+    weather: {
+        city: "合肥",
+        lat: 31.8206,
+        lon: 117.2272,
     },
 
     seo: {

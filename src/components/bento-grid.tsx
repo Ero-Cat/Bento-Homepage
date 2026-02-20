@@ -16,7 +16,7 @@ export function BentoGrid({ children, className }: BentoGridProps) {
                 "grid w-full max-w-7xl gap-5 px-8 mx-auto",
                 "grid-cols-1",
                 "md:grid-cols-4",
-                "auto-rows-auto",
+                "md:auto-rows-[100px] auto-rows-auto grid-flow-row-dense",
                 className
             )}
             variants={containerVariants}
@@ -36,7 +36,7 @@ interface BentoGridItemProps {
 export function BentoGridItem({ children, className }: BentoGridItemProps) {
     return (
         <motion.div
-            className={cn("min-w-0", className)}
+            className={cn("min-w-0 h-full", className)}
             variants={itemVariants}
         >
             {children}

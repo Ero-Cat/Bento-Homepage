@@ -15,12 +15,12 @@ export function FriendsCard() {
     if (!friends || friends.length === 0) return null;
 
     return (
-        <GlassCard className="flex flex-col gap-4">
-            <h2 className="text-xl font-semibold text-text-primary flex items-center gap-2">
+        <GlassCard className="flex flex-col gap-3 h-full">
+            {/* <h2 className="text-xl font-semibold text-text-primary flex items-center gap-2">
                 Friends
-            </h2>
+            </h2> */}
 
-            <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-3 lg:grid-cols-3 gap-3">
                 {friends.map((friend) => (
                     <motion.a
                         key={friend.name}

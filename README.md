@@ -30,7 +30,9 @@
 - **性能优化** — rAF 驱动零渲染进度条、合并 `useTransform` 链、消除 `backdrop-filter` 叠加、消除 3D tilt 与子元素 hover 位移冲突
 - **SEO 就绪** — Open Graph、Twitter Card、`<meta>` 标签全部从配置生成
 - **全静态导出** — `next build` 输出纯 HTML/CSS/JS，无需服务器
-- **🗺️ 足迹地图** — Mapbox Standard 互动地图，标记去过的城市，脉冲标记 + 毛玻璃弹窗，自动跟随浏览器语言切换地名
+- **🗺️ 足迹地图** — Mapbox Standard 互动地图，标记去过的城市，脉冲标记 + 毛玻璃弹窗，自动跟随浏览器语言切换地名，**IP 距离显示**（自动计算并展示访客与标记城市的直线距离）
+- **🌤️ 实时天气卡片** — 基于 [open-meteo.com](https://open-meteo.com) 免费 API，无需 Token，Apple Weather 风格渐变，动态天气动效（晴/多云/雨/雪/雷暴）
+- **🐍 GitHub Heatmap Snake** — 贡献热力图上的 Snake 游戏巡游动效
 - **GitHub Pages CI/CD** — 推送到 `main` 分支即自动构建部署
 
 ---
@@ -50,7 +52,8 @@
 | 🖥️ 硬件清单 | `hardware-card.tsx` | 分类展示硬件设备，Pill Tag 样式与兴趣标签一致 |
 | 🚀 项目展示 | `projects-card.tsx` | 项目名称、描述、标签、外链、GitHub Stars/Forks |
 | 🤝 友链 | `friends-card.tsx` | 好友头像网格，hover 360° 旋转漩涡特效 |
-| 🗺️ 足迹地图 | `map-card.tsx` | Mapbox 互动地图，标记去过的城市，自动 i18n 地名 |
+| 🗺️ 足迹地图 | `map-card.tsx` | Mapbox 互动地图，标记去过的城市，自动 i18n 地名，IP 距离显示 |
+| 🌤️ 实时天气 | `weather-card.tsx` | open-meteo 免费天气 API，Apple Weather 风格，动态天气动效 |
 | 💻 应用清单 | `software-card.tsx` | 常用软件展示网格 |
 
 ---
@@ -101,7 +104,8 @@ Bento-Homepage/
 │   │   ├── hardware-card.tsx     # 硬件清单
 │   │   ├── projects-card.tsx     # 项目展示（GitHub Stars/Forks）
 │   │   ├── friends-card.tsx      # 友情链接
-│   │   ├── map-card.tsx          # Mapbox 互动地图（足迹标记）
+│   │   ├── map-card.tsx          # Mapbox 互动地图（足迹标记 + IP 距离显示）
+│   │   ├── weather-card.tsx      # 实时天气（open-meteo，动态渐变动效）
 │   │   ├── software-card.tsx     # 常用应用展示
 │   │   ├── typewriter.tsx        # 打字机效果组件
 │   │   ├── footer.tsx            # 版权信息
@@ -251,7 +255,7 @@ socialLinks: [
 ]
 ```
 
-**支持平台**：`github` · `telegram` · `discord` · `email` · `twitter` · `linkedin` · `youtube` · `bilibili` · `vrchat` · `steam` · `blog`
+**支持平台**：`github` · `telegram` · `discord` · `email` · `twitter` · `linkedin` · `youtube` · `bilibili` · `vrchat` · `steam` · `blog` · `vrcx-cloud`
 
 ### 友情链接
 
@@ -283,6 +287,20 @@ map: {
 
 > 使用 Mapbox Standard 样式，自动根据浏览器语言切换地图地名。免费额度每月 50,000 次加载，个人主页完全足够。
 > **⚠️ 注意**：Token 为公开可见，请务必在 [Mapbox Account](https://account.mapbox.com/) 设置域名白名单限制来源，防止盗用。
+
+### 🌤️ 天气卡片
+
+地图卡会自动通过 `ipapi.co` 获取访客城市并计算距离；天气卡使用 **open-meteo.com 免费 API**（无需 Token）：
+
+```typescript
+weather: {
+    city: "合肥",      // 显示的城市名称
+    lat: 31.8206,      // 纬度
+    lon: 117.2272,     // 经度
+}
+```
+
+> 坐标来源：在[地图标记](#️-足迹地图)中找到对应城市的 `coordinates`，纬度在前（lat），经度在后（lon）。
 
 ### 主题色
 

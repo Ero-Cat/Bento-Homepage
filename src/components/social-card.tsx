@@ -14,6 +14,7 @@ import {
     Youtube,
     Tv,
     BookText,
+    Cloud,
 } from "lucide-react";
 import { VRChatIcon } from "@/components/icons/vrchat-icon";
 import { SteamIcon } from "@/components/icons/steam-icon";
@@ -30,15 +31,16 @@ const iconMap: Record<string, React.ComponentType<{ size?: number }>> = {
     vrchat: VRChatIcon,
     steam: SteamIcon,
     blog: BookText,
+    "vrcx-cloud": Cloud,
 };
 
 export function SocialCard() {
     const enabledLinks = siteConfig.socialLinks.filter((link) => link.enabled);
 
     return (
-        <GlassCard className="flex flex-col gap-5">
-            <h2 className="text-xl font-semibold text-text-primary">Connect</h2>
-            <div className="flex flex-wrap gap-3">
+        <GlassCard className="flex flex-col gap-3 h-full items-center justify-center">
+            {/* <h2 className="text-xl font-semibold text-text-primary">Connect</h2> */}
+            <div className="flex flex-wrap gap-5 justify-center">
                 {enabledLinks.map((link) => {
                     const Icon = iconMap[link.platform];
                     if (!Icon) return null;

@@ -220,7 +220,7 @@ export function NowPlayingCard({ tracks }: NowPlayingCardProps) {
 
     if (!tracks.length) {
         return (
-            <GlassCard className="!p-0 overflow-hidden">
+            <GlassCard className="!p-0 overflow-hidden h-full">
                 <div className="relative w-full h-full min-h-[200px]">
                     <div className="flex flex-col items-center justify-center h-full gap-2">
                         <Music size={28} className="text-white/40" />
@@ -234,7 +234,7 @@ export function NowPlayingCard({ tracks }: NowPlayingCardProps) {
     const totalTime = track ? formatTime(track.duration) : "0:00";
 
     return (
-        <GlassCard className="!p-0">
+        <GlassCard className="!p-0 h-full">
             {/* Hidden audio element */}
             <audio ref={audioRef} preload="none" />
 

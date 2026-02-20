@@ -62,9 +62,9 @@ export function PhotoStackCard({ photos }: PhotoStackCardProps) {
     }
 
     return (
-        <GlassCard className="p-3 overflow-hidden">
-            {/* Stack area — maximized for 16:9 photos */}
-            <div className="relative w-full" style={{ aspectRatio: "16 / 9" }}>
+        <GlassCard className="p-3 overflow-hidden h-full flex flex-col">
+            {/* Stack area — filling available card height */}
+            <div className="relative w-full flex-1 min-h-0">
                 <ul className="absolute inset-2 flex justify-center items-center">
                     {cards.map((card, index) => (
                         <motion.li

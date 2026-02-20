@@ -80,7 +80,7 @@ export function BlogCard() {
     if (!blogConfig?.url) return null;
 
     return (
-        <GlassCard className="flex flex-col gap-3 p-5">
+        <GlassCard className="flex flex-col gap-3 p-5 h-full">
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">

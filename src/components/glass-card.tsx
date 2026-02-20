@@ -22,7 +22,7 @@ export function GlassCard({
     href,
 }: GlassCardProps) {
     const cardClass = cn(
-        "glass-card p-6 relative z-10 h-full",
+        "glass-card p-4 md:p-5 relative z-10",
         className
     );
 

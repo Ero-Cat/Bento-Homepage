@@ -63,7 +63,7 @@ export function ProjectsCard() {
     });
 
     return (
-        <GlassCard className="flex flex-col gap-5">
+        <GlassCard className="flex flex-col gap-3 h-full">
             <h2 className="text-xl font-semibold text-text-primary">Projects</h2>
             <div className="flex flex-col gap-3">
                 {sorted.map((project) => {

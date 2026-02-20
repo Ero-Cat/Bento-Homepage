@@ -39,7 +39,7 @@ function CategoryRow({
                 isLast
                     ? undefined
                     : {
-                        paddingBottom: "14px",
+                        paddingBottom: "10px",
                         borderBottom: "1px solid var(--glass-border)",
                     }
             }
@@ -83,10 +83,10 @@ export function HardwareCard() {
     const { hardware } = siteConfig;
 
     return (
-        <GlassCard className="flex flex-col gap-5">
-            <h2 className="text-xl font-semibold text-text-primary">
+        <GlassCard className="flex flex-col gap-3 h-full">
+            {/* <h2 className="text-xl font-semibold text-text-primary">
                 Hardware
-            </h2>
+            </h2> */}
             <div className="flex flex-col gap-4">
                 {hardware.map((group, i) => (
                     <CategoryRow

@@ -28,7 +28,9 @@
 - **Performance Optimized** — rAF-driven zero-render progress bar, consolidated `useTransform` chains
 - **SEO Ready** — Open Graph, Twitter Card, and `<meta>` tags driven from config
 - **Static Export** — `next build` outputs pure HTML/CSS/JS; no server required
-- **🗺️ Footprint Map** — Mapbox Standard interactive map marking visited cities, pulse markers + glassmorphism popups, auto-detects browser language for map labels
+- **🗺️ Footprint Map** — Mapbox Standard interactive map marking visited cities, pulse markers + glassmorphism popups, auto-detects browser language for map labels, **IP Distance Display** (auto-calculates straight-line distance from visitor to marked cities)
+- **🌤️ Live Weather Card** — Powered by [open-meteo.com](https://open-meteo.com) (free, no token required), Apple Weather-style gradients, dynamic weather animations (sunny/cloudy/rain/snow/thunder)
+- **🐍 GitHub Heatmap Snake** — Animated snake traversal effect on the contribution heatmap
 - **GitHub Pages CI/CD** — Auto-deploy on push to `main` via GitHub Actions
 
 ---
@@ -48,7 +50,8 @@
 | 🖥️ Hardware | `hardware-card.tsx` | Categorized hardware inventory |
 | 🚀 Projects | `projects-card.tsx` | Project name, description, tags, links, GitHub Stars/Forks |
 | 🤝 Friends | `friends-card.tsx` | Friend avatar grid with hover effects |
-| 🗺️ Footprint Map | `map-card.tsx` | Mapbox interactive map marking visited cities, auto i18n labels |
+| 🗺️ Footprint Map | `map-card.tsx` | Mapbox interactive map, visited cities, auto i18n labels, IP distance display |
+| 🌤️ Live Weather | `weather-card.tsx` | open-meteo free weather API, Apple Weather style, dynamic animations |
 | 💻 Software | `software-card.tsx` | Frequently used software grid |
 
 ---
@@ -99,7 +102,8 @@ Bento-Homepage/
 │   │   ├── hardware-card.tsx     # Hardware inventory
 │   │   ├── projects-card.tsx     # Featured projects (GitHub Stars/Forks)
 │   │   ├── friends-card.tsx      # Friend links
-│   │   ├── map-card.tsx          # Mapbox interactive map (footprints)
+│   │   ├── map-card.tsx          # Mapbox interactive map (footprints + IP distance)
+│   │   ├── weather-card.tsx      # Live weather (open-meteo, dynamic gradient animations)
 │   │   ├── software-card.tsx     # Frequently used apps
 │   │   ├── typewriter.tsx        # Typewriter animation component
 │   │   ├── footer.tsx            # Copyright
@@ -226,7 +230,21 @@ socialLinks: [
 ]
 ```
 
-**Supported platforms**: `github` · `telegram` · `discord` · `email` · `twitter` · `linkedin` · `youtube` · `bilibili` · `vrchat` · `steam` · `blog`
+**Supported platforms**: `github` · `telegram` · `discord` · `email` · `twitter` · `linkedin` · `youtube` · `bilibili` · `vrchat` · `steam` · `blog` · `vrcx-cloud`
+
+### 🌤️ Weather Card
+
+The map card uses `ipapi.co` to fetch the visitor's city for distance display. The weather card uses the **open-meteo.com free API** (no token required):
+
+```typescript
+weather: {
+    city: "Hefei",     // Display name
+    lat: 31.8206,      // Latitude
+    lon: 117.2272,     // Longitude
+}
+```
+
+> Coordinates: Find the city in your map `markers` config. Use the second value as `lat` and the first as `lon` (`coordinates: [lon, lat]`).
 
 ### Theme Colors
 

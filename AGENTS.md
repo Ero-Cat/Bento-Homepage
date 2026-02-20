@@ -57,7 +57,7 @@
 **Responsibilities**:
 - 维护 `GlassCard` 核心组件（毛玻璃 + 3D tilt + 光晕反射 + spring 物理）
 - 实现 Bento Grid 4 列布局容器
-- 实现各功能卡片（Profile、Social、Hardware、Projects、Friends、NowPlaying、PhotoStack、GitHubHeatmap、VRChatStatus、Blog、Software）
+- 实现各功能卡片（Profile、Social、Hardware、Projects、Friends、NowPlaying、PhotoStack、GitHubHeatmap、VRChatStatus、Blog、Software、Map、Weather）
 - 实现入场动画（stagger + spring）
 - 性能优化（rAF 驱动进度条、合并 `useTransform` 链、避免字符串拼接 boxShadow）
 - 确保触控目标 ≥ 44×44pt (Apple HIG)
@@ -138,7 +138,8 @@ Bento-Homepage/
 │   │   ├── hardware-card.tsx     # 硬件清单（pill-tag 样式，与 Interests 一致）
 │   │   ├── projects-card.tsx     # 项目展示（含 GitHub Stars/Forks API）
 │   │   ├── friends-card.tsx      # 友情链接（hover 旋转漩涡特效）
-│   │   ├── map-card.tsx          # Mapbox 互动地图（标记去过的城市，脉冲标记 + 弹窗）
+│   │   ├── map-card.tsx          # Mapbox 互动地图（城市标记 + 脉冲弹窗 + IP 距离显示）
+│   │   ├── weather-card.tsx      # 实时天气卡片（open-meteo API，Apple Weather 风格渐变）
 │   │   ├── footer.tsx            # 版权信息
 │   │   └── icons/                # 自定义图标（VRChat、Steam）
 │   ├── config/
@@ -171,6 +172,12 @@ Bento-Homepage/
 ### GitHubHeatmapCard 优化
 - 使用第三方公开 API（`github-contributions-api.jogruber.de`），无需 GitHub Token
 - SVG 渲染热力图，支持水平滚动（移动端自动滚至最新）
+- 内置 GitHub Snake 贡献动效（贡献格上 snake 自动巡游动画）
+
+### WeatherCard 优化
+- 使用 [open-meteo.com](https://open-meteo.com) 免费开放 API，无需 Token
+- 经纬度从 `siteConfig.weather` 读取，动态 Apple Weather 风格渐变背景
+- 天气动效（Rain / Snow / Cloud / Sun / Thunder）使用 Framer Motion，均为 spring/linear 物理曲线
 
 ### VRChatStatusCard 优化
 - 15 秒轮询 VRCX-Cloud API，`useRef` 防止竞态
@@ -188,7 +195,9 @@ Bento-Homepage/
 | `github-contributions-api.jogruber.de` | `github-heatmap-card.tsx` | None | 运行时获取贡献热力图 |
 | VRCX-Cloud API | `vrchat-status-card.tsx` | None | 运行时轮询 VRChat 在线状态 |
 | Halo 2.x Content API | `blog-card.tsx` | None | 运行时获取最近博文 |
-| Mapbox Tiles API | `map-card.tsx` | Public Token | 运行时加载地图瓦片与交互 |
+| Mapbox Tiles API | `map-card.tsx` | Public Token | 运行时加载地图瓦片与交互、显示 IP 距离 |
+| `ipapi.co` | `map-card.tsx` | None | 运行时获取浏览者 IP 经纬度，用于距离计算 |
+| `open-meteo.com` Forecast API | `weather-card.tsx` | None | 运行时获取当前温度、天气代码、日最高/低温 |
 
 ---
 
@@ -202,3 +211,5 @@ Bento-Homepage/
 6. **i18n Description**: `profile.description` 使用 `Record<string, string>` 支持多语言简介
 7. **Zero-Dependency Data**: 所有外部 API 均为公开免认证接口，无需配置 Token
 8. **Docs Sync on Feature Completion**: 每次完成新功能后，必须同步更新 `AGENTS.md` 和 `README.md`，确保文档始终反映最新项目状态
+9. **Compact Card Content (紧凑卡片内容)**: Bento Grid 中的 `GlassCard` 内容必须紧凑，禁止出现大面积内部留白。标题与内容之间使用 `gap-3` (12px)，卡片内部不应有多余的空间浪费。但卡片**之间**的网格间距 (`gap-5`) 保持不变以确保布局呼吸感 —— 核心原则：**卡片内紧凑，卡片间舒适**
+10. **Responsive Card Internals (响应式卡片排版)**: 卡片内部的 padding、gap 和排版方式必须随屏幕尺寸自适应。`GlassCard` 基础 padding 为 `p-4`（移动端 16px）/ `md:p-5`（桌面端 20px）。各组件应使用响应式 Tailwind 类（如 `gap-3 md:gap-4`、`p-5 md:p-6`）确保在不同设备上均保持最佳信息密度

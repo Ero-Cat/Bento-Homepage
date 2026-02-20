@@ -160,16 +160,14 @@ export function VRChatStatusCard() {
                         transition={{ type: "spring", stiffness: 200, damping: 20 }}
                         className="flex flex-col gap-3"
                     >
-                        {/* ── Header: Avatar + Name + Status ── */}
-                        <div className="flex items-center gap-3">
-                            {/* Avatar with status indicator */}
+                        {/* ── Header: Avatar + Status ── */}
+                        <div className="flex flex-col items-center gap-3">
+                            {/* Avatar with status ring */}
                             <div className="relative shrink-0">
                                 <img
                                     src={avatarUrl}
-                                    alt={data.displayName}
-                                    width={56}
-                                    height={56}
-                                    className="w-14 h-14 rounded-full object-cover"
+                                    alt="Avatar"
+                                    className="object-cover w-20 h-20 rounded-full"
                                     style={{ border: `2px solid ${statusInfo.color}` }}
                                 />
                                 {/* Status dot */}
@@ -184,12 +182,11 @@ export function VRChatStatusCard() {
                             </div>
 
                             {/* Name + Badges + Status */}
-                            <div className="flex flex-col gap-0.5 min-w-0 flex-1">
-                                <div className="flex items-center gap-1.5">
-                                    <h3 className="text-base font-semibold text-text-primary truncate">
+                            <div className="flex flex-col items-center gap-0.5 min-w-0">
+                                <div className="flex items-center gap-1.5 flex-wrap justify-center">
+                                    <h3 className="text-base font-semibold text-text-primary text-center">
                                         {data.displayName}
                                     </h3>
-                                    {/* VRChat badge images */}
                                     {badges.map((badge) => (
                                         <img
                                             key={badge.title}

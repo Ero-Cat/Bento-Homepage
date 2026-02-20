@@ -9,9 +9,9 @@ export function SkillsCard() {
     const { interests } = siteConfig;
 
     return (
-        <GlassCard className="flex flex-col gap-5">
-            <h2 className="text-xl font-semibold text-text-primary">Interests</h2>
-            <div className="flex flex-wrap gap-2.5">
+        <GlassCard className="flex flex-col items-center justify-center gap-3 h-full">
+            {/* <h2 className="text-xl font-semibold text-text-primary">Interests</h2> */}
+            <div className="flex flex-wrap justify-center gap-2.5">
                 {interests.map((item) => (
                     <motion.span
                         key={item}

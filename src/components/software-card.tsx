@@ -64,7 +64,7 @@ export function SoftwareCard() {
     const { software } = siteConfig;
 
     return (
-        <GlassCard className="flex flex-col gap-0 !p-0 overflow-hidden">
+        <GlassCard className="flex flex-col gap-0 !p-0 overflow-hidden h-full">
             {/* ── macOS Title Bar with traffic lights ── */}
             <div
                 className="flex items-center px-4 py-2.5"

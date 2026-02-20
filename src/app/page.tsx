@@ -13,6 +13,8 @@ import { NowPlayingCard, type NeteaseTrack } from "@/components/now-playing-card
 import { GitHubHeatmapCard } from "@/components/github-heatmap-card";
 import { VRChatStatusCard } from "@/components/vrchat-status-card";
 import { MapCard } from "@/components/map-card";
+import { BlogCard } from "@/components/blog-card";
+import { WeatherCard } from "@/components/weather-card";
 import { siteConfig } from "@/config/site";
 
 const IMAGE_RE = /\.(jpe?g|png|webp|avif)$/i;
@@ -78,53 +80,71 @@ export default async function Home() {
   return (
     <main className="relative z-10 flex min-h-dvh flex-col items-center justify-center py-12 md:py-16">
       <BentoGrid>
-        {/* ── Row 1: Profile(3) + NowPlaying(1) ── */}
-        <BentoGridItem className="md:col-span-3">
+        {/*
+         *  Grid: 4 cols × 100px rows. Each row-span-N = N×100px.
+         *  Perfect masonry densing logic groups items to sum exact areas.
+         */}
+
+        {/* ── Section A (Rows 1-5): Identifiers & Social ── */}
+        <BentoGridItem className="md:col-span-3 md:row-span-3">
           <ProfileCard avatarImages={avatarImages} />
         </BentoGridItem>
-        <BentoGridItem className="md:col-span-1">
+
+        <BentoGridItem className="md:col-span-1 md:row-span-3">
+          <VRChatStatusCard />
+        </BentoGridItem>
+
+        <BentoGridItem className="md:col-span-1 md:row-span-2">
           <NowPlayingCard tracks={neteaseTracks} />
         </BentoGridItem>
 
-        {/* ── Row 2: [Connect + Interests](2) + [VRChat + Friends](2) ── */}
-        <BentoGridItem className="md:col-span-2">
-          <div className="flex flex-col gap-5 h-full">
-            <SocialCard />
-            <SkillsCard />
-          </div>
-        </BentoGridItem>
-        <BentoGridItem className="md:col-span-2">
-          <div className="flex flex-col gap-5 h-full">
-            <VRChatStatusCard />
-            <FriendsCard />
-          </div>
+        <BentoGridItem className="md:col-span-1 md:row-span-2">
+          <WeatherCard />
         </BentoGridItem>
 
-        {/* ── Row 3–4: Projects(2) + Software(2) → Blog(2) + Hardware(2, row-span-2) ── */}
-        <BentoGridItem className="md:col-span-2">
+        <BentoGridItem className="md:col-span-1 md:row-span-2">
+          <SocialCard />
+        </BentoGridItem>
+
+
+        <BentoGridItem className="md:col-span-1 md:row-span-2">
+          <FriendsCard />
+        </BentoGridItem>
+        {/* ── Section B (Rows 6-9): Portfolio & Competency ── */}
+        <BentoGridItem className="md:col-span-2 md:row-span-4">
           <ProjectsCard />
         </BentoGridItem>
+
         <BentoGridItem className="md:col-span-2 md:row-span-2">
-          <HardwareCard />
+          <SkillsCard />
         </BentoGridItem>
-        <BentoGridItem className="md:col-span-2">
-          <SoftwareCard />
+
+        <BentoGridItem className="md:col-span-2 md:row-span-2">
+          <GitHubHeatmapCard />
         </BentoGridItem>
-        {/* <BentoGridItem className="md:col-span-2">
-          <BlogCard />
-        </BentoGridItem> */}
-        {/* ── Row 6: Map Footprints (full width) ── */}
-        <BentoGridItem className="md:col-span-4">
+
+
+        {/* ── Section C (Rows 10-11): Tools & Location ── */}
+        <BentoGridItem className="md:col-span-2 md:row-span-3">
           <MapCard />
         </BentoGridItem>
 
-        {/* ── Row 5: PhotoStack (full width) ── */}
-        <BentoGridItem className="md:col-span-4">
+        <BentoGridItem className="md:col-span-2 md:row-span-3">
+          <SoftwareCard />
+        </BentoGridItem>
+
+        {/* ── Section D (Rows 12-15): Gallery ── */}
+        <BentoGridItem className="md:col-span-4 md:row-span-4">
           <PhotoStackCard photos={photoImages} />
         </BentoGridItem>
-        {/* ── Row 7: GitHub Heatmap (full width) ── */}
-        <BentoGridItem className="md:col-span-4">
-          <GitHubHeatmapCard />
+
+        {/* ── Section E (Rows 16-21): Gear & Thoughts ── */}
+        <BentoGridItem className="md:col-span-2 md:row-span-6">
+          <HardwareCard />
+        </BentoGridItem>
+
+        <BentoGridItem className="md:col-span-2 md:row-span-6">
+          <BlogCard />
         </BentoGridItem>
       </BentoGrid>
     </main>
