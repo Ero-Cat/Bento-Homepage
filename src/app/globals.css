@@ -10,28 +10,41 @@
   --bg-gradient-to: #f8fafc;
   --glow-color: rgba(60, 80, 100, 0.04);
 
-  /* Glass effect tokens — Light (High legibility) */
-  --glass-bg: rgba(255, 255, 255, 0.45);
-  --glass-bg-hover: rgba(255, 255, 255, 0.65);
-  --glass-border: rgba(255, 255, 255, 0.5);
-  --glass-border-hover: rgba(255, 255, 255, 0.8);
-  --glass-blur: 20px;
-  --glass-radius: 24px;
+  /* Glass effect tokens — Light (Apple Vibrancy) */
+  --glass-bg: rgba(255, 255, 255, 0.52);
+  --glass-bg-hover: rgba(255, 255, 255, 0.72);
+  /* Border is transparent — replaced by inset box-shadow inner strokes */
+  --glass-border: transparent;
+  --glass-border-hover: transparent;
+  --glass-blur: 28px;
+  --glass-radius: 28px;
 
-  /* Glass shadow — Light (Crisp & Clean) */
+  /* Glass shadow — Light (Diffuse ambient + multi-layer inner stroke) */
   --glass-shadow:
-    0 4px 30px rgba(0, 0, 0, 0.06),
-    0 1px 3px rgba(0, 0, 0, 0.02),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+    /* Ambient diffuse — 3 layers for a soft halo */
+    0 2px 6px rgba(0, 0, 0, 0.04),
+    0 8px 32px rgba(0, 0, 0, 0.07),
+    0 24px 64px rgba(0, 0, 0, 0.05),
+    /* Inner stroke — top edge refraction (glass bevel light) */
+    inset 0 1px 0 rgba(255, 255, 255, 0.88),
+    /* Inner stroke — bottom edge counter-light */
+    inset 0 -1px 0 rgba(255, 255, 255, 0.28),
+    /* Inner stroke — full perimeter outline */
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.58);
   --glass-shadow-hover:
-    0 10px 40px rgba(0, 0, 0, 0.1),
-    0 4px 8px rgba(0, 0, 0, 0.05),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.8);
+    /* Deeper ambient on hover */
+    0 4px 8px rgba(0, 0, 0, 0.06),
+    0 16px 48px rgba(0, 0, 0, 0.11),
+    0 32px 80px rgba(0, 0, 0, 0.07),
+    /* Inner strokes — strengthened on hover */
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.38),
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.70);
 
   /* Liquid Glass highlight — Light */
-  --glass-highlight: rgba(255, 255, 255, 0.7);
+  --glass-highlight: rgba(255, 255, 255, 0.92);
   --glass-highlight-end: rgba(255, 255, 255, 0);
-  --glass-inner-glow: rgba(255, 255, 255, 0.4);
+  --glass-inner-glow: rgba(255, 255, 255, 0.22);
 
   /* Theme tint — Jewel Rose (Deep & Elegant) */
   --tint-color: #be185d;
@@ -77,28 +90,38 @@
     --bg-gradient-to: #1e293b;
     --glow-color: rgba(56, 189, 248, 0.08);
 
-    /* Glass effect tokens — Dark (Deep & Clear) */
-    --glass-bg: rgba(15, 23, 42, 0.35);
-    --glass-bg-hover: rgba(30, 41, 59, 0.5);
-    --glass-border: rgba(255, 255, 255, 0.08);
-    --glass-border-hover: rgba(255, 255, 255, 0.15);
-    /* Keeps blur consistent but lower for clarity */
-    --glass-blur: 24px;
+    /* Glass effect tokens — Dark (Apple Vibrancy — Deep & Luminous) */
+    --glass-bg: rgba(15, 23, 42, 0.45);
+    --glass-bg-hover: rgba(30, 41, 59, 0.58);
+    /* Border is transparent — replaced by inset box-shadow inner strokes */
+    --glass-border: transparent;
+    --glass-border-hover: transparent;
+    --glass-blur: 32px;
 
-    /* Glass shadow — Dark (Subtle depth) */
+    /* Glass shadow — Dark (Diffuse ambient + subtle inner strokes) */
     --glass-shadow:
-      0 8px 32px rgba(0, 0, 0, 0.4),
-      0 2px 8px rgba(0, 0, 0, 0.2),
-      inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+      /* Ambient diffuse — deep, soft */
+      0 4px 16px rgba(0, 0, 0, 0.45),
+      0 12px 40px rgba(0, 0, 0, 0.35),
+      0 32px 80px rgba(0, 0, 0, 0.25),
+      /* Inner stroke — top edge (subtle glow) */
+      inset 0 1px 0 rgba(255, 255, 255, 0.18),
+      /* Inner stroke — bottom rim */
+      inset 0 -1px 0 rgba(255, 255, 255, 0.06),
+      /* Inner stroke — full perimeter outline */
+      inset 0 0 0 0.5px rgba(255, 255, 255, 0.10);
     --glass-shadow-hover:
-      0 16px 48px rgba(0, 0, 0, 0.5),
-      0 4px 12px rgba(0, 0, 0, 0.3),
-      inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+      0 6px 20px rgba(0, 0, 0, 0.55),
+      0 20px 56px rgba(0, 0, 0, 0.45),
+      0 40px 96px rgba(0, 0, 0, 0.30),
+      inset 0 1px 0 rgba(255, 255, 255, 0.26),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.10),
+      inset 0 0 0 0.5px rgba(255, 255, 255, 0.16);
 
     /* Liquid Glass highlight — Dark */
-    --glass-highlight: rgba(255, 255, 255, 0.15);
+    --glass-highlight: rgba(255, 255, 255, 0.20);
     --glass-highlight-end: rgba(255, 255, 255, 0);
-    --glass-inner-glow: rgba(255, 255, 255, 0.05);
+    --glass-inner-glow: rgba(255, 255, 255, 0.06);
 
     /* Theme tint — Vibrant Rose on Dark */
     --tint-color: #fb7185;
@@ -214,50 +237,57 @@ body {
 }
 
 /* ============================================================
-   Glass Card — Liquid Glass Effect
+   Glass Card — Apple Vibrancy Material
+   Multi-layer inner strokes + diffuse ambient shadow
    ============================================================ */
 .glass-card {
   position: relative;
   overflow: hidden;
   background: var(--glass-bg);
-  backdrop-filter: blur(var(--glass-blur)) saturate(1.8);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.8);
-  border: 1px solid var(--glass-border);
+  /* Stronger vibrancy: saturation boost + micro brightness lift */
+  backdrop-filter: blur(var(--glass-blur)) saturate(2.2) brightness(1.02);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(2.2) brightness(1.02);
+  /* No hard border — all edge definition comes from inset inner strokes */
+  border: none;
   border-radius: var(--glass-radius);
   box-shadow: var(--glass-shadow);
+  /* Spring-physics transition: snappy out, bouncy settle */
   transition:
-    background 0.35s ease,
-    border-color 0.35s ease,
-    box-shadow 0.35s ease,
-    transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    background 0.4s cubic-bezier(0.25, 1, 0.5, 1),
+    box-shadow 0.4s cubic-bezier(0.25, 1, 0.5, 1),
+    transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* Top-edge refraction highlight */
+/* Top-edge bevel highlight — wider gradient, sharper center peak */
 .glass-card::before {
   content: "";
   position: absolute;
   top: 0;
-  left: 10%;
-  right: 10%;
+  left: 6%;
+  right: 6%;
   height: 1px;
   background: linear-gradient(90deg,
       transparent 0%,
-      var(--glass-highlight) 50%,
+      rgba(255, 255, 255, 0.45) 20%,
+      var(--glass-highlight) 40%,
+      rgba(255, 255, 255, 1) 50%,
+      var(--glass-highlight) 60%,
+      rgba(255, 255, 255, 0.45) 80%,
       transparent 100%);
-  z-index: 1;
+  z-index: 2;
   pointer-events: none;
 }
 
-/* Inner gradient glow overlay */
+/* Inner corner gradient — angled ambient glow from top-left */
 .glass-card::after {
   content: "";
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: linear-gradient(135deg,
+  background: linear-gradient(140deg,
       var(--glass-inner-glow) 0%,
-      transparent 50%,
-      transparent 100%);
+      rgba(255, 255, 255, 0.04) 35%,
+      transparent 60%);
   z-index: 0;
   pointer-events: none;
 }
@@ -270,9 +300,8 @@ body {
 
 .glass-card:hover {
   background: var(--glass-bg-hover);
-  border-color: var(--glass-border-hover);
   box-shadow: var(--glass-shadow-hover);
-  transform: translateY(-2px);
+  transform: translateY(-3px);
 }
 
 /* ============================================================
