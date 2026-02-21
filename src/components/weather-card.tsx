@@ -196,7 +196,7 @@ function useDynamicLocation() {
 
             // 2. Fallback to IP-API
             try {
-                const ipRes = await fetch("http://ip-api.com/json/?fields=city,lat,lon&lang=zh-CN");
+                const ipRes = await fetch("https://ip-api.com/json/?fields=city,lat,lon&lang=zh-CN");
                 const ipData = await ipRes.json();
                 if (mounted && ipData.lat && ipData.lon) {
                     setLocation({

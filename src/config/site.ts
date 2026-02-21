@@ -243,7 +243,7 @@ export const siteConfig: SiteConfig = {
     vrchat: {
         apiBase: "https://vrcx-cloud.iacg.moe",
         userId: "usr_dcf7bc56-34d4-482a-b21f-fb2c05dcfb2f",
-        bioLines: 6,
+        bioLines: 5,
     },
 
     map: {

@@ -84,11 +84,11 @@ function useVisitorGeo() {
     const [geo, setGeo] = useState<VisitorGeo | null>(null);
     useEffect(() => {
         let cancelled = false;
-        fetch("http://ip-api.com/json/?fields=city,lat,lon&lang=zh-CN")
+        fetch("https://ipapi.co/json/")
             .then((r) => r.json())
             .then((data) => {
-                if (!cancelled && data.lat && data.lon) {
-                    setGeo({ city: data.city, lat: data.lat, lon: data.lon });
+                if (!cancelled && data.latitude && data.longitude) {
+                    setGeo({ city: data.city, lat: data.latitude, lon: data.longitude });
                 }
             })
             .catch(() => { /* silently fail */ });
