@@ -25,7 +25,6 @@ export function GlassCard({
 }: GlassCardProps) {
     const content = (
         <>
-            <div className="liquid-corners" />
             {children}
         </>
     );
