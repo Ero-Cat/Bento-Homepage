@@ -98,13 +98,11 @@ export default async function Home() {
           <NowPlayingCard tracks={neteaseTracks} />
         </BentoGridItem>
 
-        <BentoGridItem className="md:col-span-1 md:row-span-2">
-          <WeatherCard />
+        <BentoGridItem className="md:col-span-2 md:row-span-2">
+          <SkillsCard />
         </BentoGridItem>
 
-        <BentoGridItem className="md:col-span-1 md:row-span-2">
-          <SocialCard />
-        </BentoGridItem>
+
 
 
         <BentoGridItem className="md:col-span-1 md:row-span-2">
@@ -115,8 +113,12 @@ export default async function Home() {
           <ProjectsCard />
         </BentoGridItem>
 
-        <BentoGridItem className="md:col-span-2 md:row-span-2">
-          <SkillsCard />
+        <BentoGridItem className="md:col-span-1 md:row-span-2">
+          <WeatherCard />
+        </BentoGridItem>
+
+        <BentoGridItem className="md:col-span-1 md:row-span-2">
+          <SocialCard />
         </BentoGridItem>
 
         <BentoGridItem className="md:col-span-2 md:row-span-2">
