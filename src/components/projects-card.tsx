@@ -63,9 +63,9 @@ export function ProjectsCard() {
     });
 
     return (
-        <GlassCard className="flex flex-col gap-3 h-full">
-            <h2 className="text-xl font-semibold text-text-primary">Projects</h2>
-            <div className="flex flex-col gap-3">
+        <GlassCard className="flex flex-col gap-3 h-full p-5 md:p-6">
+            {/* <h2 className="text-xl font-semibold text-text-primary">Projects</h2> */}
+            <div className="flex flex-col gap-2">
                 {sorted.map((project) => {
                     const repoStats = stats[project.url];
 
@@ -75,7 +75,7 @@ export function ProjectsCard() {
                             href={project.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="group flex flex-col gap-2 rounded-2xl p-4 -mx-2 transition-colors hover:bg-[rgba(var(--tint-rgb),0.06)]"
+                            className="group flex flex-col gap-2 rounded-2xl p-4 transition-colors hover:bg-[rgba(var(--tint-rgb),0.06)]"
                         >
                             <div className="flex items-center gap-2">
                                 <span className="font-semibold text-base text-text-primary group-hover:text-tint transition-colors">

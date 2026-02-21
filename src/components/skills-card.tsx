@@ -9,7 +9,7 @@ export function SkillsCard() {
     const { interests } = siteConfig;
 
     return (
-        <GlassCard className="flex flex-col items-center justify-center gap-3 h-full">
+        <GlassCard className="flex flex-col items-center justify-center gap-4 h-full p-5 md:p-6">
             {/* <h2 className="text-xl font-semibold text-text-primary">Interests</h2> */}
             <div className="flex flex-wrap justify-center gap-2.5">
                 {interests.map((item) => (

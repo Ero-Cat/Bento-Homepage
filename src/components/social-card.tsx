@@ -38,9 +38,9 @@ export function SocialCard() {
     const enabledLinks = siteConfig.socialLinks.filter((link) => link.enabled);
 
     return (
-        <GlassCard className="flex flex-col gap-3 h-full items-center justify-center">
+        <GlassCard className="flex flex-col gap-3 h-full items-center justify-center p-5 md:p-6">
             {/* <h2 className="text-xl font-semibold text-text-primary">Connect</h2> */}
-            <div className="flex flex-wrap gap-5 justify-center">
+            <div className="grid grid-cols-3 gap-5 justify-items-center">
                 {enabledLinks.map((link) => {
                     const Icon = iconMap[link.platform];
                     if (!Icon) return null;

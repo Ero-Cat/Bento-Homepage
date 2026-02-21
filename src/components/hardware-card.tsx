@@ -83,7 +83,7 @@ export function HardwareCard() {
     const { hardware } = siteConfig;
 
     return (
-        <GlassCard className="flex flex-col gap-3 h-full">
+        <GlassCard className="flex flex-col gap-3 h-full p-5 md:p-6">
             {/* <h2 className="text-xl font-semibold text-text-primary">
                 Hardware
             </h2> */}

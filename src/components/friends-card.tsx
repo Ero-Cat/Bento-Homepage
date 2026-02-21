@@ -15,7 +15,7 @@ export function FriendsCard() {
     if (!friends || friends.length === 0) return null;
 
     return (
-        <GlassCard className="flex flex-col gap-3 h-full">
+        <GlassCard className="flex flex-col items-center justify-center gap-3 h-full p-5 md:p-6">
             {/* <h2 className="text-xl font-semibold text-text-primary flex items-center gap-2">
                 Friends
             </h2> */}
