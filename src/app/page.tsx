@@ -136,7 +136,7 @@ export default async function Home() {
         </BentoGridItem>
 
         {/* ── Section D (Rows 12-15): Gallery ── */}
-        <BentoGridItem className="md:col-span-4 md:row-span-4">
+        <BentoGridItem className="md:col-span-4 md:row-span-6">
           <PhotoStackCard photos={photoImages} />
         </BentoGridItem>
 

@@ -8,7 +8,7 @@ import { ImageIcon } from "lucide-react";
 /* ============================================================
    Card Stack Config — Adapted from ericwu.me
    ============================================================ */
-const CARD_OFFSET = 6;
+const CARD_OFFSET = 8
 const ROTATION_FACTOR = 4;
 
 /** Deterministic pseudo-random rotation based on index */
@@ -62,10 +62,14 @@ export function PhotoStackCard({ photos }: PhotoStackCardProps) {
     }
 
     return (
-        <GlassCard className="p-3 overflow-hidden h-full flex flex-col">
-            {/* Stack area — filling available card height */}
-            <div className="relative w-full flex-1 min-h-0">
-                <ul className="absolute inset-2 flex justify-center items-center">
+        <GlassCard className="p-3 h-full flex flex-col">
+            {/* Stack area — overflow-hidden clips photos that would escape the card top */}
+            <div className="relative w-full flex-1 min-h-0 overflow-hidden rounded-xl">
+                {/* Extra top padding absorbs the upward stacking offsets */}
+                <ul
+                    className="absolute inset-x-2 bottom-2 flex justify-center items-center"
+                    style={{ top: `${cards.length * CARD_OFFSET - 20}px` }}
+                >
                     {cards.map((card, index) => (
                         <motion.li
                             key={card.id}

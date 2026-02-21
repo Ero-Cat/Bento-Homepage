@@ -14,34 +14,39 @@ interface GlassCardProps {
     children: React.ReactNode;
     className?: string;
     href?: string;
+    onClick?: () => void;
 }
 
 export function GlassCard({
     children,
-    className,
+    className = "",
     href,
+    onClick,
 }: GlassCardProps) {
-    const cardClass = cn(
-        "glass-card p-4 md:p-5 relative z-10",
-        className
+    const content = (
+        <>
+            <div className="liquid-corners" />
+            {children}
+        </>
     );
+
+    const baseClasses = `glass-card group ${className}`;
 
     if (href) {
         return (
             <a
                 href={href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={cn(cardClass, "block")}
+                className={baseClasses}
+                onClick={onClick}
             >
-                {children}
+                {content}
             </a>
         );
     }
 
     return (
-        <div className={cardClass}>
-            {children}
+        <div className={baseClasses} onClick={onClick}>
+            {content}
         </div>
     );
 }

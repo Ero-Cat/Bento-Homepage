@@ -10,41 +10,50 @@
   --bg-gradient-to: #f8fafc;
   --glow-color: rgba(60, 80, 100, 0.04);
 
-  /* Glass effect tokens — Light (Apple Vibrancy) */
-  --glass-bg: rgba(255, 255, 255, 0.52);
-  --glass-bg-hover: rgba(255, 255, 255, 0.72);
+  /* Glass effect tokens — Light (Liquid Glass — Ultra Vibrant) */
+  --glass-bg: rgba(255, 255, 255, 0.12);
+  --glass-bg-hover: rgba(255, 255, 255, 0.20);
   /* Border is transparent — replaced by inset box-shadow inner strokes */
   --glass-border: transparent;
   --glass-border-hover: transparent;
-  --glass-blur: 28px;
+  --glass-blur: 36px;
+  --glass-saturate: 3.5;
   --glass-radius: 28px;
 
-  /* Glass shadow — Light (Diffuse ambient + multi-layer inner stroke) */
+  /* SVG Noise for Caustics (Data URI) */
+  --liquid-noise: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+
+  /* Glass shadow — Light (Liquid Glass: ultra-diffuse + iridescent edge) */
   --glass-shadow:
-    /* Ambient diffuse — 3 layers for a soft halo */
-    0 2px 6px rgba(0, 0, 0, 0.04),
-    0 8px 32px rgba(0, 0, 0, 0.07),
-    0 24px 64px rgba(0, 0, 0, 0.05),
-    /* Inner stroke — top edge refraction (glass bevel light) */
-    inset 0 1px 0 rgba(255, 255, 255, 0.88),
-    /* Inner stroke — bottom edge counter-light */
-    inset 0 -1px 0 rgba(255, 255, 255, 0.28),
-    /* Inner stroke — full perimeter outline */
-    inset 0 0 0 0.5px rgba(255, 255, 255, 0.58);
+    /* Ultra-soft ambient diffuse */
+    0 2px 6px rgba(0, 0, 0, 0.03),
+    0 8px 32px rgba(0, 0, 0, 0.05),
+    0 24px 72px rgba(0, 0, 0, 0.04),
+    /* Edge thickness accumulation — tighter inner shadow defines the physical volume */
+    inset 0 0 0 1px rgba(255, 255, 255, 0.40),
+    inset 0 0 20px rgba(255, 255, 255, 0.15),
+    /* Inner stroke — top iridescent bevel */
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.95),
+    /* Inner stroke — bottom counter-light */
+    inset 0 -1px 0 rgba(255, 255, 255, 0.30),
+    /* Tint color bleed from below — gives color transmission effect */
+    inset 0 0 40px rgba(var(--tint-rgb), 0.03);
   --glass-shadow-hover:
-    /* Deeper ambient on hover */
-    0 4px 8px rgba(0, 0, 0, 0.06),
-    0 16px 48px rgba(0, 0, 0, 0.11),
-    0 32px 80px rgba(0, 0, 0, 0.07),
-    /* Inner strokes — strengthened on hover */
-    inset 0 1px 0 rgba(255, 255, 255, 0.95),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.38),
-    inset 0 0 0 0.5px rgba(255, 255, 255, 0.70);
+    /* Volumetric ambient drop on hover (deeper Z-space) */
+    0 8px 16px rgba(0, 0, 0, 0.04),
+    0 24px 64px rgba(0, 0, 0, 0.07),
+    0 48px 120px rgba(0, 0, 0, 0.05),
+    /* Edge thickness squeeze */
+    inset 0 0 0 1px rgba(255, 255, 255, 0.55),
+    inset 0 0 24px rgba(255, 255, 255, 0.25),
+    inset 0 1.5px 0 rgba(255, 255, 255, 1),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.45),
+    inset 0 0 48px rgba(var(--tint-rgb), 0.06);
 
   /* Liquid Glass highlight — Light */
-  --glass-highlight: rgba(255, 255, 255, 0.92);
+  --glass-highlight: rgba(255, 255, 255, 0.98);
   --glass-highlight-end: rgba(255, 255, 255, 0);
-  --glass-inner-glow: rgba(255, 255, 255, 0.22);
+  --glass-inner-glow: rgba(255, 255, 255, 0.30);
 
   /* Theme tint — Jewel Rose (Deep & Elegant) */
   --tint-color: #be185d;
@@ -90,38 +99,45 @@
     --bg-gradient-to: #1e293b;
     --glow-color: rgba(56, 189, 248, 0.08);
 
-    /* Glass effect tokens — Dark (Apple Vibrancy — Deep & Luminous) */
-    --glass-bg: rgba(15, 23, 42, 0.45);
-    --glass-bg-hover: rgba(30, 41, 59, 0.58);
+    /* Glass effect tokens — Dark (Liquid Glass — Ultra Vibrant) */
+    --glass-bg: rgba(255, 255, 255, 0.06);
+    --glass-bg-hover: rgba(255, 255, 255, 0.10);
     /* Border is transparent — replaced by inset box-shadow inner strokes */
     --glass-border: transparent;
     --glass-border-hover: transparent;
-    --glass-blur: 32px;
+    --glass-blur: 40px;
+    --glass-saturate: 4.0;
 
-    /* Glass shadow — Dark (Diffuse ambient + subtle inner strokes) */
+    /* Glass shadow — Dark (Liquid Glass: deep diffuse + luminous rim) */
     --glass-shadow:
-      /* Ambient diffuse — deep, soft */
-      0 4px 16px rgba(0, 0, 0, 0.45),
-      0 12px 40px rgba(0, 0, 0, 0.35),
-      0 32px 80px rgba(0, 0, 0, 0.25),
-      /* Inner stroke — top edge (subtle glow) */
-      inset 0 1px 0 rgba(255, 255, 255, 0.18),
-      /* Inner stroke — bottom rim */
-      inset 0 -1px 0 rgba(255, 255, 255, 0.06),
-      /* Inner stroke — full perimeter outline */
-      inset 0 0 0 0.5px rgba(255, 255, 255, 0.10);
-    --glass-shadow-hover:
-      0 6px 20px rgba(0, 0, 0, 0.55),
-      0 20px 56px rgba(0, 0, 0, 0.45),
+      /* Deep ambient — creates floating depth */
+      0 4px 16px rgba(0, 0, 0, 0.50),
+      0 12px 48px rgba(0, 0, 0, 0.40),
       0 40px 96px rgba(0, 0, 0, 0.30),
-      inset 0 1px 0 rgba(255, 255, 255, 0.26),
-      inset 0 -1px 0 rgba(255, 255, 255, 0.10),
-      inset 0 0 0 0.5px rgba(255, 255, 255, 0.16);
+      /* Edge thickness accumulation (corners look denser) */
+      inset 0 0 0 1px rgba(255, 255, 255, 0.12),
+      inset 0 0 20px rgba(255, 255, 255, 0.05),
+      /* Inner stroke — top luminous bevel */
+      inset 0 1.5px 0 rgba(255, 255, 255, 0.28),
+      /* Inner stroke — bottom rim */
+      inset 0 -1px 0 rgba(255, 255, 255, 0.08),
+      /* Tint color transmission bleed */
+      inset 0 0 48px rgba(var(--tint-rgb), 0.05);
+    --glass-shadow-hover:
+      /* Volumetric deep press */
+      0 8px 24px rgba(0, 0, 0, 0.60),
+      0 28px 72px rgba(0, 0, 0, 0.45),
+      0 64px 140px rgba(0, 0, 0, 0.30),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.20),
+      inset 0 0 24px rgba(255, 255, 255, 0.08),
+      inset 0 1.5px 0 rgba(255, 255, 255, 0.40),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.14),
+      inset 0 0 56px rgba(var(--tint-rgb), 0.08);
 
     /* Liquid Glass highlight — Dark */
-    --glass-highlight: rgba(255, 255, 255, 0.20);
+    --glass-highlight: rgba(255, 255, 255, 0.35);
     --glass-highlight-end: rgba(255, 255, 255, 0);
-    --glass-inner-glow: rgba(255, 255, 255, 0.06);
+    --glass-inner-glow: rgba(255, 255, 255, 0.10);
 
     /* Theme tint — Vibrant Rose on Dark */
     --tint-color: #fb7185;
@@ -244,64 +260,155 @@ body {
   position: relative;
   overflow: hidden;
   background: var(--glass-bg);
-  /* Stronger vibrancy: saturation boost + micro brightness lift */
-  backdrop-filter: blur(var(--glass-blur)) saturate(2.2) brightness(1.02);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(2.2) brightness(1.02);
+  /* Liquid Glass: ultra-high saturation + brightness lift to make bg colors bleed through */
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate, 3.5)) brightness(1.08) contrast(1.02);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate, 3.5)) brightness(1.08) contrast(1.02);
   /* No hard border — all edge definition comes from inset inner strokes */
   border: none;
   border-radius: var(--glass-radius);
   box-shadow: var(--glass-shadow);
-  /* Spring-physics transition: snappy out, bouncy settle */
+  /* Spring-physics transition: snappy out, bouncy settle.
+     Scale added for volumetric interaction */
   transition:
-    background 0.4s cubic-bezier(0.25, 1, 0.5, 1),
-    box-shadow 0.4s cubic-bezier(0.25, 1, 0.5, 1),
-    transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+    background 0.5s cubic-bezier(0.25, 1, 0.5, 1),
+    box-shadow 0.5s cubic-bezier(0.25, 1, 0.5, 1),
+    transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+    backdrop-filter 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+  transform-style: preserve-3d;
 }
 
-/* Top-edge bevel highlight — wider gradient, sharper center peak */
+/* Top-edge content-aware refraction — Solution B (subtle)
+   backdrop-filter samples background pixels and gently amplifies
+   their hue — produces a whisper-thin chromatic trace, not a
+   solid colored border. The fallback gradient is nearly invisible
+   and only serves as a luminance floor. */
 .glass-card::before {
   content: "";
   position: absolute;
   top: 0;
-  left: 6%;
-  right: 6%;
-  height: 1px;
-  background: linear-gradient(90deg,
-      transparent 0%,
-      rgba(255, 255, 255, 0.45) 20%,
-      var(--glass-highlight) 40%,
-      rgba(255, 255, 255, 1) 50%,
-      var(--glass-highlight) 60%,
-      rgba(255, 255, 255, 0.45) 80%,
-      transparent 100%);
-  z-index: 2;
+  left: 0;
+  right: 0;
+  height: 2px;
+  border-radius: var(--glass-radius) var(--glass-radius) 0 0;
+  z-index: 3;
   pointer-events: none;
+
+  /* ── Core: gentle background color sampling ── */
+  backdrop-filter: blur(0px) saturate(5) brightness(1.4) contrast(1.2);
+  -webkit-backdrop-filter: blur(0px) saturate(5) brightness(1.4) contrast(1.2);
+
+  /* ── Whisper-thin fallback — nearly transparent, just luminance ── */
+  background: linear-gradient(90deg,
+      rgba(200, 140, 255, 0.08) 0%,
+      rgba(140, 190, 255, 0.12) 20%,
+      rgba(255, 255, 255, 0.30) 42%,
+      rgba(255, 255, 255, 0.38) 50%,
+      rgba(255, 255, 255, 0.30) 58%,
+      rgba(140, 230, 180, 0.12) 80%,
+      rgba(255, 190, 100, 0.08) 100%);
+  mix-blend-mode: screen;
+
+  /* ── Mask: edges fade into card corners ── */
+  -webkit-mask-image: linear-gradient(90deg,
+      transparent 0%,
+      black 8%,
+      black 92%,
+      transparent 100%);
+  mask-image: linear-gradient(90deg,
+      transparent 0%,
+      black 8%,
+      black 92%,
+      transparent 100%);
 }
 
-/* Inner corner gradient — angled ambient glow from top-left */
+/* Liquid glass interior — four-layer inner surface lighting
+   1. SVG Noise mask for caustics (bends the light)
+   2. Top-left corner lens flare pool
+   3. Bottom-edge "meniscus" — liquid sitting at edge of glass
+   4. Diagonal light sweep traversing the surface */
 .glass-card::after {
   content: "";
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: linear-gradient(140deg,
-      var(--glass-inner-glow) 0%,
-      rgba(255, 255, 255, 0.04) 35%,
-      transparent 60%);
-  z-index: 0;
+
+  /* Apply SVG noise as a mask to break up the smooth gradients into shimmering caustics */
+  -webkit-mask-image: var(--liquid-noise);
+  mask-image: var(--liquid-noise);
+  -webkit-mask-size: 200px 200px;
+  mask-size: 200px 200px;
+  /* Blend the noise with a solid alpha so some smooth light still passes through */
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+
+  mix-blend-mode: soft-light;
+
+  background:
+    /* ① Top-left corner lens flare pool */
+    radial-gradient(ellipse 65% 45% at 20% 0%,
+      rgba(255, 255, 255, 0.45) 0%,
+      rgba(255, 255, 255, 0.12) 50%,
+      transparent 100%),
+    /* ② Bottom-edge liquid meniscus — subtle bright rim */
+    linear-gradient(to top,
+      rgba(255, 255, 255, 0.25) 0%,
+      rgba(255, 255, 255, 0.08) 6px,
+      transparent 18px),
+    /* ③ Diagonal sweep — slow liquid highlight traversal.
+       Colors bumped up slightly because the mask cuts opacity */
+    linear-gradient(115deg,
+      transparent 0%,
+      transparent 28%,
+      rgba(255, 255, 255, 0.35) 43%,
+      rgba(255, 255, 255, 0.55) 50%,
+      rgba(255, 255, 255, 0.35) 57%,
+      transparent 72%,
+      transparent 100%);
+  background-size: 100% 100%, 100% 100%, 200% 200%;
+  animation: liquid-shine 8s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  z-index: 1;
   pointer-events: none;
+}
+
+/* Add a separate clean layer for smooth light (to balance the noise caustics) */
+.glass-card::before,
+.glass-card::after {
+  /* Both pseudoelements are positioned */
+}
+
+/* Secondary after for smooth corner thickness */
+.glass-card>.liquid-corners {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 1;
+  /* Thick corners: simulate glass refracting at the bends */
+  background:
+    radial-gradient(circle at 0 0, rgba(255, 255, 255, 0.1) 0, transparent 40px),
+    radial-gradient(circle at 100% 0, rgba(255, 255, 255, 0.15) 0, transparent 50px);
 }
 
 /* Ensure card content sits above pseudo-elements */
 .glass-card>* {
   position: relative;
-  z-index: 1;
+  z-index: 2;
 }
 
 .glass-card:hover {
   background: var(--glass-bg-hover);
   box-shadow: var(--glass-shadow-hover);
-  transform: translateY(-3px);
+  /* Volumetric press: moves up slightly but scales subtly to simulate
+     the tension of pushing into a liquid surface */
+  transform: translateY(-4px) scale(0.995);
+  /* Refraction surge: saturation spikes on interaction like pressing glass */
+  backdrop-filter: blur(var(--glass-blur)) saturate(calc(var(--glass-saturate, 3.5) + 1.5)) brightness(1.15) contrast(1.05);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(calc(var(--glass-saturate, 3.5) + 1.5)) brightness(1.15) contrast(1.05);
+}
+
+/* Pause liquid sweep on hover — freeze the gloss in place */
+.glass-card:hover::after {
+  animation-play-state: paused;
 }
 
 /* ============================================================
@@ -390,6 +497,35 @@ body {
 
   50% {
     opacity: 0;
+  }
+}
+
+/* ============================================================
+   Liquid Glass — Light Sweep Animation
+   Moves the diagonal gloss stripe across the card surface
+   ============================================================ */
+@keyframes liquid-shine {
+  0% {
+    background-position: 0 0, -100% 0;
+    opacity: 0.6;
+  }
+
+  30% {
+    opacity: 1;
+  }
+
+  50% {
+    background-position: 0 0, 0% 0;
+    opacity: 1;
+  }
+
+  80% {
+    opacity: 0.8;
+  }
+
+  100% {
+    background-position: 0 0, 100% 0;
+    opacity: 0.6;
   }
 }
 
