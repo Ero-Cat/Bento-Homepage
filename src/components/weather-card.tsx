@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { siteConfig } from "@/config/site";
 import { GlassCard } from "@/components/glass-card";
+import { useDynamicLocation } from "@/hooks/use-dynamic-location";
 import { motion } from "framer-motion";
 import {
     Sun,
@@ -137,111 +138,6 @@ function WeatherAnimations({ code }: { code: number }) {
     if ((code >= 71 && code <= 77) || (code >= 85 && code <= 86)) return <SnowEffect />;
     if (code >= 95) return <ThunderEffect />;
     return null;
-}
-
-// ── Location Hook ────────────────────────────────────────────────────────
-
-interface LocationData {
-    lat: number;
-    lon: number;
-    city: string;
-}
-
-/**
- * Tries browser Geolocation first.
- * If that fails or takes > 3s, checks IP via ip-api.com.
- * If that fails, uses default config.
- */
-function useDynamicLocation() {
-    const [location, setLocation] = useState<LocationData | null>(null);
-
-    useEffect(() => {
-        let mounted = true;
-
-        async function fetchWithFallback() {
-            // 1. Try Geolocation
-            if ("geolocation" in navigator) {
-                try {
-                    const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
-                        navigator.geolocation.getCurrentPosition(resolve, reject, {
-                            timeout: 3000,
-                            maximumAge: 1000 * 60 * 60, // 1 hour cache
-                        });
-                    });
-
-                    if (!mounted) return;
-
-                    const lat = pos.coords.latitude;
-                    const lon = pos.coords.longitude;
-
-                    // Reverse geocode via free BigDataCloud API for client city
-                    try {
-                        const geoRes = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=zh`);
-                        const geoData = await geoRes.json();
-                        setLocation({
-                            lat,
-                            lon,
-                            city: geoData.city || geoData.locality || "当前位置",
-                        });
-                        return; // Success!
-                    } catch (e) {
-                        setLocation({ lat, lon, city: "当前位置" });
-                        return; // Success, but no exact city name
-                    }
-                } catch (e) {
-                    // Geolocation failed or timed out. Fallback to IP.
-                    console.log("Geolocation failed, falling back to IP...");
-                }
-            }
-
-            // 2. Fallback to IP-API
-            try {
-                const ipRes = await fetch("https://ip-api.com/json/?fields=city,lat,lon&lang=zh-CN");
-                const ipData = await ipRes.json();
-                if (mounted && ipData.lat && ipData.lon) {
-                    setLocation({
-                        lat: ipData.lat,
-                        lon: ipData.lon,
-                        city: ipData.city || "当前位置",
-                    });
-                    return;
-                }
-            } catch (e) {
-                console.error("IP fallback failed:", e);
-            }
-
-            // 3. Ultimate Fallback: Config
-            if (mounted) {
-                const configLoc = siteConfig.weather || {
-                    city: "合肥",
-                    lat: 31.8206,
-                    lon: 117.2272,
-                };
-                setLocation(configLoc);
-            }
-        }
-
-        fetchWithFallback();
-
-        // Listen for geolocation permission changes
-        if ("permissions" in navigator) {
-            navigator.permissions.query({ name: "geolocation" }).then((result) => {
-                if (!mounted) return;
-                result.onchange = () => {
-                    if (result.state === "granted" || result.state === "prompt") {
-                        // Re-fetch if user granted permission
-                        fetchWithFallback();
-                    }
-                };
-            }).catch(() => {
-                // Ignore permissions API errors
-            });
-        }
-
-        return () => { mounted = false; };
-    }, []);
-
-    return location;
 }
 
 export function WeatherCard() {

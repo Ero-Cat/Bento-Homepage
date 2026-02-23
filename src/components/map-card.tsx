@@ -3,6 +3,7 @@
 import { useRef, useEffect, useState, useCallback, useMemo } from "react";
 import { GlassCard } from "@/components/glass-card";
 import { siteConfig } from "@/config/site";
+import { useDynamicLocation } from "@/hooks/use-dynamic-location";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 
@@ -58,11 +59,7 @@ function generateArc(
 
 // ── Types ────────────────────────────────────────────────────
 
-interface VisitorGeo {
-    city: string;
-    lat: number;
-    lon: number;
-}
+// (VisitorGeo replaced by shared LocationData from useDynamicLocation)
 
 // ── Hooks ────────────────────────────────────────────────────
 
@@ -79,24 +76,6 @@ function useIsDark() {
     return dark;
 }
 
-/** Fetch visitor geolocation via ip-api.com (free, no key) */
-function useVisitorGeo() {
-    const [geo, setGeo] = useState<VisitorGeo | null>(null);
-    useEffect(() => {
-        let cancelled = false;
-        fetch("https://ipapi.co/json/")
-            .then((r) => r.json())
-            .then((data) => {
-                if (!cancelled && data.latitude && data.longitude) {
-                    setGeo({ city: data.city, lat: data.latitude, lon: data.longitude });
-                }
-            })
-            .catch(() => { /* silently fail */ });
-        return () => { cancelled = true; };
-    }, []);
-    return geo;
-}
-
 // ── Component ────────────────────────────────────────────────
 
 export function MapCard() {
@@ -104,7 +83,7 @@ export function MapCard() {
     const containerRef = useRef<HTMLDivElement>(null);
     const mapRef = useRef<mapboxgl.Map | null>(null);
     const isDark = useIsDark();
-    const visitorGeo = useVisitorGeo();
+    const visitorLocation = useDynamicLocation();
 
     // Find 合肥 from config markers
     const hefeiCoords: [number, number] = useMemo(() => {
@@ -114,8 +93,8 @@ export function MapCard() {
 
     // Distance calculation
     const visitorCoords: [number, number] | null = useMemo(() => {
-        return visitorGeo ? [visitorGeo.lon, visitorGeo.lat] : null;
-    }, [visitorGeo]);
+        return visitorLocation ? [visitorLocation.lon, visitorLocation.lat] : null;
+    }, [visitorLocation]);
 
     const distanceKm = useMemo(() => {
         return visitorCoords ? haversineKm(hefeiCoords, visitorCoords) : null;
@@ -133,7 +112,7 @@ export function MapCard() {
             // --- Visitor marker ---
             const el = document.createElement("div");
             el.className = "map-visitor-marker map-dynamic-marker";
-            el.setAttribute("aria-label", visitorGeo!.city);
+            el.setAttribute("aria-label", visitorLocation!.city);
 
             new mapboxgl.Marker({ element: el })
                 .setLngLat(visitorCoords)
@@ -143,7 +122,7 @@ export function MapCard() {
                         closeButton: false,
                         className: "map-popup",
                     }).setHTML(
-                        `<span class="map-popup-content">📍 ${visitorGeo!.city}（你的位置）</span>`
+                        `<span class="map-popup-content">📍 ${visitorLocation!.city}（你的位置）</span>`
                     )
                 )
                 .addTo(map);
@@ -203,7 +182,7 @@ export function MapCard() {
                 });
             }
         },
-        [visitorCoords, isDark, hefeiCoords, distanceKm, visitorGeo]
+        [visitorCoords, isDark, hefeiCoords, distanceKm, visitorLocation]
     );
 
     /* Initialize map */
@@ -276,11 +255,11 @@ export function MapCard() {
     // If visitor geo arrives after map is ready, draw the arc
     useEffect(() => {
         const map = mapRef.current;
-        if (!map || !visitorGeo) return;
+        if (!map || !visitorLocation) return;
         if (map.isStyleLoaded()) {
             drawArc(map);
         }
-    }, [visitorGeo, drawArc]);
+    }, [visitorLocation, drawArc]);
 
     if (!mapConfig) return null;
 
