@@ -9,13 +9,13 @@ import { HardwareCard } from "@/components/hardware-card";
 import { SoftwareCard } from "@/components/software-card";
 import { FriendsCard } from "@/components/friends-card";
 import { PhotoStackCard } from "@/components/photo-stack-card";
-import { NowPlayingCard, type NeteaseTrack } from "@/components/now-playing-card";
+import { NowPlayingCard } from "@/components/now-playing-card";
 import { GitHubHeatmapCard } from "@/components/github-heatmap-card";
 import { VRChatStatusCard } from "@/components/vrchat-status-card";
 import { MapCard } from "@/components/map-card";
 import { BlogCard } from "@/components/blog-card";
 import { WeatherCard } from "@/components/weather-card";
-import { siteConfig } from "@/config/site";
+
 
 const IMAGE_RE = /\.(jpe?g|png|webp|avif)$/i;
 
@@ -29,56 +29,12 @@ function scanImages(subdir: string): string[] {
   }
 }
 
-interface RawNeteaseSong {
-  name: string;
-  artists?: { name: string }[];
-  album?: { name: string; picUrl: string };
-  duration?: number;
-  id: number;
-}
-
-/** Fetch song details from NetEase at build time */
-async function fetchNeteaseTracks(): Promise<NeteaseTrack[]> {
-  const songIds = siteConfig.netease?.songIds;
-  if (!songIds?.length) return [];
-
-  try {
-    const idsParam = encodeURIComponent(`[${songIds.join(",")}]`);
-    const res = await fetch(
-      `https://music.163.com/api/song/detail/?id=${songIds[0]}&ids=${idsParam}`,
-      {
-        headers: {
-          "User-Agent":
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-          Referer: "https://music.163.com/",
-        },
-      }
-    );
-
-    if (!res.ok) return [];
-    const data = await res.json();
-    if (!data?.songs?.length) return [];
-
-    return data.songs.map((song: RawNeteaseSong) => ({
-      name: song.name,
-      artist: song.artists?.map((a) => a.name).join(" / ") ?? "Unknown",
-      album: song.album?.name ?? "Unknown",
-      albumCover: song.album?.picUrl ?? "",
-      duration: song.duration ?? 0,
-      songId: song.id,
-    }));
-  } catch {
-    return [];
-  }
-}
-
-export default async function Home() {
+export default function Home() {
   const avatarImages = scanImages("avatar");
   const photoImages = scanImages("photos");
-  const neteaseTracks = await fetchNeteaseTracks();
 
   return (
-    <main className="relative z-10 flex min-h-dvh flex-col items-center justify-center py-12 md:py-16">
+    <main className="relative z-10 flex min-h-dvh flex-col items-center justify-start py-8 sm:py-10 md:py-14">
       <BentoGrid>
         {/*
          *  Grid: 4 cols × 100px rows. Each row-span-N = N×100px.
@@ -95,16 +51,12 @@ export default async function Home() {
         </BentoGridItem>
 
         <BentoGridItem className="md:col-span-1 md:row-span-2">
-          <NowPlayingCard tracks={neteaseTracks} />
+          <NowPlayingCard />
         </BentoGridItem>
 
         <BentoGridItem className="md:col-span-2 md:row-span-2">
           <SkillsCard />
         </BentoGridItem>
-
-
-
-
         <BentoGridItem className="md:col-span-1 md:row-span-2">
           <FriendsCard />
         </BentoGridItem>

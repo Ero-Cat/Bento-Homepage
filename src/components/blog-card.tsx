@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { BookOpen, Eye, ArrowUpRight } from "lucide-react";
+import { BookOpen, ArrowUpRight, ChevronRight, Eye } from "lucide-react";
 import { GlassCard } from "@/components/glass-card";
 import { siteConfig } from "@/config/site";
 
@@ -51,15 +51,9 @@ function timeAgo(dateStr: string): string {
     return "刚刚";
 }
 
-function truncate(str: string, len: number): string {
-    if (!str) return "";
-    return str.length > len ? str.slice(0, len) + "…" : str;
-}
-
 export function BlogCard() {
     const blogConfig = siteConfig.blog;
     const [posts, setPosts] = useState<HaloPost[]>([]);
-    // Initialize loading based on config presence
     const [loading, setLoading] = useState(!!blogConfig?.url);
 
     useEffect(() => {
@@ -80,52 +74,54 @@ export function BlogCard() {
     if (!blogConfig?.url) return null;
 
     return (
-        <GlassCard className="flex flex-col gap-3 p-5 h-full">
+        <GlassCard variant="panel" className="flex flex-col gap-4 p-5 md:p-6 h-full">
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                    <BookOpen size={18} className="text-text-secondary" />
-                    <h3 className="text-lg font-semibold text-text-primary">最近博文</h3>
+                    <div
+                        className="w-[26px] h-[26px] rounded-[8px] flex items-center justify-center shrink-0"
+                        style={{ background: "rgba(var(--tint-rgb), 0.10)" }}
+                    >
+                        <BookOpen size={13} style={{ color: "var(--tint-color)" }} />
+                    </div>
+                    <h3 className="text-[14px] font-semibold text-text-primary tracking-tight">博客</h3>
                 </div>
                 <a
                     href={blogConfig.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-1 text-xs text-text-tertiary hover:text-text-primary transition-colors"
+                    className="group flex items-center gap-0.5 text-[11px] font-medium text-text-tertiary hover:text-tint transition-colors duration-150"
                 >
-                    查看全部
-                    <ArrowUpRight size={12} />
+                    全部
+                    <ArrowUpRight
+                        size={11}
+                        className="transition-transform duration-150 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                    />
                 </a>
             </div>
 
             {/* Post List */}
-            <div className="flex flex-col">
+            <div className="flex flex-col flex-1 gap-0.5 -mx-1">
                 {loading ? (
                     /* Skeleton */
                     Array.from({ length: 4 }).map((_, i) => (
-                        <div
-                            key={i}
-                            className="flex flex-col gap-2 py-3"
-                            style={{
-                                borderBottom:
-                                    i < 3 ? "1px solid var(--glass-border)" : "none",
-                            }}
-                        >
-                            <div
-                                className="h-4 rounded-md animate-pulse"
-                                style={{
-                                    width: `${60 + ((i * 13) % 30)}%`,
-                                    backgroundColor: "var(--glass-border)",
-                                }}
-                            />
-                            <div
-                                className="h-3 rounded-md animate-pulse"
-                                style={{
-                                    width: `${80 + ((i * 7) % 15)}%`,
-                                    backgroundColor: "var(--glass-border)",
-                                    opacity: 0.5,
-                                }}
-                            />
+                        <div key={i} className="flex items-center gap-3 px-2.5 py-[10px] rounded-xl">
+                            <div className="flex-1 flex flex-col gap-2">
+                                <div
+                                    className="h-3.5 rounded-full animate-pulse"
+                                    style={{
+                                        width: `${58 + ((i * 13) % 32)}%`,
+                                        background: "var(--surface-bg-strong)",
+                                    }}
+                                />
+                                <div
+                                    className="h-2.5 rounded-full animate-pulse"
+                                    style={{
+                                        width: `${36 + ((i * 9) % 22)}%`,
+                                        background: "var(--surface-bg)",
+                                    }}
+                                />
+                            </div>
                         </div>
                     ))
                 ) : posts.length > 0 ? (
@@ -135,55 +131,65 @@ export function BlogCard() {
                             href={`${blogConfig.url}${post.status.permalink}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex flex-col gap-1.5 py-3 group cursor-pointer"
-                            style={{
-                                borderBottom:
-                                    i < posts.length - 1
-                                        ? "1px solid var(--glass-border)"
-                                        : "none",
-                            }}
-                            initial={{ opacity: 0, y: 8 }}
+                            className="group relative flex items-center gap-2 px-2.5 py-[10px] rounded-xl cursor-pointer"
+                            initial={{ opacity: 0, y: 5 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{
-                                delay: i * 0.05,
+                                delay: i * 0.045,
                                 type: "spring",
-                                stiffness: 200,
-                                damping: 20,
+                                stiffness: 300,
+                                damping: 26,
                             }}
+                            whileHover={{ backgroundColor: "var(--surface-bg)" }}
+                            style={{ borderRadius: 12 }}
                         >
-                            {/* Title */}
-                            <h4 className="text-sm font-medium text-text-primary group-hover:text-[var(--tint)] transition-colors leading-snug">
-                                {post.spec.title}
-                            </h4>
+                            {/* Content */}
+                            <div className="flex-1 min-w-0">
+                                <h4 className="text-[13px] font-semibold leading-snug line-clamp-1 transition-colors duration-150 text-text-primary group-hover:text-tint">
+                                    {post.spec.title}
+                                </h4>
 
-                            {/* Excerpt */}
-                            <p className="text-xs text-text-tertiary leading-relaxed line-clamp-2">
-                                {truncate(post.status.excerpt, 80)}
-                            </p>
-
-                            {/* Meta row */}
-                            <div className="flex items-center gap-3 text-[11px] text-text-tertiary">
-                                <span>{timeAgo(post.spec.publishTime)}</span>
-                                {post.categories?.[0] && (
-                                    <span
-                                        className="px-1.5 py-0.5 rounded-md"
-                                        style={{
-                                            backgroundColor: "rgba(var(--tint-rgb), 0.1)",
-                                            color: "var(--tint)",
-                                        }}
-                                    >
-                                        {post.categories[0].spec.displayName}
+                                {/* Meta row */}
+                                <div className="flex items-center gap-1.5 mt-1">
+                                    <span className="text-[11px] font-medium text-text-tertiary">
+                                        {timeAgo(post.spec.publishTime)}
                                     </span>
-                                )}
-                                <span className="flex items-center gap-0.5">
-                                    <Eye size={11} />
-                                    {post.stats?.visit ?? 0}
-                                </span>
+                                    {post.categories?.[0] && (
+                                        <>
+                                            <span
+                                                className="text-[10px] select-none"
+                                                style={{ color: "var(--text-tertiary)", opacity: 0.4 }}
+                                            >
+                                                ·
+                                            </span>
+                                            <span className="prism-badge rounded-[5px] px-1.5 py-0.5 text-[10px] font-semibold tracking-wide leading-none">
+                                                {post.categories[0].spec.displayName}
+                                            </span>
+                                        </>
+                                    )}
+                                    <span
+                                        className="ml-auto flex items-center gap-1 text-[11px]"
+                                        style={{ color: "var(--text-tertiary)", opacity: 0.55 }}
+                                    >
+                                        <Eye size={10} />
+                                        {post.stats?.visit ?? 0}
+                                    </span>
+                                </div>
                             </div>
+
+                            {/* Hover arrow — slides in from left */}
+                            <ChevronRight
+                                size={13}
+                                className="shrink-0 transition-all duration-150 opacity-0 -translate-x-1.5 group-hover:opacity-45 group-hover:translate-x-0"
+                                style={{ color: "var(--text-tertiary)" }}
+                            />
                         </motion.a>
                     ))
                 ) : (
-                    <p className="text-sm text-text-tertiary py-4 text-center">
+                    <p
+                        className="text-[13px] py-6 text-center"
+                        style={{ color: "var(--text-tertiary)", opacity: 0.55 }}
+                    >
                         暂无博文
                     </p>
                 )}

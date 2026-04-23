@@ -52,6 +52,15 @@ export const itemVariants: Variants = {
         opacity: 1,
         y: 0,
         scale: 1,
+        // After entrance animation completes, clear FM's inline transform so the
+        // element is NOT promoted to an independent GPU compositing layer.
+        // Without this, transform: translate3d(0,0,0) stays on every BentoGridItem,
+        // causing compositor-thread scroll to move DOM cards at a different tick
+        // than the WebGL canvas (which runs on main-thread rAF), producing 1-frame
+        // jitter between glass and content on every scroll event.
+        transitionEnd: {
+            transform: "none",
+        },
         transition: SPRING_ENTRANCE,
     },
 };

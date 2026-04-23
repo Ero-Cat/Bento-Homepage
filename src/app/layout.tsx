@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Quicksand } from "next/font/google";
 import { siteConfig } from "@/config/site";
 import { BackgroundLayer } from "@/components/background-layer";
+import { LiquidGlassProvider } from "@/components/liquid-glass-provider";
 import fs from "node:fs";
 import path from "node:path";
 import "./globals.css";
@@ -68,10 +69,12 @@ export default function RootLayout({
   const bgImages = getBgImages();
 
   return (
-    <html lang="en" suppressHydrationWarning style={themeVars}>
+    <html lang="en" data-liquid-glass="loading" suppressHydrationWarning style={themeVars}>
       <body className={`${quicksand.variable} antialiased`}>
         <BackgroundLayer images={bgImages} />
-        {children}
+        <LiquidGlassProvider>
+          {children}
+        </LiquidGlassProvider>
       </body>
     </html>
   );

@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Music, SkipBack, Play, Pause, SkipForward, Volume2, VolumeX } from "lucide-react";
-import { GlassCard } from "@/components/glass-card";
+import { siteConfig } from "@/config/site";
 
 /* ============================================================
    Types
@@ -35,19 +35,23 @@ function getSongUrl(songId: number) {
 }
 
 /* ============================================================
-   NowPlayingCard Component — iPhone Lock Screen Glass Style
+   NowPlayingCard Component — iOS media card style
    with real audio playback
    ============================================================ */
-interface NowPlayingCardProps {
-    tracks: NeteaseTrack[];
-}
+export function NowPlayingCard() {
+    const tracks = useMemo<NeteaseTrack[]>(
+        () => (siteConfig.netease?.tracks ?? []).map((t) => ({ ...t })),
+        []
+    );
 
-export function NowPlayingCard({ tracks }: NowPlayingCardProps) {
-    const [currentIdx, setCurrentIdx] = useState(0);
+    const [currentIdx, setCurrentIdx] = useState(() =>
+        tracks.length > 1 ? Math.floor(Math.random() * tracks.length) : 0
+    );
     const [isPlaying, setIsPlaying] = useState(false);
     const [isMuted, setIsMuted] = useState(false);
+    // Real audio duration from loadedmetadata (track.duration is 0 in config)
+    const [audioDuration, setAudioDuration] = useState(0);
 
-    /* Refs for zero-render progress animation */
     const barRef = useRef<HTMLDivElement>(null);
     const timeRef = useRef<HTMLSpanElement>(null);
     const rafRef = useRef<number>(0);
@@ -55,17 +59,39 @@ export function NowPlayingCard({ tracks }: NowPlayingCardProps) {
     /* Audio element ref */
     const audioRef = useRef<HTMLAudioElement>(null);
 
-    /* Pick a random starting track on mount + set default volume */
+    /* Ref: when true, the next currentIdx change should auto-play the new track */
+    const pendingPlayRef = useRef(false);
+
+    /* Set default volume */
     useEffect(() => {
-        if (tracks.length > 1) {
-            setTimeout(() => {
-                setCurrentIdx(Math.floor(Math.random() * tracks.length));
-            }, 0);
-        }
         if (audioRef.current) {
             audioRef.current.volume = 0.78;
         }
-    }, [tracks.length]);
+    }, []);
+
+    /* loadedmetadata — get real track duration */
+    useEffect(() => {
+        const audio = audioRef.current;
+        if (!audio) return;
+        const onMeta = () => setAudioDuration(audio.duration || 0);
+        audio.addEventListener("loadedmetadata", onMeta);
+        return () => audio.removeEventListener("loadedmetadata", onMeta);
+    }, []);
+
+    /* Auto-play when currentIdx changes via prev/next */
+    useEffect(() => {
+        if (!pendingPlayRef.current) return;
+        pendingPlayRef.current = false;
+        const audio = audioRef.current;
+        const t = tracks[currentIdx];
+        if (!audio || !t) return;
+        setAudioDuration(0);
+        audio.src = getSongUrl(t.songId);
+        audio.load();
+        audio.play()
+            .then(() => setIsPlaying(true))
+            .catch(() => setIsPlaying(false));
+    }, [currentIdx, tracks]);
 
     const track = tracks[currentIdx] ?? null;
 
@@ -136,46 +162,26 @@ export function NowPlayingCard({ tracks }: NowPlayingCardProps) {
         const audio = audioRef.current;
         if (audio) {
             audio.pause();
-            audio.currentTime = 0;
         }
-        setCurrentIdx((i) => (i + 1) % tracks.length);
         if (barRef.current) barRef.current.style.width = "0%";
         if (timeRef.current) timeRef.current.textContent = "0:00";
-
-        setIsPlaying(true);
-        setTimeout(() => {
-            const a = audioRef.current;
-            if (a) {
-                const newIdx = (currentIdx + 1) % tracks.length;
-                a.src = getSongUrl(tracks[newIdx].songId);
-                a.load();
-                a.play().catch(() => { });
-            }
-        }, 50);
-    }, [tracks, currentIdx]);
+        setIsPlaying(false);
+        pendingPlayRef.current = true;
+        setCurrentIdx((i) => (i + 1) % tracks.length);
+    }, [tracks.length]);
 
     const prevTrack = useCallback(() => {
         if (tracks.length <= 1) return;
         const audio = audioRef.current;
         if (audio) {
             audio.pause();
-            audio.currentTime = 0;
         }
-        setCurrentIdx((i) => (i - 1 + tracks.length) % tracks.length);
         if (barRef.current) barRef.current.style.width = "0%";
         if (timeRef.current) timeRef.current.textContent = "0:00";
-
-        setIsPlaying(true);
-        setTimeout(() => {
-            const a = audioRef.current;
-            if (a) {
-                const newIdx = (currentIdx - 1 + tracks.length) % tracks.length;
-                a.src = getSongUrl(tracks[newIdx].songId);
-                a.load();
-                a.play().catch(() => { });
-            }
-        }, 50);
-    }, [tracks, currentIdx]);
+        setIsPlaying(false);
+        pendingPlayRef.current = true;
+        setCurrentIdx((i) => (i - 1 + tracks.length) % tracks.length);
+    }, [tracks.length]);
 
     /* Handle audio ended — auto-advance */
     useEffect(() => {
@@ -184,10 +190,12 @@ export function NowPlayingCard({ tracks }: NowPlayingCardProps) {
 
         const handleEnded = () => {
             if (tracks.length > 1) {
-                // Multi-track: advance to next song (loops through playlist)
-                nextTrack();
+                if (barRef.current) barRef.current.style.width = "0%";
+                if (timeRef.current) timeRef.current.textContent = "0:00";
+                setIsPlaying(false);
+                pendingPlayRef.current = true;
+                setCurrentIdx((i) => (i + 1) % tracks.length);
             } else {
-                // Single track: loop the same song
                 audio.currentTime = 0;
                 audio.play().catch(() => { });
                 if (barRef.current) barRef.current.style.width = "0%";
@@ -197,7 +205,7 @@ export function NowPlayingCard({ tracks }: NowPlayingCardProps) {
 
         audio.addEventListener("ended", handleEnded);
         return () => audio.removeEventListener("ended", handleEnded);
-    }, [nextTrack, tracks.length]);
+    }, [tracks.length]);
 
     /* Mute toggle */
     useEffect(() => {
@@ -220,29 +228,25 @@ export function NowPlayingCard({ tracks }: NowPlayingCardProps) {
 
     if (!tracks.length) {
         return (
-            <GlassCard className="!p-0 overflow-hidden h-full">
-                <div className="relative w-full h-full min-h-[200px]">
-                    <div className="flex flex-col items-center justify-center h-full gap-2">
+            <div className="ios-media-card h-full min-h-[200px]">
+                <div className="ios-media-card__panel flex h-full flex-col items-center justify-center gap-2 px-5 py-6">
+                    <div className="ios-media-card__button flex h-14 w-14 items-center justify-center rounded-full text-white/45">
                         <Music size={28} className="text-white/40" />
-                        <p className="text-sm text-white/40">暂无播放记录</p>
                     </div>
+                    <p className="text-sm text-white/55">暂无播放记录</p>
                 </div>
-            </GlassCard>
+            </div>
         );
     }
 
-    const totalTime = track ? formatTime(track.duration) : "0:00";
+    const totalTime = audioDuration > 0 ? formatTime(audioDuration * 1000) : "--:--";
 
     return (
-        <GlassCard className="!p-0 h-full">
+        <div className="ios-media-card h-full min-h-[200px]">
             {/* Hidden audio element */}
             <audio ref={audioRef} preload="none" />
 
-            {/* Inner container with its own border-radius + overflow clip */}
-            <div
-                className="relative w-full h-full min-h-[200px]"
-                style={{ background: 'rgb(30,30,30)', borderRadius: 'inherit', overflow: 'hidden' }}
-            >
+            <div className="ios-media-card__panel relative h-full w-full min-h-[200px]">
                 {/* ── Layer 1: Pre-blurred album art background (crossfade — no black corner flash) ── */}
                 <AnimatePresence>
                     {track?.albumCover && (
@@ -264,17 +268,18 @@ export function NowPlayingCard({ tracks }: NowPlayingCardProps) {
                 <div
                     className="absolute inset-0 pointer-events-none"
                     style={{
-                        background: "linear-gradient(145deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.03) 50%, rgba(0,0,0,0.06) 100%)",
+                        background:
+                            "linear-gradient(180deg, rgba(15,23,42,0.16) 0%, rgba(15,23,42,0.32) 52%, rgba(15,23,42,0.46) 100%)",
                     }}
                 />
 
                 {/* ── Layer 3: Content ── */}
-                <div className="relative z-10 flex flex-col justify-between h-full p-5 gap-3">
+                <div className="relative z-10 flex h-full flex-col justify-between gap-3 p-5 md:p-6">
                     {/* ── Top: Album + Info ── */}
                     <div className="flex items-center gap-4">
                         {/* Album Cover */}
                         <div
-                            className="shrink-0 w-[72px] h-[72px] rounded-2xl overflow-hidden"
+                            className="ios-media-card__album glass-media-mask h-[72px] w-[72px] shrink-0 rounded-[24px]"
                             style={{
                                 boxShadow: "0 8px 32px rgba(0,0,0,0.35), 0 2px 8px rgba(0,0,0,0.2)",
                             }}
@@ -313,7 +318,7 @@ export function NowPlayingCard({ tracks }: NowPlayingCardProps) {
 
                         {/* Mute toggle */}
                         <motion.button
-                            className="text-white/40 hover:text-white/70 transition-colors"
+                            className="ios-media-card__button flex h-9 w-9 items-center justify-center rounded-full text-white/50 transition-colors hover:text-white/80"
                             whileTap={{ scale: 0.85 }}
                             onClick={() => setIsMuted(!isMuted)}
                             aria-label={isMuted ? "Unmute" : "Mute"}
@@ -325,17 +330,13 @@ export function NowPlayingCard({ tracks }: NowPlayingCardProps) {
                     {/* ── Progress bar — clickable to seek ── */}
                     <div className="flex flex-col gap-1">
                         <div
-                            className="relative w-full h-[3px] rounded-full bg-white/15 overflow-hidden cursor-pointer"
+                            className="ios-media-card__progress relative h-[4px] w-full cursor-pointer overflow-hidden rounded-full"
                             onClick={handleProgressClick}
                         >
                             <div
                                 ref={barRef}
-                                className="absolute left-0 top-0 h-full rounded-full pointer-events-none"
-                                style={{
-                                    width: "0%",
-                                    background: "rgba(255,255,255,0.75)",
-                                    transition: "none",
-                                }}
+                                className="ios-media-card__progress-fill absolute left-0 top-0 h-full rounded-full pointer-events-none"
+                                style={{ width: "0%", transition: "none" }}
                             />
                         </div>
                         <div className="flex justify-between text-[10px] text-white/35 font-medium tabular-nums">
@@ -355,7 +356,7 @@ export function NowPlayingCard({ tracks }: NowPlayingCardProps) {
                             <SkipBack size={20} fill="currentColor" />
                         </motion.button>
                         <motion.button
-                            className="flex items-center justify-center w-11 h-11 rounded-full bg-white/15 backdrop-blur-sm text-white/90 hover:bg-white/25 transition-colors"
+                            className="ios-media-card__button flex h-11 w-11 items-center justify-center rounded-full text-white/90 transition-colors hover:bg-white/12"
                             whileTap={{ scale: 0.9 }}
                             onClick={togglePlay}
                             aria-label={isPlaying ? "Pause" : "Play"}
@@ -377,6 +378,6 @@ export function NowPlayingCard({ tracks }: NowPlayingCardProps) {
                     </div>
                 </div>
             </div>
-        </GlassCard>
+        </div>
     );
 }

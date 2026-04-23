@@ -132,21 +132,21 @@ export function VRChatStatusCard() {
     const avatarUrl = data?.profilePicOverride || data?.currentAvatarThumbnailImageUrl || "";
 
     return (
-        <GlassCard className="flex flex-col gap-3 p-5 h-full">
+        <GlassCard variant="panel" className="flex flex-col gap-3 p-5 h-full">
             {loading ? (
                 /* ── Skeleton ── */
                 <div className="flex flex-col gap-3 animate-pulse">
                     <div className="flex items-center gap-3">
                         <div
                             className="w-14 h-14 rounded-full shrink-0"
-                            style={{ backgroundColor: "var(--glass-border)" }}
+                            style={{ backgroundColor: "var(--glass-inner-border)" }}
                         />
                         <div className="flex flex-col gap-2 flex-1">
-                            <div className="h-4 w-28 rounded" style={{ backgroundColor: "var(--glass-border)" }} />
-                            <div className="h-3 w-20 rounded" style={{ backgroundColor: "var(--glass-border)", opacity: 0.5 }} />
+                            <div className="h-4 w-28 rounded" style={{ backgroundColor: "var(--glass-inner-border)" }} />
+                            <div className="h-3 w-20 rounded" style={{ backgroundColor: "var(--glass-inner-border)", opacity: 0.5 }} />
                         </div>
                     </div>
-                    <div className="h-12 rounded" style={{ backgroundColor: "var(--glass-border)", opacity: 0.3 }} />
+                    <div className="h-12 rounded" style={{ backgroundColor: "var(--glass-inner-border)", opacity: 0.3 }} />
                 </div>
             ) : error ? (
                 <p className="text-sm text-text-tertiary text-center py-4">无法加载 VRChat 状态</p>
@@ -175,7 +175,7 @@ export function VRChatStatusCard() {
                                     className="absolute bottom-0 right-0 w-4 h-4 rounded-full border-2"
                                     style={{
                                         backgroundColor: statusInfo.color,
-                                        borderColor: "var(--glass-bg)",
+                                        borderColor: "var(--glass-inner-bg)",
                                         animation: statusInfo.pulse ? "pulse 2s ease-in-out infinite" : "none",
                                     }}
                                 />

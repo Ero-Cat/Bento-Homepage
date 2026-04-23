@@ -336,7 +336,7 @@ export function GitHubHeatmapCard() {
     }
 
     return (
-        <GlassCard className="flex flex-col gap-3 p-5 h-full">
+        <GlassCard variant="panel" className="flex flex-col gap-3 p-5 h-full">
             {/* Header */}
             <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-text-primary">GitHub</h3>
@@ -361,7 +361,7 @@ export function GitHubHeatmapCard() {
                                         style={{
                                             width: CELL,
                                             height: CELL,
-                                            backgroundColor: "var(--glass-border)",
+                                            backgroundColor: "var(--glass-inner-border)",
                                         }}
                                     />
                                 ))}
@@ -440,13 +440,10 @@ export function GitHubHeatmapCard() {
                     <motion.div
                         initial={{ opacity: 0, y: 4 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="absolute pointer-events-none px-2.5 py-1.5 rounded-lg text-xs font-medium z-50"
+                        className="glass-floating-ui absolute pointer-events-none z-50 rounded-lg px-2.5 py-1.5 text-xs font-medium"
                         style={{
                             left: tooltip.x,
                             top: tooltip.y,
-                            background: "var(--glass-bg)",
-                            backdropFilter: "blur(12px)",
-                            border: "1px solid var(--glass-border)",
                             color: "var(--text-primary)",
                             transform: "translateX(-50%)",
                             whiteSpace: "nowrap",

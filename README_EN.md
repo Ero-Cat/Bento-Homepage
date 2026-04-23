@@ -10,10 +10,14 @@
 
 ## ✨ Features
 
-- **Liquid Glass Design** — Frosted glass cards with `backdrop-filter: blur()`, translucent borders, 3D tilt + glare overlay
+- **Shared Liquid Glass Renderer** — All `GlassCard` shells are rendered through a single `LiquidGlassCanvas` with `bgPass → vBlurPass → hBlurPass → mainPass`
+- **Synchronized Background Crossfade** — Page background and liquid glass now share the same transition timing when images rotate
+- **Demand-Driven Rendering** — The shared canvas only redraws when backgrounds, geometry, scroll position, or initial entrance settling actually change
+- **Runtime Quality Tiers** — Blur downsampling and FBO precision are adjusted from device DPR, pointer type, memory, and card density
+- **Per-Card Scissor Rendering** — The main pass clips work to each card’s actual screen region instead of rasterizing every card as a full-screen draw
 - **Bento Grid Layout** — Responsive CSS Grid (4 → 1 columns) for desktop / mobile
 - **Config-Driven** — All personal info lives in a single `src/config/site.ts`; zero component edits needed
-- **🎵 NetEase Music Player** — Real audio playback with play/pause, skip, seekable progress bar, volume control, auto-loop
+- **🎵 NetEase Music Player** — Real audio playback with play/pause, skip, seekable progress bar, volume control, auto-loop, using a dedicated iOS media-card material
 - **🎮 VRChat Live Status** — Real-time online status via VRCX-Cloud API with 15s polling, trust rank, badges
 - **📊 GitHub Contribution Heatmap** — No token needed, loads past year's contribution data
 - **📝 Blog Card** — Halo 2.x Content API integration, shows recent posts (optional)
@@ -25,7 +29,8 @@
 - **Light / Dark Auto** — Follows system `prefers-color-scheme` with dual-mode design tokens
 - **Live GitHub Stats** — Project cards auto-fetch ⭐ Stars and 🍴 Forks from GitHub API
 - **Entrance Animations** — Staggered fade-in + slide-up with spring physics via Framer Motion
-- **Performance Optimized** — rAF-driven zero-render progress bar, consolidated `useTransform` chains
+- **Flattened Inner Controls** — Tags, buttons, and embedded surfaces are kept visually quiet instead of glossy or bulbous
+- **Performance Optimized** — shared WebGL canvas, invalidation-driven rendering, geometry caching, blur downsampling, and rAF-driven zero-render progress bar
 - **SEO Ready** — Open Graph, Twitter Card, and `<meta>` tags driven from config
 - **Static Export** — `next build` outputs pure HTML/CSS/JS; no server required
 - **🗺️ Footprint Map** — Mapbox Standard interactive map marking visited cities, pulse markers + glassmorphism popups, auto-detects browser language for map labels, **IP Distance Display** (auto-calculates straight-line distance from visitor to marked cities)
@@ -40,7 +45,7 @@
 | Card | Component | Description |
 |---|---|---|
 | 👤 Profile | `profile-card.tsx` | Multi-avatar 3D carousel, multilingual greeting, typewriter, i18n bio |
-| 🎵 Now Playing | `now-playing-card.tsx` | NetEase Music player, iPhone lock-screen glass style |
+| 🎵 Now Playing | `now-playing-card.tsx` | NetEase Music player with a dedicated iOS media-card style |
 | 📸 Photo Stack | `photo-stack-card.tsx` | Interactive photo stack with click-to-expand |
 | 🎮 VRChat | `vrchat-status-card.tsx` | Live online status, avatar, trust rank, badges |
 | 📊 Heatmap | `github-heatmap-card.tsx` | GitHub contribution heatmap (past year) |
@@ -97,11 +102,11 @@ Bento-Homepage/
 │   │   ├── github-heatmap-card.tsx # GitHub contribution heatmap
 │   │   ├── vrchat-status-card.tsx  # VRChat live status
 │   │   ├── blog-card.tsx         # Blog recent posts (Halo 2.x)
-│   │   ├── social-card.tsx       # Social link icons
-│   │   ├── skills-card.tsx       # Interest pill tags
-│   │   ├── hardware-card.tsx     # Hardware inventory
-│   │   ├── projects-card.tsx     # Featured projects (GitHub Stars/Forks)
-│   │   ├── friends-card.tsx      # Friend links
+│   │   ├── social-card.tsx       # Social link icons (Prism orb buttons)
+│   │   ├── skills-card.tsx       # Interest tags (Prism pills)
+│   │   ├── hardware-card.tsx     # Hardware inventory (Prism pills)
+│   │   ├── projects-card.tsx     # Featured projects (Prism panels + badges)
+│   │   ├── friends-card.tsx      # Friend links (Prism avatar discs)
 │   │   ├── map-card.tsx          # Mapbox interactive map (footprints + IP distance)
 │   │   ├── weather-card.tsx      # Live weather (open-meteo, dynamic gradient animations)
 │   │   ├── software-card.tsx     # Frequently used apps

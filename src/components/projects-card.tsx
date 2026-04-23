@@ -1,9 +1,13 @@
 "use client";
 
+import React from "react";
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import { siteConfig } from "@/config/site";
 import { GlassCard } from "@/components/glass-card";
 import { ExternalLink, Star, GitFork } from "lucide-react";
+import { SPRING_GENTLE } from "@/lib/motion";
+import { cn } from "@/lib/utils";
 
 interface RepoStats {
     stars: number;
@@ -63,61 +67,84 @@ export function ProjectsCard() {
     });
 
     return (
-        <GlassCard className="flex flex-col gap-3 h-full p-5 md:p-6">
-            {/* <h2 className="text-xl font-semibold text-text-primary">Projects</h2> */}
-            <div className="flex flex-col gap-2">
-                {sorted.map((project) => {
+        <GlassCard variant="panel" className="flex h-full flex-col p-5 md:p-6">
+            <div className="flex flex-col">
+                {sorted.map((project, i) => {
                     const repoStats = stats[project.url];
 
                     return (
-                        <a
-                            key={project.name}
-                            href={project.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="group flex flex-col gap-2 rounded-2xl p-4 transition-colors hover:bg-[rgba(var(--tint-rgb),0.06)]"
-                        >
-                            <div className="flex items-center gap-2">
-                                <span className="font-semibold text-base text-text-primary group-hover:text-tint transition-colors">
-                                    {project.name}
-                                </span>
+                        <React.Fragment key={project.name}>
+                            {i > 0 && (
+                                <div
+                                    className="h-px mx-1"
+                                    style={{ background: "var(--glass-divider)" }}
+                                />
+                            )}
+                            <motion.a
+                                href={project.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="group relative flex flex-col gap-1.5 rounded-xl px-3 py-3 -mx-1 transition-colors hover:bg-[var(--surface-bg)] cursor-pointer"
+                                whileHover={{ x: 2 }}
+                                whileTap={{ scale: 0.97 }}
+                                transition={SPRING_GENTLE}
+                            >
+                                {/* Left tint accent — appears on hover */}
+                                <div
+                                    className="absolute left-0 top-2.5 bottom-2.5 w-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                                    style={{ background: "var(--tint-color)" }}
+                                />
 
-                                {/* Star & Fork badges */}
-                                {repoStats && (
-                                    <div className="flex items-center gap-3 ml-auto text-text-tertiary text-sm">
-                                        <span className="flex items-center gap-1">
-                                            <Star size={14} />
-                                            {repoStats.stars}
-                                        </span>
-                                        <span className="flex items-center gap-1">
-                                            <GitFork size={14} />
-                                            {repoStats.forks}
-                                        </span>
+                                {/* Name + external icon */}
+                                <div className="flex items-center justify-between gap-2">
+                                    <span className="font-semibold text-[15px] text-text-primary group-hover:text-tint transition-colors duration-150 leading-snug">
+                                        {project.name}
+                                    </span>
+                                    <div className="flex items-center gap-2.5 shrink-0">
+                                        {repoStats && (
+                                            <>
+                                                <span className="flex items-center gap-0.5 text-[12px] text-text-tertiary">
+                                                    <Star size={11} style={{ color: "#ff9f0a" }} />
+                                                    {repoStats.stars}
+                                                </span>
+                                                <span className="flex items-center gap-0.5 text-[12px] text-text-tertiary">
+                                                    <GitFork size={11} />
+                                                    {repoStats.forks}
+                                                </span>
+                                            </>
+                                        )}
+                                        <ExternalLink
+                                            size={12}
+                                            className="text-text-tertiary opacity-0 group-hover:opacity-60 transition-opacity"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Description */}
+                                <p className="text-[13px] text-text-secondary leading-relaxed line-clamp-2">
+                                    {project.description}
+                                </p>
+
+                                {/* Tags */}
+                                {project.tags && project.tags.length > 0 && (
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {project.tags.map((tag) => (
+                                            <span
+                                                key={tag}
+                                                className="inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-medium"
+                                                style={{
+                                                    background: "rgba(var(--tint-rgb), 0.08)",
+                                                    color: "var(--tint-color)",
+                                                    border: "1px solid rgba(var(--tint-rgb), 0.16)",
+                                                }}
+                                            >
+                                                {tag}
+                                            </span>
+                                        ))}
                                     </div>
                                 )}
-
-                                <ExternalLink
-                                    size={14}
-                                    className="text-text-tertiary opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
-                                />
-                            </div>
-                            <p className="text-sm text-text-secondary leading-relaxed">
-                                {project.description}
-                            </p>
-                            {project.tags && project.tags.length > 0 && (
-                                <div className="flex flex-wrap gap-2 mt-1">
-                                    {project.tags.map((tag) => (
-                                        <span
-                                            key={tag}
-                                            className="text-xs font-medium text-text-tertiary px-2.5 py-1 rounded-lg"
-                                            style={{ background: "var(--icon-bg)" }}
-                                        >
-                                            {tag}
-                                        </span>
-                                    ))}
-                                </div>
-                            )}
-                        </a>
+                            </motion.a>
+                        </React.Fragment>
                     );
                 })}
             </div>

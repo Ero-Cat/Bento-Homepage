@@ -52,19 +52,22 @@ export function ProfileCard({ avatarImages }: ProfileCardProps) {
             : [siteConfig.profile.avatar];
 
     return (
-        <GlassCard className="flex flex-col items-center justify-center text-center gap-4 p-5 md:p-6 md:flex-row md:text-left md:items-center md:gap-5 h-full">
+        <GlassCard
+            variant="hero"
+            className="flex h-full flex-col items-center justify-center gap-4 p-5 text-center md:flex-row md:items-center md:gap-5 md:p-6 md:text-left"
+        >
             {/* Avatar Carousel */}
             <AvatarCarousel images={images} alt={name} />
 
             {/* Info */}
             <div className="flex flex-col gap-2 flex-1 min-w-0">
                 {/* Line 1: Hello 👋 */}
-                <p className="text-2xl font-medium text-text-secondary animate-fade-in">
+                <p className="text-xl font-medium text-text-secondary animate-fade-in">
                     {hello}{" "}
                     <span className="inline-block animate-wave origin-[70%_70%]">👋</span>
                 </p>
                 {/* Line 2: I'm + Name */}
-                <h1 className="text-4xl font-bold tracking-tight text-text-primary">
+                <h1 className="text-[2.2rem] md:text-[2.6rem] font-bold tracking-tight text-text-primary leading-none">
                     <span className="text-text-secondary font-medium">{iam}</span>{" "}
                     {aliases && aliases.length > 0 ? (
                         <Typewriter aliases={aliases} />
@@ -72,14 +75,14 @@ export function ProfileCard({ avatarImages }: ProfileCardProps) {
                         name
                     )}
                 </h1>
-                <p className="text-xl font-medium text-text-secondary">{title}</p>
+                <p className="text-lg font-semibold text-text-secondary tracking-[-0.01em]">{title}</p>
                 {location && (
-                    <p className="flex items-center justify-center gap-1.5 text-base text-text-tertiary md:justify-start">
-                        <MapPin size={16} className="shrink-0" />
+                    <p className="flex items-center justify-center gap-1.5 text-[15px] text-text-tertiary md:justify-start">
+                        <MapPin size={14} className="shrink-0" style={{ color: "var(--tint-color)" }} />
                         {location}
                     </p>
                 )}
-                <p className="mt-1 text-base leading-relaxed text-text-secondary">
+                <p className="text-[15px] leading-relaxed text-text-secondary">
                     {localizedDesc}
                 </p>
             </div>

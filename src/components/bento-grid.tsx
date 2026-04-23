@@ -13,14 +13,14 @@ export function BentoGrid({ children, className }: BentoGridProps) {
     return (
         <motion.div
             className={cn(
-                "grid w-full max-w-7xl gap-5 px-8 mx-auto",
+                "mx-auto grid w-full max-w-[1440px] gap-5 px-4 sm:px-6 lg:px-8",
                 "grid-cols-1",
                 "md:grid-cols-4",
-                "md:auto-rows-[100px] auto-rows-auto grid-flow-row-dense",
+                "auto-rows-auto grid-flow-row-dense md:auto-rows-[106px] xl:auto-rows-[110px]",
                 className
             )}
             variants={containerVariants}
-            initial="hidden"
+            initial={false}
             animate="visible"
         >
             {children}

@@ -43,8 +43,15 @@ export interface SiteConfig {
         tags?: string[];
     }[];
     netease?: {
-        /** 网易云歌曲 ID 列表，卡片将随机展示其中一首 */
-        songIds: number[];
+        /** 网易云曲目列表，包含完整元数据（无需运行时 API 请求） */
+        tracks: {
+            songId: number;
+            name: string;
+            artist: string;
+            album: string;
+            albumCover: string;
+            duration: number; // ms
+        }[];
     };
     github?: {
         /** GitHub 用户名，用于贡献热力图 */
@@ -228,7 +235,32 @@ export const siteConfig: SiteConfig = {
     ],
 
     netease: {
-        songIds: [1814460094, 1408944670, 1854700148],
+        tracks: [
+            {
+                songId: 1814460094,
+                name: "Waves That Sound Like You",
+                artist: "BigRicePiano",
+                album: "Waves That Sound Like You",
+                albumCover: "https://p1.music.126.net/N_1k-mBbHtEXz0z9Bvipzg==/109951165656563230.jpg",
+                duration: 0,
+            },
+            {
+                songId: 1408944670,
+                name: "The Sound of Rain",
+                artist: "BigRicePiano",
+                album: "The Sound of Rain",
+                albumCover: "https://p2.music.126.net/6Uk3QRGKLaCTvfOFXDKyLQ==/109951165017760372.jpg",
+                duration: 0,
+            },
+            {
+                songId: 1854700148,
+                name: "晚",
+                artist: "柠安",
+                album: "晚",
+                albumCover: "https://p1.music.126.net/o3m413wu0IE6MMDHaPBbUA==/109951166102809451.jpg",
+                duration: 0,
+            },
+        ],
     },
 
     github: {
@@ -294,10 +326,10 @@ export const siteConfig: SiteConfig = {
     },
 
     theme: {
-        tintColor: "#fb7185",
-        tintColorRGB: "251, 113, 133",
-        gradientFrom: "#020617",
-        gradientVia: "#0f172a",
-        gradientTo: "#1e293b",
+        tintColor: "#ff375f",
+        tintColorRGB: "255, 55, 95",
+        gradientFrom: "#000000",
+        gradientVia: "#090909",
+        gradientTo: "#111116",
     },
 };

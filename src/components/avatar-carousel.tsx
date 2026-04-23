@@ -105,7 +105,7 @@ export function AvatarCarousel({
                         style={{
                             width: size,
                             height: size,
-                            borderColor: "var(--glass-border)",
+                            borderColor: "var(--glass-inner-border)",
                         }}
                     />
                 </motion.div>

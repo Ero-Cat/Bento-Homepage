@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "skills": {
+    "apple-ui-design": {
+      "source": "smithery.ai",
+      "sourceType": "well-known",
+      "computedHash": "30e2a14deceef915fad0b7c64446829fe7ebf557bdbc00241ef1b00acc46bd81"
+    },
+    "bento-design": {
+      "source": "smithery.ai",
+      "sourceType": "well-known",
+      "computedHash": "def8b77405b9bdd04a8e058958c478b1a7a3160de4f3f5610d7ffbda8987c5d4"
+    },
+    "frontend-design": {
+      "source": "smithery.ai",
+      "sourceType": "well-known",
+      "computedHash": "e8118284a6365753790d44bb2758a6032b3af27fa84696428d9233f2be0f4e78"
+    }
+  }
+}

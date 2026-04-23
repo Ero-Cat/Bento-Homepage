@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { LIQUID_GLASS_CANVAS } from "@/lib/liquid-glass";
 
 
 
@@ -24,6 +25,7 @@ interface BackgroundLayerProps {
 export function BackgroundLayer({ images }: BackgroundLayerProps) {
     const [shuffled, setShuffled] = useState<string[]>([]);
     const [index, setIndex] = useState(0);
+    const previousUrlRef = useRef("");
 
     // Shuffle on mount (client only) to avoid hydration mismatch
     useEffect(() => {
@@ -50,15 +52,70 @@ export function BackgroundLayer({ images }: BackgroundLayerProps) {
     }, [index, shuffled]);
 
     const currentImage = shuffled.length > 0 ? shuffled[index] : images[0];
+    const nextImage =
+        shuffled.length > 1 ? shuffled[(index + 1) % shuffled.length] : currentImage;
+
+    useEffect(() => {
+        const root = document.documentElement;
+        const activeUrl = currentImage ? `/bg/${currentImage}` : "";
+        const nextUrl = nextImage ? `/bg/${nextImage}` : "";
+        const previousUrl = previousUrlRef.current;
+        let cleanupTimer: number | undefined;
+
+        if (activeUrl) {
+            root.dataset[LIQUID_GLASS_CANVAS.activeBackgroundDatasetKey] = activeUrl;
+        } else {
+            delete root.dataset[LIQUID_GLASS_CANVAS.activeBackgroundDatasetKey];
+        }
+
+        if (nextUrl) {
+            root.dataset[LIQUID_GLASS_CANVAS.nextBackgroundDatasetKey] = nextUrl;
+        } else {
+            delete root.dataset[LIQUID_GLASS_CANVAS.nextBackgroundDatasetKey];
+        }
+
+        if (previousUrl && previousUrl !== activeUrl) {
+            root.dataset[LIQUID_GLASS_CANVAS.previousBackgroundDatasetKey] = previousUrl;
+            root.dataset[LIQUID_GLASS_CANVAS.backgroundTransitionDurationDatasetKey] =
+                `${LIQUID_GLASS_CANVAS.backgroundTransitionMs}`;
+
+            cleanupTimer = window.setTimeout(() => {
+                if (root.dataset[LIQUID_GLASS_CANVAS.activeBackgroundDatasetKey] === activeUrl) {
+                    delete root.dataset[LIQUID_GLASS_CANVAS.previousBackgroundDatasetKey];
+                    delete root.dataset[LIQUID_GLASS_CANVAS.backgroundTransitionDurationDatasetKey];
+                }
+            }, LIQUID_GLASS_CANVAS.backgroundTransitionMs);
+        } else {
+            delete root.dataset[LIQUID_GLASS_CANVAS.previousBackgroundDatasetKey];
+            delete root.dataset[LIQUID_GLASS_CANVAS.backgroundTransitionDurationDatasetKey];
+        }
+
+        previousUrlRef.current = activeUrl;
+
+        return () => {
+            if (cleanupTimer) {
+                window.clearTimeout(cleanupTimer);
+            }
+        };
+    }, [currentImage, nextImage]);
+
+    useEffect(() => {
+        const root = document.documentElement;
+        return () => {
+            delete root.dataset[LIQUID_GLASS_CANVAS.activeBackgroundDatasetKey];
+            delete root.dataset[LIQUID_GLASS_CANVAS.nextBackgroundDatasetKey];
+            delete root.dataset[LIQUID_GLASS_CANVAS.previousBackgroundDatasetKey];
+            delete root.dataset[LIQUID_GLASS_CANVAS.backgroundTransitionDurationDatasetKey];
+        };
+    }, []);
 
     return (
         <div className="fixed inset-0 z-0" aria-hidden="true">
             {/* Crossfade background images */}
-            <AnimatePresence mode="sync">
+            <AnimatePresence initial={false} mode="sync">
                 <motion.div
                     key={currentImage}
                     className="absolute inset-0"
-                    initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 2, ease: "easeInOut" }}
@@ -78,57 +135,10 @@ export function BackgroundLayer({ images }: BackgroundLayerProps) {
                     background: `linear-gradient(
                         to bottom,
                         var(--bg-overlay-gradient-top) 0%,
-                        var(--bg-overlay) 40%,
-                        var(--bg-overlay) 60%,
+                        var(--bg-overlay) 46%,
+                        var(--bg-overlay) 58%,
                         var(--bg-overlay-gradient-bottom) 100%
                     )`,
-                }}
-            />
-
-            {/* Floating color orbs — "Crystal Clarity" Edition */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                {/* Orb 1 — Jewel Rose/Tint */}
-                <div
-                    className="absolute w-[700px] h-[700px] rounded-full opacity-20"
-                    style={{
-                        top: "-10%",
-                        left: "-5%",
-                        background: "radial-gradient(circle, rgba(var(--tint-rgb), 0.25) 0%, transparent 70%)",
-                        animation: "float-orb-1 25s ease-in-out infinite",
-                        filter: "blur(120px)",
-                    }}
-                />
-                {/* Orb 2 — Cool Blue/Slate */}
-                <div
-                    className="absolute w-[600px] h-[600px] rounded-full opacity-15"
-                    style={{
-                        bottom: "-5%",
-                        right: "-5%",
-                        background: "radial-gradient(circle, rgba(56, 189, 248, 0.2) 0%, transparent 70%)",
-                        animation: "float-orb-2 30s ease-in-out infinite",
-                        filter: "blur(120px)",
-                    }}
-                />
-                {/* Orb 3 — Warm Platinum/Gold */}
-                <div
-                    className="absolute w-[500px] h-[500px] rounded-full opacity-10"
-                    style={{
-                        top: "40%",
-                        left: "50%",
-                        transform: "translateX(-50%)",
-                        background: "radial-gradient(circle, rgba(200, 200, 220, 0.2) 0%, transparent 70%)",
-                        animation: "float-orb-3 22s ease-in-out infinite",
-                        filter: "blur(100px)",
-                    }}
-                />
-            </div>
-
-            {/* Noise grain texture */}
-            <div
-                className="absolute inset-0 opacity-[0.02] mix-blend-overlay pointer-events-none"
-                style={{
-                    backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
-                    backgroundRepeat: "repeat",
                 }}
             />
         </div>

@@ -264,7 +264,12 @@ export function MapCard() {
     if (!mapConfig) return null;
 
     return (
-        <GlassCard className="map-card relative p-0 overflow-hidden h-full">
+        <GlassCard
+            variant="media"
+            className="map-card relative !p-0 h-full"
+            contentClassName="glass-media-mask relative h-full"
+            innerClip
+        >
             {/* Floating header overlay */}
             <div className="map-header">
                 <span className="text-sm text-text-tertiary">

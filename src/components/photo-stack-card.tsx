@@ -52,19 +52,19 @@ export function PhotoStackCard({ photos }: PhotoStackCardProps) {
 
     if (photos.length === 0) {
         return (
-            <GlassCard className="flex flex-col items-center justify-center gap-3 p-12">
+            <GlassCard variant="media" className="flex flex-col items-center justify-center gap-3 p-12">
                 <ImageIcon size={40} className="text-text-tertiary" />
                 <p className="text-sm text-text-tertiary">
-                    Place photos in <code className="text-xs px-1.5 py-0.5 rounded-md" style={{ background: "var(--icon-bg)" }}>public/photos/</code>
+                    Place photos in <code className="prism-badge prism-static rounded-md px-1.5 py-0.5 text-xs">public/photos/</code>
                 </p>
             </GlassCard>
         );
     }
 
     return (
-        <GlassCard className="p-3 h-full flex flex-col">
+        <GlassCard variant="media" className="p-3 h-full flex flex-col">
             {/* Stack area — overflow-hidden clips photos that would escape the card top */}
-            <div className="relative w-full flex-1 min-h-0 overflow-hidden rounded-xl">
+            <div className="glass-media-mask relative w-full flex-1 min-h-0">
                 {/* Extra top padding absorbs the upward stacking offsets */}
                 <ul
                     className="absolute inset-x-2 bottom-2 flex justify-center items-center"
@@ -97,7 +97,7 @@ export function PhotoStackCard({ photos }: PhotoStackCardProps) {
                                 className="w-full h-full rounded-2xl object-cover shadow-lg select-none pointer-events-none"
                                 style={{
                                     aspectRatio: "16 / 9",
-                                    border: "2px solid var(--glass-border)",
+                                    border: "1px solid var(--glass-inner-border)",
                                 }}
                                 loading={index === cards.length - 1 ? "eager" : "lazy"}
                                 draggable={false}

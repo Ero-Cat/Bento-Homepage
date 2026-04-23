@@ -24,7 +24,7 @@ function AppIcon({ app }: { app: { name: string; icon: string } }) {
         : `/icons/software/${app.icon}.svg`;
 
     const iconContent = showFallback ? (
-        <span className="text-white/90 text-2xl font-bold drop-shadow-sm">
+        <span className="text-text-primary text-2xl font-bold drop-shadow-[0_1px_1px_rgba(255,255,255,0.35)] dark:text-white/90 dark:drop-shadow-sm">
             {app.name.charAt(0)}
         </span>
     ) : (
@@ -64,11 +64,16 @@ export function SoftwareCard() {
     const { software } = siteConfig;
 
     return (
-        <GlassCard className="flex flex-col gap-0 !p-0 overflow-hidden h-full">
+        <GlassCard
+            variant="media"
+            className="flex h-full flex-col gap-0 !p-0"
+            contentClassName="glass-media-mask h-full"
+            innerClip
+        >
             {/* ── macOS Title Bar with traffic lights ── */}
             <div
-                className="flex items-center px-4 py-2.5"
-                style={{ borderBottom: "1px solid var(--glass-border)" }}
+                className="prism-panel prism-static flex items-center px-4 py-2.5"
+                style={{ borderBottom: "1px solid var(--glass-divider)" }}
             >
                 {/* Traffic lights */}
                 <div className="flex gap-[7px]">

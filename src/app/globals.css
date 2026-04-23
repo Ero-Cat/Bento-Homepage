@@ -2,153 +2,150 @@
 
 /* ============================================================
    Design Tokens — Light Mode (Default)
+   Apple HIG: clarity, deference, depth
    ============================================================ */
 :root {
-  /* Background gradient — Light ("Crystal Clarity" Platinum) */
-  --bg-gradient-from: #f3f6f8;
-  --bg-gradient-via: #eceff2;
-  --bg-gradient-to: #f8fafc;
-  --glow-color: rgba(60, 80, 100, 0.04);
+  /* Background gradient — Light (Apple.com whites) */
+  --bg-gradient-from: #ffffff;
+  --bg-gradient-via: #f5f5f7;
+  --bg-gradient-to: #fbfbfd;
+  --glow-color: rgba(194, 0, 101, 0.05);
 
-  /* Glass effect tokens — Light (Liquid Glass — Ultra Vibrant) */
-  --glass-bg: rgba(255, 255, 255, 0.12);
-  --glass-bg-hover: rgba(255, 255, 255, 0.20);
-  /* Border is transparent — replaced by inset box-shadow inner strokes */
-  --glass-border: transparent;
-  --glass-border-hover: transparent;
-  --glass-blur: 36px;
-  --glass-saturate: 2.0;
+  /* Glass shape token — used by card border-radius */
   --glass-radius: 28px;
+  /* Fallback glass — luminous frosted white */
+  --glass-fallback-bg: rgba(255, 255, 255, 0.68);
+  --glass-fallback-border: rgba(0, 0, 0, 0.05);
+  --glass-fallback-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
+  /* Shell (WebGL backing) */
+  --glass-shell-fill: rgba(255, 255, 255, 0.20);
+  --glass-shell-fill-strong: rgba(255, 255, 255, 0.36);
+  --glass-shell-border: rgba(255, 255, 255, 0.58);
+  --glass-shell-highlight: rgba(255, 255, 255, 0.88);
+  --glass-shell-shadow: rgba(0, 0, 0, 0.06);
+  --glass-inner-bg: rgba(255, 255, 255, 0.28);
+  --glass-inner-border: rgba(255, 255, 255, 0.44);
+  --glass-divider: rgba(0, 0, 0, 0.06);
+  --glass-floating-bg: rgba(255, 255, 255, 0.80);
+  --glass-floating-border: rgba(0, 0, 0, 0.05);
+  --glass-scene-veil-strength: 1.08;
+  /* Prism micro-surface — Apple-grade frosted panels */
+  --prism-fill: rgba(255, 255, 255, 0.14);
+  --prism-fill-strong: rgba(255, 255, 255, 0.22);
+  --prism-border: rgba(255, 255, 255, 0.34);
+  --prism-highlight: rgba(255, 255, 255, 0.58);
+  --prism-shadow: rgba(0, 0, 0, 0.04);
+  --prism-tint-rgb: 194, 0, 101;
+  --prism-orb-glow: rgba(194, 0, 101, 0.10);
+  --prism-press-depth: 0.982;
+  /* Surface tokens — minimal inner glass surfaces (replaces prism noise) */
+  --surface-bg: rgba(0, 0, 0, 0.05);
+  --surface-bg-strong: rgba(0, 0, 0, 0.09);
+  --surface-border: rgba(0, 0, 0, 0.07);
+  --surface-border-hover: rgba(0, 0, 0, 0.13);
+  /* iOS media card material — Apple Music frosted glass */
+  --ios-material-bg: rgba(255, 255, 255, 0.42);
+  --ios-material-border: rgba(255, 255, 255, 0.60);
+  --ios-material-shadow: 0 16px 48px rgba(0, 0, 0, 0.10), 0 4px 12px rgba(0, 0, 0, 0.06);
+  --ios-material-highlight: rgba(255, 255, 255, 0.80);
+  --ios-control-bg: rgba(255, 255, 255, 0.32);
+  --ios-control-border: rgba(255, 255, 255, 0.48);
+  --ios-progress-track: rgba(0, 0, 0, 0.08);
+  --ios-progress-fill: rgba(194, 0, 101, 0.88);
 
-  /* SVG Noise for Caustics (Data URI) */
-  --liquid-noise: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  /* Theme tint — Vivid Rose (Apple-grade saturation) */
+  --tint-color: #c8005d;
+  --tint-rgb: 200, 0, 93;
 
-  /* Glass shadow — Light (macOS crisp style) */
-  --glass-shadow:
-    0 2px 6px rgba(0, 0, 0, 0.03),
-    0 8px 32px rgba(0, 0, 0, 0.04),
-    0 24px 72px rgba(0, 0, 0, 0.02),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.50),
-    inset 0 0 20px rgba(var(--tint-rgb), 0.01);
-  --glass-shadow-hover:
-    0 8px 16px rgba(0, 0, 0, 0.04),
-    0 24px 64px rgba(0, 0, 0, 0.06),
-    0 48px 120px rgba(0, 0, 0, 0.04),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.45),
-    inset 0 1px 0 rgba(255, 255, 255, 0.70),
-    inset 0 0 24px rgba(var(--tint-rgb), 0.03);
-
-  /* Liquid Glass highlight — Light */
-  --glass-highlight: rgba(255, 255, 255, 0.98);
-  --glass-highlight-end: rgba(255, 255, 255, 0);
-  --glass-inner-glow: rgba(255, 255, 255, 0.30);
-
-  /* Theme tint — Jewel Rose (Deep & Elegant) */
-  --tint-color: #be185d;
-  --tint-rgb: 190, 24, 93;
-
-  /* Typography — Light (Maximum Contrast & Harmony) */
-  --text-primary: #0f172a;
-  /* Slate 900 - Deepest Blue-Black */
-  --text-secondary: #334155;
-  /* Slate 700 - Readable Dark Gray */
-  --text-tertiary: #64748b;
-  /* Slate 500 - Balanced Gray */
+  /* Typography — Apple canonical label colors */
+  --text-primary: #1d1d1f;
+  --text-secondary: #424245;
+  --text-tertiary: #6e6e73;
 
   /* Background overlay for bg image — Light */
-  --bg-overlay: rgba(248, 250, 252, 0.4);
-  --bg-overlay-gradient-top: rgba(241, 245, 249, 0.85);
-  --bg-overlay-gradient-bottom: rgba(248, 250, 252, 0.8);
+  --bg-overlay: rgba(250, 250, 252, 0.28);
+  --bg-overlay-gradient-top: rgba(255, 255, 255, 0.72);
+  --bg-overlay-gradient-bottom: rgba(245, 245, 247, 0.56);
 
   /* Scrollbar */
-  --scrollbar-thumb: rgba(0, 0, 0, 0.2);
+  --scrollbar-thumb: rgba(0, 0, 0, 0.18);
 
   /* Social icon bg */
-  --icon-bg: rgba(0, 0, 0, 0.04);
-  --icon-border: rgba(0, 0, 0, 0.08);
-
-  /* Tag Adaptive Colors — Light */
-  --tag-text: #be185d;
-  /* Deep Pink 700 - Readable on light bg */
-  --tag-bg: rgba(190, 24, 93, 0.08);
-  /* Very subtle tint background */
-  --tag-border: rgba(190, 24, 93, 0.15);
-  /* Gentle definition */
+  --icon-bg: rgba(255, 255, 255, 0.32);
+  --icon-border: rgba(0, 0, 0, 0.04);
 }
 
 /* ============================================================
    Design Tokens — Dark Mode (System Preference)
+   Apple HIG: Space Black + luminous glass
    ============================================================ */
 @media (prefers-color-scheme: dark) {
   :root {
-    /* Background gradient — Dark ("Deep Space") */
-    --bg-gradient-from: #020617;
-    --bg-gradient-via: #0f172a;
-    --bg-gradient-to: #1e293b;
-    --glow-color: rgba(56, 189, 248, 0.08);
+    /* Background gradient — dark handled by site.ts theme injection */
+    --bg-gradient-from: #000000;
+    --bg-gradient-via: #0a0a0f;
+    --bg-gradient-to: #111116;
+    --glow-color: rgba(255, 55, 95, 0.12);
 
-    /* Glass effect tokens — Dark (Liquid Glass — Ultra Vibrant) */
-    --glass-bg: rgba(255, 255, 255, 0.06);
-    --glass-bg-hover: rgba(255, 255, 255, 0.10);
-    /* Border is transparent — replaced by inset box-shadow inner strokes */
-    --glass-border: transparent;
-    --glass-border-hover: transparent;
-    --glass-blur: 40px;
-    --glass-saturate: 2.0;
+    /* Theme tint — Apple Vibrant Rose */
+    --tint-color: #ff375f;
+    --tint-rgb: 255, 55, 95;
+    /* Fallback glass — deep space frosted */
+    --glass-fallback-bg: rgba(0, 0, 0, 0.52);
+    --glass-fallback-border: rgba(255, 255, 255, 0.10);
+    --glass-fallback-shadow: 0 8px 40px rgba(0, 0, 0, 0.56), 0 2px 10px rgba(0, 0, 0, 0.36);
+    /* Shell */
+    --glass-shell-fill: rgba(255, 255, 255, 0.06);
+    --glass-shell-fill-strong: rgba(255, 255, 255, 0.10);
+    --glass-shell-border: rgba(255, 255, 255, 0.11);
+    --glass-shell-highlight: rgba(255, 255, 255, 0.16);
+    --glass-shell-shadow: rgba(0, 0, 0, 0.64);
+    --glass-inner-bg: rgba(255, 255, 255, 0.052);
+    --glass-inner-border: rgba(255, 255, 255, 0.082);
+    --glass-divider: rgba(255, 255, 255, 0.07);
+    --glass-floating-bg: rgba(28, 28, 30, 0.80);
+    --glass-floating-border: rgba(255, 255, 255, 0.09);
+    --glass-scene-veil-strength: 1.06;
+    /* Prism micro-surface — darker, luminous highlight edges */
+    --prism-fill: rgba(255, 255, 255, 0.042);
+    --prism-fill-strong: rgba(255, 255, 255, 0.072);
+    --prism-border: rgba(255, 255, 255, 0.10);
+    --prism-highlight: rgba(255, 255, 255, 0.16);
+    --prism-shadow: rgba(0, 0, 0, 0.48);
+    --prism-tint-rgb: 255, 55, 95;
+    --prism-orb-glow: rgba(255, 55, 95, 0.16);
+    --prism-press-depth: 0.982;
+    /* Surface tokens — luminous inner glass surfaces */
+    --surface-bg: rgba(255, 255, 255, 0.08);
+    --surface-bg-strong: rgba(255, 255, 255, 0.13);
+    --surface-border: rgba(255, 255, 255, 0.11);
+    --surface-border-hover: rgba(255, 255, 255, 0.18);
+    /* iOS media card material — Apple Music dark */
+    --ios-material-bg: rgba(28, 28, 30, 0.68);
+    --ios-material-border: rgba(255, 255, 255, 0.10);
+    --ios-material-shadow: 0 16px 48px rgba(0, 0, 0, 0.60), 0 4px 12px rgba(0, 0, 0, 0.44);
+    --ios-material-highlight: rgba(255, 255, 255, 0.11);
+    --ios-control-bg: rgba(255, 255, 255, 0.08);
+    --ios-control-border: rgba(255, 255, 255, 0.10);
+    --ios-progress-track: rgba(255, 255, 255, 0.11);
+    --ios-progress-fill: rgba(255, 55, 95, 0.92);
 
-    /* Glass shadow — Dark (macOS crisp style) */
-    --glass-shadow:
-      0 4px 16px rgba(0, 0, 0, 0.25),
-      0 12px 48px rgba(0, 0, 0, 0.20),
-      0 40px 96px rgba(0, 0, 0, 0.15),
-      inset 0 0 0 1px rgba(255, 255, 255, 0.10),
-      inset 0 1px 0 rgba(255, 255, 255, 0.20),
-      inset 0 0 24px rgba(var(--tint-rgb), 0.02);
-    --glass-shadow-hover:
-      0 8px 24px rgba(0, 0, 0, 0.35),
-      0 28px 72px rgba(0, 0, 0, 0.25),
-      0 64px 140px rgba(0, 0, 0, 0.20),
-      inset 0 0 0 1px rgba(255, 255, 255, 0.15),
-      inset 0 1px 0 rgba(255, 255, 255, 0.30),
-      inset 0 0 32px rgba(var(--tint-rgb), 0.04);
-
-    /* Liquid Glass highlight — Dark */
-    --glass-highlight: rgba(255, 255, 255, 0.35);
-    --glass-highlight-end: rgba(255, 255, 255, 0);
-    --glass-inner-glow: rgba(255, 255, 255, 0.10);
-
-    /* Theme tint — Vibrant Rose on Dark */
-    --tint-color: #fb7185;
-    --tint-rgb: 251, 113, 133;
-
-    /* Typography — Dark (Soft High-Contrast) */
-    --text-primary: #f8fafc;
-    /* Slate 50 - Off-white (less harsh than pure #FFF) */
-    --text-secondary: #cbd5e1;
-    /* Slate 300 - Clear Light Gray */
-    --text-tertiary: #94a3b8;
-    /* Slate 400 - Readable Mid-Gray */
+    /* Typography — Apple dark canonical label colors */
+    --text-primary: #f5f5f7;
+    --text-secondary: #c7c7cc;
+    --text-tertiary: #8e8e93;
 
     /* Background overlay for bg image — Dark */
-    --bg-overlay: rgba(2, 6, 23, 0.5);
-    --bg-overlay-gradient-top: rgba(2, 6, 23, 0.85);
-    --bg-overlay-gradient-bottom: rgba(15, 23, 42, 0.8);
+    --bg-overlay: rgba(0, 0, 0, 0.28);
+    --bg-overlay-gradient-top: rgba(0, 0, 0, 0.58);
+    --bg-overlay-gradient-bottom: rgba(10, 10, 15, 0.48);
 
     /* Scrollbar */
-    --scrollbar-thumb: rgba(255, 255, 255, 0.1);
+    --scrollbar-thumb: rgba(255, 255, 255, 0.08);
 
     /* Social icon bg */
     --icon-bg: rgba(255, 255, 255, 0.05);
-    --icon-border: rgba(255, 255, 255, 0.08);
-
-    /* Tag Adaptive Colors — Dark */
-    --tag-text: #fff0f5;
-    /* Lavender Blush - Pops against dark */
-    --tag-bg: rgba(251, 113, 133, 0.2);
-    /* Visible container to separate from background */
-    --tag-border: rgba(251, 113, 133, 0.35);
-    /* Clear boundary */
+    --icon-border: rgba(255, 255, 255, 0.07);
   }
 }
 
@@ -159,12 +156,13 @@
   --color-background: var(--bg-gradient-via);
   --color-foreground: var(--text-primary);
   --color-tint: var(--tint-color);
-  --color-glass-bg: var(--glass-bg);
-  --color-glass-border: var(--glass-border);
+  --color-glass-bg: var(--glass-floating-bg);
+  --color-glass-border: var(--glass-floating-border);
   --color-text-primary: var(--text-primary);
   --color-text-secondary: var(--text-secondary);
   --color-text-tertiary: var(--text-tertiary);
-  --font-sans: "system-ui", "-apple-system", "sans-serif";
+  /* Apple SF Pro-style system font stack */
+  --font-sans: -apple-system, "BlinkMacSystemFont", "SF Pro Display", "SF Pro Text", "Helvetica Neue", "Helvetica", system-ui, sans-serif;
   --animate-wave: wave 2.5s ease-in-out infinite;
   --animate-fade-in: fade-in 0.6s ease-out both;
 }
@@ -222,117 +220,370 @@
    ============================================================ */
 body {
   color: var(--text-primary);
-  font-family: var(--font-quicksand), system-ui, -apple-system, sans-serif;
+  /* Quicksand as display font, Apple SF Pro as system fallback */
+  font-family: var(--font-quicksand), -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", system-ui, sans-serif;
   font-size: 17px;
-  line-height: 1.6;
+  line-height: 1.55;
   min-height: 100dvh;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  letter-spacing: -0.01em;
+  text-rendering: optimizeLegibility;
+  -webkit-tap-highlight-color: transparent;
+  font-feature-settings: "kern" 1, "liga" 1;
 }
 
 /* ============================================================
-   Glass Card — Apple Vibrancy Material
-   Multi-layer inner strokes + diffuse ambient shadow
+   Glass Card — Liquid Glass (WebGL2 canvas-driven)
+   The glass surface is rendered by LiquidGlassCanvas.
+   This rule only sets the z-index stack for content.
    ============================================================ */
-.glass-card {
-  position: relative;
-  overflow: hidden;
-  background: var(--glass-bg);
-  /* Liquid Glass: ultra-high saturation + brightness lift to make bg colors bleed through */
-  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate, 3.5)) brightness(1.08) contrast(1.02);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate, 3.5)) brightness(1.08) contrast(1.02);
-  /* No hard border — all edge definition comes from inset inner strokes */
-  border: none;
-  border-radius: var(--glass-radius);
-  box-shadow: var(--glass-shadow);
-  /* Spring-physics transition: snappy out, bouncy settle.
-     Scale added for volumetric interaction */
-  transition:
-    background 0.5s cubic-bezier(0.25, 1, 0.5, 1),
-    box-shadow 0.5s cubic-bezier(0.25, 1, 0.5, 1),
-    transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
-    backdrop-filter 0.5s cubic-bezier(0.25, 1, 0.5, 1);
-  transform-style: preserve-3d;
-}
-
-
-
-/* Ensure card content sits above pseudo-elements */
-.glass-card>* {
+.glass-card > * {
   position: relative;
   z-index: 2;
 }
 
-.glass-card:hover {
-  background: var(--glass-bg-hover);
-  box-shadow: var(--glass-shadow-hover);
-  /* Volumetric press: moves up slightly but scales subtly to simulate
-     the tension of pushing into a liquid surface */
-  transform: translateY(-4px) scale(0.995);
-  /* Refraction surge: saturation spikes on interaction like pressing glass */
-  backdrop-filter: blur(var(--glass-blur)) saturate(calc(var(--glass-saturate, 3.5) + 1.5)) brightness(1.15) contrast(1.05);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(calc(var(--glass-saturate, 3.5) + 1.5)) brightness(1.15) contrast(1.05);
+.glass-card {
+  border-radius: var(--glass-radius);
+  isolation: isolate;
+  overflow: hidden;
+  background: transparent;
+  border: 1px solid transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
+:root[data-liquid-glass="loading"] .glass-card {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
 
+:root[data-liquid-glass="loading"] .glass-card::before {
+  content: none;
+  opacity: 0;
+  box-shadow: none;
+}
+
+:root[data-liquid-glass="loading"] .glass-card::after {
+  content: none;
+  opacity: 0;
+}
+
+.glass-card::before,
+.glass-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.glass-card::before {
+  z-index: 1;
+  opacity: 0;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.12) 0%,
+      rgba(255, 255, 255, 0.04) 22%,
+      transparent 54%,
+      rgba(255, 255, 255, 0.03) 100%
+    );
+  box-shadow: 0 18px 36px var(--glass-shell-shadow);
+}
+
+.glass-card::after {
+  z-index: 1;
+  inset: 1px;
+  opacity: 0;
+  border-radius: calc(var(--glass-radius) - 1px);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.08) 0%,
+      rgba(255, 255, 255, 0.02) 18%,
+      transparent 38%,
+      transparent 76%,
+      rgba(255, 255, 255, 0.015) 90%,
+      rgba(255, 255, 255, 0.06) 100%
+    );
+}
+
+:root[data-liquid-glass="fallback"] .glass-card {
+  border-radius: var(--glass-radius);
+  background: var(--glass-fallback-bg);
+  border-color: var(--glass-fallback-border);
+  box-shadow: var(--glass-fallback-shadow);
+  backdrop-filter: blur(var(--glass-fallback-blur, 18px)) saturate(1.3);
+  -webkit-backdrop-filter: blur(var(--glass-fallback-blur, 18px)) saturate(1.3);
+}
+
+:root[data-liquid-glass="fallback"] .glass-card::before {
+  opacity: 0.18;
+  box-shadow: 0 18px 36px var(--glass-shell-shadow);
+}
+
+:root[data-liquid-glass="fallback"] .glass-card::after {
+  opacity: 0.08;
+}
+
+:root[data-liquid-glass="ready"] .glass-card {
+  background: transparent;
+  border-width: 0;
+  border-color: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+:root[data-liquid-glass="ready"] .glass-card::before {
+  content: none;
+  opacity: 0;
+  box-shadow: none;
+}
+
+:root[data-liquid-glass="ready"] .glass-card::after {
+  content: none;
+  opacity: 0;
+}
+
+.liquid-glass-canvas {
+  opacity: 0;
+  /* Transition is applied via JS inline style (600ms ease) on first render.
+     This CSS rule acts as a non-JS fallback and keeps opacity=0 until ready. */
+  transition: opacity 600ms ease;
+}
+
+:root[data-liquid-glass="ready"] .liquid-glass-canvas {
+  opacity: 1;
+}
+
+/* When WebGL glass is active, disable Prism inner backdrop-filter
+   to avoid double-blur artifacts inside the glass shell */
+:root[data-liquid-glass="ready"] .glass-card .prism-panel,
+:root[data-liquid-glass="ready"] .glass-card .prism-badge,
+:root[data-liquid-glass="ready"] .glass-card .prism-orb-button,
+:root[data-liquid-glass="ready"] .glass-card .prism-pill,
+:root[data-liquid-glass="ready"] .glass-card .prism-avatar-disc {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
 
 /* ============================================================
-   App Icon Tile — frosted glass micro-tile for Software Card
+   Prism Micro-Surface System — Clarity-First
+   Three semantic layers:
+     prism-panel / prism-orb-button / prism-avatar-disc → neutral glass
+     prism-pill  → tinted capsule (iOS filter chip, accent-hued)
+     prism-badge → accent categorical label
+   Zero pseudo-elements. Zero backdrop-filter (avoids perf hit on
+   small elements and double-blur inside glass shell).
    ============================================================ */
-.app-icon-tile {
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  box-shadow:
-    0 2px 8px rgba(0, 0, 0, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  transition: background 0.25s ease, box-shadow 0.25s ease;
+
+/* Shared structural base */
+.prism-panel,
+.prism-badge,
+.prism-orb-button,
+.prism-pill,
+.prism-avatar-disc {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  color: inherit;
 }
 
-@media (prefers-color-scheme: dark) {
-  .app-icon-tile {
-    background: rgba(255, 255, 255, 0.06);
-    border-color: rgba(255, 255, 255, 0.08);
-    box-shadow:
-      0 2px 8px rgba(0, 0, 0, 0.3),
-      inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  }
+/* Disable pseudo-elements — no noise */
+.prism-panel::before, .prism-panel::after,
+.prism-badge::before, .prism-badge::after,
+.prism-orb-button::before, .prism-orb-button::after,
+.prism-pill::before, .prism-pill::after,
+.prism-avatar-disc::before, .prism-avatar-disc::after {
+  content: none;
 }
 
-/* ============================================================
-   Pill Tag Component
-   ============================================================ */
-.pill-tag {
-  display: inline-flex;
-  align-items: center;
-  padding: 6px 14px;
-  border-radius: 9999px;
-  font-size: 14px;
-  font-weight: 500;
-  letter-spacing: 0.01em;
+/* Neutral glass surfaces */
+.prism-panel,
+.prism-orb-button,
+.prism-avatar-disc {
+  background: var(--surface-bg);
+  border: 1px solid var(--surface-border);
+}
 
-  /* Adaptive colors using variables defined in :root */
-  color: var(--tag-text);
-  background: var(--tag-bg);
-  border: 1px solid var(--tag-border);
+/* Tinted capsule — iOS 17-style filter chip */
+.prism-pill {
+  background: rgba(var(--tint-rgb), 0.08);
+  border: 1px solid rgba(var(--tint-rgb), 0.20);
+  color: var(--text-secondary);
+}
 
-  cursor: default;
+/* Accent micro-label — categorical badge */
+.prism-badge {
+  background: rgba(var(--tint-rgb), 0.09);
+  border: 1px solid rgba(var(--tint-rgb), 0.18);
+  color: var(--tint-color);
+}
+
+.prism-static {
+  transform: translateZ(0);
+}
+
+.prism-interactive {
+  transform: translateZ(0);
+  cursor: pointer;
   user-select: none;
-  transition: all 0.2s ease;
+  -webkit-user-select: none;
+  /* NOTE: no 'transform' here — Framer Motion owns all transform animations.
+     Adding transform to CSS transition would hijack FM spring physics. */
+  transition:
+    background 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    opacity 200ms ease;
 }
 
-.pill-tag:hover {
-  filter: brightness(1.1);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(var(--tint-rgb), 0.15);
+.prism-interactive:focus-visible {
+  outline: 2px solid rgba(var(--tint-rgb), 0.32);
+  outline-offset: 2px;
 }
 
-/* Specific styling for Dark Mode legibility */
-@media (prefers-color-scheme: dark) {
-  .pill-tag {
-    font-weight: 600;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
-  }
+/* Press feedback — opacity only; scale is handled by Framer Motion whileTap */
+.prism-interactive:active {
+  opacity: 0.72;
+  transition: opacity 55ms ease-out;
+}
+
+/* Panel / orb / avatar — neutral hover intensify */
+.prism-panel.prism-interactive:hover,
+.prism-orb-button.prism-interactive:hover,
+.prism-avatar-disc.prism-interactive:hover {
+  background: var(--surface-bg-strong);
+  border-color: var(--surface-border-hover);
+}
+
+/* Pill — tint-intensify on hover + soft glow */
+.prism-pill.prism-interactive:hover {
+  background: rgba(var(--tint-rgb), 0.14);
+  border-color: rgba(var(--tint-rgb), 0.32);
+  box-shadow: 0 0 14px rgba(var(--tint-rgb), 0.10);
+}
+
+/* Panel: subtle edge highlight */
+.prism-panel {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+/* Orb button: platform color glow on hover */
+.prism-orb-button {
+  transition:
+    background 200ms cubic-bezier(0.25, 0.1, 0.25, 1),
+    border-color 200ms cubic-bezier(0.25, 0.1, 0.25, 1),
+    box-shadow 200ms cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.prism-orb-button.prism-interactive:hover {
+  box-shadow: 0 0 22px var(--prism-orb-glow);
+}
+
+/* Interactive glass card — content dims on press (canvas renders separately, not affected) */
+.glass-card[data-glass-interactive="true"] {
+  transition: filter 240ms ease;
+}
+
+.glass-card[data-glass-interactive="true"]:active {
+  filter: brightness(0.88) saturate(0.92);
+  transition: filter 55ms ease-out;
+}
+
+.glass-divider {
+  border-color: var(--glass-divider);
+}
+
+.glass-floating-ui {
+  background: var(--glass-floating-bg);
+  border: 1px solid var(--glass-floating-border);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--prism-highlight) 72%, transparent),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.04),
+    0 12px 32px color-mix(in srgb, var(--prism-shadow) 80%, transparent);
+  backdrop-filter: blur(20px) saturate(1.6);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6);
+}
+
+.glass-media-mask {
+  border-radius: inherit;
+  overflow: hidden;
+}
+.ios-media-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: var(--glass-radius);
+  border: none;
+  background:
+    linear-gradient(160deg,
+      color-mix(in srgb, var(--ios-material-bg) 90%, white 10%) 0%,
+      var(--ios-material-bg) 100%);
+  box-shadow: var(--ios-material-shadow);
+  backdrop-filter: blur(28px) saturate(1.8);
+  -webkit-backdrop-filter: blur(28px) saturate(1.8);
+}
+
+.ios-media-card::before {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  pointer-events: none;
+  border-radius: calc(var(--glass-radius) - 1px);
+  background:
+    linear-gradient(160deg,
+      var(--ios-material-highlight) 0%,
+      rgba(255, 255, 255, 0.04) 36%,
+      rgba(var(--prism-tint-rgb), 0.012) 100%);
+  opacity: 0.7;
+}
+
+.ios-media-card__panel {
+  position: relative;
+  z-index: 1;
+  border-radius: inherit;
+  overflow: hidden;
+}
+
+.ios-media-card__album {
+  background: rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28), 0 4px 10px rgba(0, 0, 0, 0.14);
+}
+
+.ios-media-card__button {
+  background: var(--ios-control-bg);
+  border: 1px solid var(--ios-control-border);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 4px 12px rgba(0, 0, 0, 0.14);
+  backdrop-filter: blur(16px) saturate(1.2);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+  transition: filter 180ms cubic-bezier(0.25, 0.1, 0.25, 1), transform 100ms cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.ios-media-card__button:hover {
+  filter: brightness(1.06);
+}
+
+.ios-media-card__button:active {
+  transform: scale(0.96);
+}
+
+.ios-media-card__progress {
+  background: var(--ios-progress-track);
+}
+
+.ios-media-card__progress-fill {
+  background: var(--ios-progress-fill);
 }
 
 /* ============================================================
@@ -469,7 +720,7 @@ body {
   justify-content: space-between;
   padding: 14px 20px;
   background: linear-gradient(to bottom,
-      var(--glass-bg) 0%,
+      var(--glass-inner-bg) 0%,
       transparent 100%);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
@@ -513,17 +764,19 @@ body {
 
 /* Popup overrides — glassmorphism theme */
 .map-popup .mapboxgl-popup-content {
-  background: var(--glass-bg);
-  backdrop-filter: blur(16px) saturate(1.8);
-  -webkit-backdrop-filter: blur(16px) saturate(1.8);
-  border: 1px solid var(--glass-border);
+  background: var(--glass-floating-bg);
+  backdrop-filter: blur(12px) saturate(1.08);
+  -webkit-backdrop-filter: blur(12px) saturate(1.08);
+  border: 1px solid var(--glass-floating-border);
   border-radius: 12px;
   padding: 8px 14px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--prism-highlight) 66%, transparent),
+    0 10px 22px color-mix(in srgb, var(--prism-shadow) 72%, transparent);
 }
 
 .map-popup .mapboxgl-popup-tip {
-  border-top-color: var(--glass-bg);
+  border-top-color: var(--glass-floating-bg);
 }
 
 .map-popup-content {
@@ -573,16 +826,18 @@ body {
   align-items: center;
   gap: 6px;
   padding: 6px 14px;
-  background: var(--glass-bg);
-  backdrop-filter: blur(12px) saturate(1.6);
-  -webkit-backdrop-filter: blur(12px) saturate(1.6);
-  border: 1px solid var(--glass-border);
+  background: var(--glass-floating-bg);
+  backdrop-filter: blur(10px) saturate(1.08);
+  -webkit-backdrop-filter: blur(10px) saturate(1.08);
+  border: 1px solid var(--glass-floating-border);
   border-radius: 20px;
   font-size: 13px;
   font-weight: 600;
   color: var(--text-primary);
   z-index: 10;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--prism-highlight) 66%, transparent),
+    0 10px 22px color-mix(in srgb, var(--prism-shadow) 72%, transparent);
   pointer-events: none;
   animation: fade-in 0.6s ease-out both;
   animation-delay: 0.3s;
@@ -615,15 +870,17 @@ body {
   align-items: baseline;
   justify-content: center;
   padding: 4px 10px;
-  background: var(--glass-bg);
-  backdrop-filter: blur(8px) saturate(1.6);
-  -webkit-backdrop-filter: blur(8px) saturate(1.6);
-  border: 1px solid var(--glass-border);
+  background: var(--glass-floating-bg);
+  backdrop-filter: blur(8px) saturate(1.08);
+  -webkit-backdrop-filter: blur(8px) saturate(1.08);
+  border: 1px solid var(--glass-floating-border);
   border-radius: 12px;
   font-size: 11px;
   font-weight: 600;
   color: var(--text-primary);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--prism-highlight) 66%, transparent),
+    0 8px 18px color-mix(in srgb, var(--prism-shadow) 72%, transparent);
   pointer-events: none;
   font-family: var(--font-sans);
 }
@@ -636,5 +893,5 @@ body {
   transform: translateX(-50%);
   border-width: 4px;
   border-style: solid;
-  border-color: var(--glass-border) transparent transparent transparent;
+  border-color: var(--glass-floating-border) transparent transparent transparent;
 }

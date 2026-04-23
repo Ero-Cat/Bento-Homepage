@@ -2,7 +2,7 @@
 
 > **Project**: 个人主页 (Personal Homepage)
 > **Type**: 纯静态单页应用 (Static SPA)
-> **Architecture**: Config-Driven Bento Grid with Glassmorphism
+> **Architecture**: Config-Driven Bento Grid with Shared Liquid Glass Renderer
 > **Live**: [iacg.moe](https://iacg.moe)
 
 ---
@@ -44,6 +44,7 @@
 - 定义 TypeScript 类型系统 (`SiteConfig` interface)
 - 维护 `src/config/site.ts` 配置驱动架构
 - 确保 `next.config.ts` 正确配置 `output: "export"` 静态导出
+- 维护共享 Liquid Glass 配置 (`src/lib/liquid-glass.ts`) 与 shader 导入配置
 
 **Constraints**:
 - 所有颜色值必须通过 CSS 变量管理，禁止硬编码 HEX
@@ -55,18 +56,21 @@
 ### 2. `UI_Developer` (UI 开发者)
 
 **Responsibilities**:
-- 维护 `GlassCard` 核心组件（毛玻璃 + 3D tilt + 光晕反射 + spring 物理）
+- 维护 `GlassCard` 核心组件（卡片注册、variant、fallback 与内容层栈）
+- 维护 `LiquidGlassCanvas` 共享 WebGL2 画布（bgPass → vBlurPass → hBlurPass → mainPass）
 - 实现 Bento Grid 4 列布局容器
 - 实现各功能卡片（Profile、Social、Hardware、Projects、Friends、NowPlaying、PhotoStack、GitHubHeatmap、VRChatStatus、Blog、Software、Map、Weather）
 - 实现入场动画（stagger + spring）
-- 性能优化（rAF 驱动进度条、合并 `useTransform` 链、避免字符串拼接 boxShadow）
+- 性能优化（共享画布、rAF 驱动进度条、避免多层 blur 叠加、减少布局探测）
 - 确保触控目标 ≥ 44×44pt (Apple HIG)
 
 **Constraints**:
 - 所有动画必须使用 spring 物理曲线，禁止 linear/ease-in-out
 - 动画必须可被用户交互打断 (interruptible)
 - 所有组件 API 仅从 `siteConfig` 读取数据，禁止组件内硬编码文本
-- `overflow: hidden` 不可用于 `transform-style: preserve-3d` 的父容器；需在子容器中使用 `borderRadius: inherit` 独立裁剪
+- 外层 `GlassCard` 负责液态玻璃壳层与注册，不负责媒体裁剪；媒体裁剪必须下沉到子容器并使用 `borderRadius: inherit`
+- 玻璃光学参数必须通过 `GlassVariant` / CSS 变量集中管理，禁止在业务卡片中复制 shader 参数
+- 内层微表面必须通过 `globals.css` 中的共享 `Prism` material classes（如 `prism-panel` / `prism-badge` / `prism-orb-button` / `prism-pill`）统一管理，禁止在业务卡片中重新拼装一套局部玻璃参数
 
 ---
 
@@ -118,13 +122,15 @@ Bento-Homepage/
 │   └── photos/                   # 照片堆叠目录
 ├── src/
 │   ├── app/
-│   │   ├── globals.css           # 设计令牌（明/暗）、玻璃样式、动画关键帧
+│   │   ├── globals.css           # 设计令牌（明/暗）、Prism micro-surface utility、动画关键帧
 │   │   ├── layout.tsx            # 根布局、SEO 元数据、背景图扫描、主题注入
 │   │   └── page.tsx              # 首页 — Bento Grid 组装 + 数据 fetch
 │   ├── components/
-│   │   ├── glass-card.tsx        # 核心毛玻璃卡片（3D tilt + 光晕 + spring 物理）
+│   │   ├── glass-card.tsx        # 核心卡片壳层（variant + 注册 + fallback）
 │   │   ├── bento-grid.tsx        # 4 列响应式网格容器
-│   │   ├── background-layer.tsx  # 背景轮播 + 渐变遮罩 + 浮动光球 + 噪点纹理
+│   │   ├── background-layer.tsx  # 背景轮播 + 渐变遮罩 + 浮动光球 + 噪点纹理 + active bg 发布
+│   │   ├── liquid-glass-provider.tsx # Client wrapper，注入共享 LiquidGlassCanvas
+│   │   ├── liquid-glass-canvas.tsx   # 共享 WebGL2 画布，渲染所有 GlassCard 壳层
 │   │   ├── profile-card.tsx      # 头像轮播 + 多语言问候 + 打字机 + i18n 简介
 │   │   ├── avatar-carousel.tsx   # 多头像旋转 3D 轮播组件
 │   │   ├── typewriter.tsx        # 打字机效果组件
@@ -133,11 +139,11 @@ Bento-Homepage/
 │   │   ├── github-heatmap-card.tsx # GitHub 贡献热力图（无需 Token）
 │   │   ├── vrchat-status-card.tsx  # VRChat 实时在线状态（VRCX-Cloud API）
 │   │   ├── blog-card.tsx         # 博客最新文章（Halo 2.x API）
-│   │   ├── social-card.tsx       # 社交图标链接（scale hover，无 y 位移避免 3D tilt 抖动）
-│   │   ├── skills-card.tsx       # 兴趣 Pill Tags（scale + boxShadow hover）
-│   │   ├── hardware-card.tsx     # 硬件清单（pill-tag 样式，与 Interests 一致）
-│   │   ├── projects-card.tsx     # 项目展示（含 GitHub Stars/Forks API）
-│   │   ├── friends-card.tsx      # 友情链接（hover 旋转漩涡特效）
+│   │   ├── social-card.tsx       # 社交图标链接（Prism orb buttons）
+│   │   ├── skills-card.tsx       # 兴趣标签（Prism pills）
+│   │   ├── hardware-card.tsx     # 硬件清单（Prism pills，与 Interests 一致）
+│   │   ├── projects-card.tsx     # 项目展示（Prism panels + badges，含 GitHub Stars/Forks API）
+│   │   ├── friends-card.tsx      # 友情链接（Prism avatar discs + hover 旋转特效）
 │   │   ├── map-card.tsx          # Mapbox 互动地图（城市标记 + 脉冲弹窗 + IP 距离显示）
 │   │   ├── weather-card.tsx      # 实时天气卡片（open-meteo API，Apple Weather 风格渐变）
 │   │   ├── footer.tsx            # 版权信息
@@ -145,8 +151,15 @@ Bento-Homepage/
 │   ├── config/
 │   │   └── site.ts               # ⭐ 唯一配置文件 (SSoT)
 │   └── lib/
+│       ├── liquid-glass.ts       # Liquid Glass variant / optical token SSoT
+│       ├── gl-utils.ts           # WebGL2 shader/FBO/texture helper
 │       ├── motion.ts             # 弹簧物理预设 & 动画变体
 │       └── utils.ts              # cn() 类名合并工具
+├── src/shaders/
+│   ├── glass-bg.glsl             # 背景 pass
+│   ├── glass-vblur.glsl          # 垂直 blur pass
+│   ├── glass-hblur.glsl          # 水平 blur pass
+│   └── glass-main.glsl           # 主 liquid-glass compose pass
 ├── AGENTS.md                     # 本文件
 ├── README.md                     # 项目文档（中文）
 ├── README_EN.md                  # 项目文档（英文）
@@ -159,15 +172,32 @@ Bento-Homepage/
 
 ## Performance Notes
 
-### GlassCard 优化
-- **移除 `useDynamicShadow`**：每帧字符串拼接 boxShadow 改为 CSS 静态阴影
-- **合并 GlareOverlay**：3 个独立 `useTransform` → 1 个合并链（1 subscription instead of 3）
-- **移除 `willChange: "transform"`**：避免与 `backdrop-filter` 子元素冲突导致强制重合成
+### LiquidGlassCanvas 优化
+- **共享单画布**：所有 `GlassCard` 通过 DOM 注册到同一个 `LiquidGlassCanvas`，避免每张卡片单独建 WebGL context
+- **失效驱动渲染**：共享画布不再常驻 60fps 全量重绘；仅在背景切换、resize、scroll、卡片几何变化和首屏入场稳定阶段才重新调度渲染
+- **变体化参数**：`hero` / `panel` / `media` / `dense` / `immersive` 通过 `src/lib/liquid-glass.ts` 集中管理半径、折射、Fresnel、glare 与 fallback blur
+- **稳定背景源**：`BackgroundLayer` 将当前背景图 URL 发布到根节点 dataset，Canvas 不再通过脆弱 DOM 查询推断背景
+- **背景切换同步**：`BackgroundLayer` 同步发布当前/上一张背景与过渡时间，Canvas 在 `bgPass` 内执行同时序 crossfade，避免 glass 与页面背景不同步
+- **几何缓存与可见性裁剪**：卡片 rect / radius 在注册后缓存，配合 `ResizeObserver`、`IntersectionObserver` 和滚动脏标记更新，避免每帧对所有卡片执行布局读取
+- **按卡片范围绘制**：`mainPass` 通过 scissor 限定到每张卡片的实际屏幕区域，避免“每张卡都绘制一次全屏 quad”的 GPU 浪费
+- **降采样 blur**：背景 blur pass 根据运行时质量档位使用降采样 FBO，在移动端/高 DPR/高卡片密度下自动降低填充成本
+- **纯光学壳层**：WebGL2 就绪后，`GlassCard` 的旧 DOM 玻璃外观必须静音，只保留结构与命中区域，光学效果完全由 Canvas 负责
+- **CSS fallback**：WebGL2 不可用时退回 CSS blur/border/shadow 玻璃壳层，保证内容可读
+
+### Shader Source of Truth
+- `src/shaders/*.glsl` 是 Liquid Glass shader 的唯一源码来源
+- `next.config.ts` 通过 `turbopack.rules` + `raw-loader` 导入 `.glsl` 为字符串
+- 禁止在业务组件中复制 shader 字符串；如需调光学效果，修改 shader 文件或 `src/lib/liquid-glass.ts`
 
 ### NowPlayingCard 优化
-- **消除 backdrop-filter 叠加**：仅保留 GlassCard 内置的 `blur(20px)`，专辑封面使用 CSS `filter: blur()` 预模糊
+- **独立材质系统**：`NowPlayingCard` 不注册到 `LiquidGlassCanvas`，改用独立 iOS media card 材质，避免和 refractive bento 壳层混用
 - **rAF 进度条**：`requestAnimationFrame` + `ref` 直写 DOM，播放期间零 React 重渲染
-- **3D 圆角裁剪**：`overflow: hidden` 在 `preserve-3d` 下失效，改为子容器 `borderRadius: inherit` 独立裁剪
+- **媒体控件层级**：封面、按钮、进度条使用专用 media-card token，不复用 liquid-glass micro-surface
+
+### Prism Micro-Surface 系统
+- 内层交互面与内容承载面统一使用 `Prism` 体系：`prism-panel`、`prism-badge`、`prism-orb-button`、`prism-pill`、`prism-avatar-disc`
+- `Prism` token 在 `globals.css` 中独立维护，与外层 `GlassCard` shader 壳层分层；不得复用旧 `glass-chip` / `pill-tag` 语义
+- `Prism` 默认走扁平化系统控件语言：弱高光、弱阴影、弱色偏，避免内层微表面与外层 liquid shell 抢戏
 
 ### GitHubHeatmapCard 优化
 - 使用第三方公开 API（`github-contributions-api.jogruber.de`），无需 GitHub Token
@@ -213,3 +243,7 @@ Bento-Homepage/
 8. **Docs Sync on Feature Completion**: 每次完成新功能后，必须同步更新 `AGENTS.md` 和 `README.md`，确保文档始终反映最新项目状态
 9. **Compact Card Content (紧凑卡片内容)**: Bento Grid 中的 `GlassCard` 内容必须紧凑，禁止出现大面积内部留白。标题与内容之间使用 `gap-3` (12px)，卡片内部不应有多余的空间浪费。但卡片**之间**的网格间距 (`gap-5`) 保持不变以确保布局呼吸感 —— 核心原则：**卡片内紧凑，卡片间舒适**
 10. **Responsive Card Internals (响应式卡片排版)**: 卡片内部的 padding、gap 和排版方式必须随屏幕尺寸自适应。`GlassCard` 基础 padding 为 `p-4`（移动端 16px）/ `md:p-5`（桌面端 20px）。各组件应使用响应式 Tailwind 类（如 `gap-3 md:gap-4`、`p-5 md:p-6`）确保在不同设备上均保持最佳信息密度
+11. **Shared Liquid Glass Variants**: 所有使用共享液态玻璃壳层的卡片必须显式选择或继承 `GlassVariant`。业务组件不得直接硬编码整套折射、glare、radius 和 tint 参数；`NowPlayingCard` 是独立 iOS media card 例外
+12. **Shell vs Content Separation**: 外层 `GlassCard` 只负责液态玻璃壳层与命中区域；内容层、chip、按钮、divider、媒体裁剪必须由内层 DOM 结构负责
+13. **Stable Background Contract**: 共享画布只能通过 `BackgroundLayer` 发布的 active background dataset 读取背景，禁止重新引入 `querySelector + computedStyle` 推断链路
+14. **Prism Surface SSoT**: 所有内层微表面必须复用 `Prism` class 和对应 token；禁止重新引入 `glass-inner-surface`、`glass-chip`、`glass-icon-button`、`pill-tag` 作为业务组件接口
