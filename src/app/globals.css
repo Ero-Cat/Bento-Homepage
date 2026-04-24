@@ -39,10 +39,10 @@
   --prism-orb-glow: rgba(255, 255, 255, 0);
   --prism-press-depth: 0.985;
   /* Surface tokens — minimal inner glass surfaces (replaces prism noise) */
-  --surface-bg: rgba(0, 0, 0, 0.05);
-  --surface-bg-strong: rgba(0, 0, 0, 0.09);
-  --surface-border: rgba(0, 0, 0, 0.07);
-  --surface-border-hover: rgba(0, 0, 0, 0.13);
+  --surface-bg: rgba(255, 255, 255, 0.10);
+  --surface-bg-strong: rgba(255, 255, 255, 0.16);
+  --surface-border: rgba(255, 255, 255, 0.16);
+  --surface-border-hover: rgba(255, 255, 255, 0.24);
   /* iOS media card material — Apple Music frosted glass */
   --ios-material-bg: rgba(255, 255, 255, 0.3);
   --ios-material-border: rgba(255, 255, 255, 0.60);
@@ -116,10 +116,10 @@
     --prism-orb-glow: rgba(255, 255, 255, 0);
     --prism-press-depth: 0.985;
     /* Surface tokens — luminous inner glass surfaces */
-    --surface-bg: rgba(255, 255, 255, 0.08);
-    --surface-bg-strong: rgba(255, 255, 255, 0.13);
-    --surface-border: rgba(255, 255, 255, 0.11);
-    --surface-border-hover: rgba(255, 255, 255, 0.18);
+    --surface-bg: rgba(255, 255, 255, 0.052);
+    --surface-bg-strong: rgba(255, 255, 255, 0.082);
+    --surface-border: rgba(255, 255, 255, 0.082);
+    --surface-border-hover: rgba(255, 255, 255, 0.13);
     /* iOS media card material — Apple Music dark */
     --ios-material-bg: rgba(28, 28, 30, 0.68);
     --ios-material-border: rgba(255, 255, 255, 0.10);
@@ -474,7 +474,7 @@ body {
 
 /* Press feedback — opacity only; scale is handled by Framer Motion whileTap */
 .prism-interactive:active {
-  opacity: 0.72;
+  opacity: 0.82;
   transition: opacity 55ms ease-out;
 }
 
@@ -483,19 +483,18 @@ body {
 .prism-orb-button.prism-interactive:hover,
 .prism-avatar-disc.prism-interactive:hover {
   background: var(--surface-bg-strong);
-  border-color: var(--surface-border-hover);
+  border-color: var(--surface-border);
 }
 
 /* Pill — tint-intensify on hover + soft glow */
 .prism-pill.prism-interactive:hover {
-  background: rgba(var(--tint-rgb), 0.14);
-  border-color: rgba(var(--tint-rgb), 0.32);
-  box-shadow: 0 0 14px rgba(var(--tint-rgb), 0.10);
+  background: rgba(var(--tint-rgb), 0.11);
+  border-color: rgba(var(--tint-rgb), 0.24);
 }
 
 /* Panel: subtle edge highlight */
 .prism-panel {
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--prism-highlight) 56%, transparent);
 }
 
 /* Orb button: platform color glow on hover */
@@ -507,7 +506,7 @@ body {
 }
 
 .prism-orb-button.prism-interactive:hover {
-  box-shadow: 0 0 22px var(--prism-orb-glow);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--prism-highlight) 62%, transparent);
 }
 
 /* Interactive glass card — content dims on press (canvas renders separately, not affected) */

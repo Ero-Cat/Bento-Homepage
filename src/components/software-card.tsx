@@ -41,7 +41,7 @@ function AppIcon({ app }: { app: { name: string; icon: string } }) {
     return (
         <motion.div
             className="flex flex-col items-center gap-2 cursor-default select-none"
-            whileHover={{ scale: 1.12, y: -3 }}
+            whileHover={{ scale: 1.03, y: -1 }}
             transition={SPRING_GENTLE}
         >
             {/* Icon — rendered directly, no tile background */}

@@ -14,6 +14,31 @@ export interface LiquidGlassQualityProfile {
   preferHalfFloat: boolean;
 }
 
+export interface VisualViewportLike {
+  width: number;
+  height: number;
+  offsetLeft?: number;
+  offsetTop?: number;
+}
+
+export interface LiquidGlassViewportInput {
+  innerWidth: number;
+  innerHeight: number;
+  devicePixelRatio: number;
+  dprCap: number;
+  visualViewport?: VisualViewportLike;
+}
+
+export interface LiquidGlassViewportState {
+  cssWidth: number;
+  cssHeight: number;
+  dpr: number;
+  width: number;
+  height: number;
+  offsetLeft: number;
+  offsetTop: number;
+}
+
 export interface SpringSettleInput {
   pos: readonly [number, number];
   prev: readonly [number, number];
@@ -43,6 +68,24 @@ export interface ScissorRect {
 export interface ScrollFollowMotionState {
   offset: number;
   velocity: number;
+}
+
+export interface ScrollGeometryTrackingState {
+  lastScrollY: number;
+  lastViewportOffsetTop: number;
+  lastViewportOffsetLeft: number;
+  framesRemaining: number;
+  idleFrames: number;
+}
+
+export interface ScrollGeometrySnapshot {
+  scrollY: number;
+  viewportOffsetTop: number;
+  viewportOffsetLeft: number;
+}
+
+export interface ScrollGeometryTrackingOptions {
+  idleFrameLimit?: number;
 }
 
 export function resolveLiquidGlassQuality({
@@ -86,6 +129,68 @@ export function resolveLiquidGlassQuality({
     blurBufferScale: 1,
     dprCap: 2,
     preferHalfFloat: true,
+  };
+}
+
+export function resolveLiquidGlassViewport({
+  innerWidth,
+  innerHeight,
+  devicePixelRatio,
+  dprCap,
+  visualViewport,
+}: LiquidGlassViewportInput): LiquidGlassViewportState {
+  const cssWidth = Math.max(1, visualViewport?.width ?? innerWidth);
+  const cssHeight = Math.max(1, visualViewport?.height ?? innerHeight);
+  const dpr = Math.min(Math.max(devicePixelRatio || 1, 1), dprCap);
+
+  return {
+    cssWidth,
+    cssHeight,
+    dpr,
+    width: Math.max(1, Math.round(cssWidth * dpr)),
+    height: Math.max(1, Math.round(cssHeight * dpr)),
+    offsetLeft: visualViewport?.offsetLeft ?? 0,
+    offsetTop: visualViewport?.offsetTop ?? 0,
+  };
+}
+
+export function beginScrollGeometryTracking(
+  state: ScrollGeometryTrackingState,
+  frameBudget: number,
+): ScrollGeometryTrackingState {
+  return {
+    ...state,
+    framesRemaining: Math.max(state.framesRemaining, Math.max(0, frameBudget)),
+    idleFrames: 0,
+  };
+}
+
+export function stepScrollGeometryTracking(
+  state: ScrollGeometryTrackingState,
+  snapshot: ScrollGeometrySnapshot,
+  { idleFrameLimit = 10 }: ScrollGeometryTrackingOptions = {},
+): {
+  state: ScrollGeometryTrackingState;
+  geometryChanged: boolean;
+  shouldContinue: boolean;
+} {
+  const geometryChanged =
+    snapshot.scrollY !== state.lastScrollY ||
+    snapshot.viewportOffsetTop !== state.lastViewportOffsetTop ||
+    snapshot.viewportOffsetLeft !== state.lastViewportOffsetLeft;
+  const idleFrames = geometryChanged ? 0 : state.idleFrames + 1;
+  const framesRemaining = Math.max(state.framesRemaining - 1, 0);
+
+  return {
+    state: {
+      lastScrollY: snapshot.scrollY,
+      lastViewportOffsetTop: snapshot.viewportOffsetTop,
+      lastViewportOffsetLeft: snapshot.viewportOffsetLeft,
+      framesRemaining,
+      idleFrames,
+    },
+    geometryChanged,
+    shouldContinue: framesRemaining > 0 && idleFrames < idleFrameLimit,
   };
 }
 

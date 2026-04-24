@@ -39,9 +39,7 @@ export function SkillsCard() {
                     <motion.span
                         key={interest}
                         variants={item}
-                        className="prism-pill prism-interactive inline-flex items-center rounded-full px-3.5 py-1.5 text-[13px] font-medium select-none"
-                        whileHover={{ scale: 1.06 }}
-                        whileTap={{ scale: 0.96 }}
+                        className="prism-pill prism-static inline-flex items-center rounded-full px-3.5 py-1.5 text-[13px] font-medium select-none"
                     >
                         {interest}
                     </motion.span>

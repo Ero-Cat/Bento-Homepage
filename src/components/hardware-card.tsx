@@ -1,6 +1,3 @@
-"use client";
-
-import { motion } from "framer-motion";
 import {
     Apple,
     Monitor,
@@ -11,7 +8,6 @@ import {
 } from "lucide-react";
 import { siteConfig } from "@/config/site";
 import { GlassCard } from "@/components/glass-card";
-import { SPRING_GENTLE } from "@/lib/motion";
 
 /* ── Lucide icon lookup ─────────────────────────────────────── */
 const ICON_MAP: Record<string, LucideIcon> = {
@@ -79,17 +75,16 @@ function CategoryRow({
             {/* Item chips — tinted with category accent */}
             <div className="flex flex-wrap gap-1.5">
                 {group.items.map((item) => (
-                    <motion.span
+                    <span
                         key={item}
-                        className="prism-pill prism-interactive inline-flex items-center rounded-full px-3 py-1 text-[13px] font-medium"
+                        className="prism-pill prism-static inline-flex items-center rounded-full px-3 py-1 text-[13px] font-medium"
                         style={{
                             background: `${accent}10`,
                             borderColor: `${accent}28`,
                         }}
-                        whileHover={{ scale: 1.04 }}                        whileTap={{ scale: 0.95 }}                        transition={SPRING_GENTLE}
                     >
                         {item}
-                    </motion.span>
+                    </span>
                 ))}
             </div>
         </div>

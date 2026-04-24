@@ -144,7 +144,7 @@ Bento-Homepage/
 │   │   ├── skills-card.tsx       # 兴趣标签（Prism pills）
 │   │   ├── hardware-card.tsx     # 硬件清单（Prism pills，与 Interests 一致）
 │   │   ├── projects-card.tsx     # 项目展示（Prism panels + badges，含 GitHub Stars/Forks API）
-│   │   ├── friends-card.tsx      # 友情链接（Prism avatar discs + hover 旋转特效）
+│   │   ├── friends-card.tsx      # 友情链接（Prism avatar discs + 轻量 hover 反馈）
 │   │   ├── map-card.tsx          # Mapbox 互动地图（城市标记 + 脉冲弹窗 + IP 距离显示）
 │   │   ├── weather-card.tsx      # 实时天气卡片（open-meteo API，Apple Weather 风格渐变）
 │   │   ├── footer.tsx            # 版权信息
@@ -180,6 +180,7 @@ Bento-Homepage/
 - **稳定背景源**：`BackgroundLayer` 将当前背景图 URL 发布到根节点 dataset，Canvas 不再通过脆弱 DOM 查询推断背景
 - **背景切换同步**：`BackgroundLayer` 同步发布当前/上一张背景与过渡时间，Canvas 在 `bgPass` 内执行同时序 crossfade，避免 glass 与页面背景不同步
 - **几何缓存与可见性裁剪**：卡片 rect / radius 在注册后缓存，配合 `ResizeObserver`、`IntersectionObserver` 和滚动脏标记更新，避免每帧对所有卡片执行布局读取
+- **移动端视口同步**：Canvas 使用 `visualViewport` 解析动态视口尺寸和 offset，并在滚动惯性结束前持续追踪 scroll/viewport 几何，避免 mobile 与滚动场景下 glass shell 和 DOM 内容错位
 - **按卡片范围绘制**：`mainPass` 通过 scissor 限定到每张卡片的实际屏幕区域，避免“每张卡都绘制一次全屏 quad”的 GPU 浪费
 - **降采样 blur**：背景 blur pass 根据运行时质量档位使用降采样 FBO，在移动端/高 DPR/高卡片密度下自动降低填充成本
 - **纯光学壳层**：WebGL2 就绪后，`GlassCard` 的旧 DOM 玻璃外观必须静音，只保留结构与命中区域，光学效果完全由 Canvas 负责
@@ -206,6 +207,7 @@ Bento-Homepage/
 - 内层交互面与内容承载面统一使用 `Prism` 体系：`prism-panel`、`prism-badge`、`prism-orb-button`、`prism-pill`、`prism-avatar-disc`
 - `Prism` token 在 `globals.css` 中独立维护，与外层 `GlassCard` shader 壳层分层；不得复用旧 `glass-chip` / `pill-tag` 语义
 - `Prism` 默认走扁平化系统控件语言：弱高光、弱阴影、弱色偏，避免内层微表面与外层 liquid shell 抢戏
+- 信息型标签（Interests / Hardware）使用 `prism-static`，禁止做成带 scale/glow 的伪按钮；列表型卡片 hover 只保留低噪声色彩反馈，避免装饰箭头和方向位移
 
 ### GitHubHeatmapCard 优化
 - 使用第三方公开 API（`github-contributions-api.jogruber.de`），无需 GitHub Token

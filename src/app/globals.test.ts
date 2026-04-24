@@ -192,3 +192,34 @@ test("affected components migrate from glass utilities to prism surfaces", () =>
     }
   }
 });
+
+test("informational chips render as static prism surfaces instead of clickable hover controls", () => {
+  for (const path of [
+    "src/components/skills-card.tsx",
+    "src/components/hardware-card.tsx",
+  ]) {
+    const source = readFileSync(new URL(path, projectRoot), "utf8");
+
+    assert.match(source, /\bprism-pill prism-static\b/, `Expected ${path} to use static Prism pills`);
+    assert.doesNotMatch(source, /whileHover=\{\{\s*scale:/, `Expected ${path} not to scale static chips on hover`);
+    assert.doesNotMatch(source, /whileTap=\{\{\s*scale:/, `Expected ${path} not to press static chips`);
+  }
+});
+
+test("dense list cards avoid directional hover shifts and decorative hover arrows", () => {
+  const projectsSource = readFileSync(new URL("src/components/projects-card.tsx", projectRoot), "utf8");
+  const blogSource = readFileSync(new URL("src/components/blog-card.tsx", projectRoot), "utf8");
+
+  assert.doesNotMatch(projectsSource, /whileHover=\{\{\s*x:/, "Expected project rows not to slide horizontally on hover");
+  assert.doesNotMatch(projectsSource, /Left tint accent/, "Expected project rows not to add a decorative hover-only accent rail");
+  assert.doesNotMatch(blogSource, /group-hover:translate-x/, "Expected blog rows not to reveal sliding hover arrows");
+  assert.doesNotMatch(blogSource, /whileHover=\{\{\s*backgroundColor:/, "Expected blog rows to use shared Prism hover styling");
+});
+
+test("profile hero text can wrap inside narrow mobile cards", () => {
+  const source = readFileSync(new URL("src/components/profile-card.tsx", projectRoot), "utf8");
+
+  assert.match(source, /break-words/, "Expected ProfileCard headline and title to opt into wrapping");
+  assert.match(source, /w-full/, "Expected ProfileCard info column to fill the mobile card content width");
+  assert.match(source, /Typewriter[\s\S]*className="[^"]*max-w-full/, "Expected Typewriter text to stay within the mobile card width");
+});

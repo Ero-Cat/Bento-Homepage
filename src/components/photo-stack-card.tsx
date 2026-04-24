@@ -102,9 +102,9 @@ export function PhotoStackCard({ photos }: PhotoStackCardProps) {
                                 alt={`Photo ${card.id + 1}`}
                                 fill
                                 sizes="(min-width: 768px) 1376px, calc(100vw - 32px)"
-                                className="rounded-2xl object-cover shadow-lg select-none pointer-events-none"
+                                className="rounded-2xl object-cover shadow-md select-none pointer-events-none"
                                 style={{
-                                    border: "1px solid var(--glass-inner-border)",
+                                    border: "1px solid var(--surface-border)",
                                 }}
                                 loading="lazy"
                                 draggable={false}

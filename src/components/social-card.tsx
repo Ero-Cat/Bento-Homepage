@@ -91,8 +91,8 @@ export function SocialCard() {
                             <motion.div
                                 className="prism-orb-button prism-interactive flex h-11 w-11 items-center justify-center rounded-full"
                                 style={{ color: "var(--text-secondary)" }}
-                                whileHover={{ scale: 1.10, color: brandColor }}
-                                whileTap={{ scale: 0.92 }}
+                                whileHover={{ scale: 1.04, color: brandColor }}
+                                whileTap={{ scale: 0.96 }}
                                 transition={SPRING_INTERACTIVE}
                             >
                                 <Icon size={19} />

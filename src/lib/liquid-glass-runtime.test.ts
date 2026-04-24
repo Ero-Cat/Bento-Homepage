@@ -3,8 +3,11 @@ import assert from "node:assert/strict";
 
 import {
   addScrollFollowImpulse,
+  beginScrollGeometryTracking,
   expandScissorRect,
   resolveLiquidGlassQuality,
+  resolveLiquidGlassViewport,
+  stepScrollGeometryTracking,
   stepScrollFollowMotion,
   springIsSettled,
 } from "./liquid-glass-runtime.ts";
@@ -54,6 +57,73 @@ test("resolveLiquidGlassQuality keeps liquid glass enabled with an ultra-low pro
     dprCap: 1.1,
     preferHalfFloat: false,
   });
+});
+
+test("resolveLiquidGlassViewport follows the visual viewport on mobile browser chrome changes", () => {
+  assert.deepEqual(
+    resolveLiquidGlassViewport({
+      innerWidth: 390,
+      innerHeight: 844,
+      devicePixelRatio: 3,
+      dprCap: 1.35,
+      visualViewport: {
+        width: 390,
+        height: 724,
+        offsetLeft: 0,
+        offsetTop: 72,
+      },
+    }),
+    {
+      cssWidth: 390,
+      cssHeight: 724,
+      dpr: 1.35,
+      width: 527,
+      height: 977,
+      offsetLeft: 0,
+      offsetTop: 72,
+    },
+  );
+});
+
+test("scroll geometry tracking stays active through long momentum scrolls and settles after idle frames", () => {
+  const state = beginScrollGeometryTracking(
+    {
+      lastScrollY: 0,
+      lastViewportOffsetTop: 0,
+      lastViewportOffsetLeft: 0,
+      framesRemaining: 0,
+      idleFrames: 0,
+    },
+    48,
+  );
+
+  let result = stepScrollGeometryTracking(
+    state,
+    { scrollY: 1, viewportOffsetTop: 0, viewportOffsetLeft: 0 },
+    { idleFrameLimit: 4 },
+  );
+
+  for (let frame = 2; frame <= 20; frame++) {
+    result = stepScrollGeometryTracking(
+      result.state,
+      { scrollY: frame, viewportOffsetTop: 0, viewportOffsetLeft: 0 },
+      { idleFrameLimit: 4 },
+    );
+  }
+
+  assert.equal(result.shouldContinue, true);
+  assert.equal(result.geometryChanged, true);
+
+  for (let frame = 0; frame < 4; frame++) {
+    result = stepScrollGeometryTracking(
+      result.state,
+      { scrollY: 20, viewportOffsetTop: 0, viewportOffsetLeft: 0 },
+      { idleFrameLimit: 4 },
+    );
+  }
+
+  assert.equal(result.shouldContinue, false);
+  assert.equal(result.geometryChanged, false);
 });
 
 test("springIsSettled returns false while the pointer spring is still moving", () => {

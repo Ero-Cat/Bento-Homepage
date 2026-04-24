@@ -2,11 +2,9 @@
 
 import React from "react";
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
 import { siteConfig } from "@/config/site";
 import { GlassCard } from "@/components/glass-card";
 import { ExternalLink, Star, GitFork } from "lucide-react";
-import { SPRING_GENTLE } from "@/lib/motion";
 
 interface RepoStats {
     stars: number;
@@ -79,21 +77,12 @@ export function ProjectsCard() {
                                     style={{ background: "var(--glass-divider)" }}
                                 />
                             )}
-                            <motion.a
+                            <a
                                 href={project.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="prism-panel prism-interactive group relative flex flex-col gap-1.5 rounded-xl px-3 py-3 -mx-1 cursor-pointer"
-                                whileHover={{ x: 2 }}
-                                whileTap={{ scale: 0.97 }}
-                                transition={SPRING_GENTLE}
+                                className="prism-panel prism-interactive group relative flex flex-col gap-1.5 rounded-[14px] px-3 py-2.5 -mx-1"
                             >
-                                {/* Left tint accent — appears on hover */}
-                                <div
-                                    className="absolute left-0 top-2.5 bottom-2.5 w-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                                    style={{ background: "var(--tint-color)" }}
-                                />
-
                                 {/* Name + external icon */}
                                 <div className="flex items-center justify-between gap-2">
                                     <span className="font-semibold text-[15px] text-text-primary group-hover:text-tint transition-colors duration-150 leading-snug">
@@ -103,7 +92,7 @@ export function ProjectsCard() {
                                         {repoStats && (
                                             <>
                                                 <span className="flex items-center gap-0.5 text-[12px] text-text-tertiary">
-                                                    <Star size={11} style={{ color: "#ff9f0a" }} />
+                                                    <Star size={11} style={{ color: "var(--tint-color)" }} />
                                                     {repoStats.stars}
                                                 </span>
                                                 <span className="flex items-center gap-0.5 text-[12px] text-text-tertiary">
@@ -114,7 +103,7 @@ export function ProjectsCard() {
                                         )}
                                         <ExternalLink
                                             size={12}
-                                            className="text-text-tertiary opacity-0 group-hover:opacity-60 transition-opacity"
+                                            className="text-text-tertiary opacity-35 group-hover:opacity-60 transition-opacity duration-150"
                                         />
                                     </div>
                                 </div>
@@ -137,7 +126,7 @@ export function ProjectsCard() {
                                         ))}
                                     </div>
                                 )}
-                            </motion.a>
+                            </a>
                         </React.Fragment>
                     );
                 })}

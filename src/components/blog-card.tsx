@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { BookOpen, ArrowUpRight, ChevronRight, Eye } from "lucide-react";
+import { BookOpen, ArrowUpRight, Eye } from "lucide-react";
 import { GlassCard } from "@/components/glass-card";
 import { siteConfig } from "@/config/site";
 
@@ -95,7 +95,7 @@ export function BlogCard() {
                     全部
                     <ArrowUpRight
                         size={11}
-                        className="transition-transform duration-150 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                        className="opacity-70 transition-opacity duration-150 group-hover:opacity-100"
                     />
                 </a>
             </div>
@@ -131,7 +131,7 @@ export function BlogCard() {
                             href={`${blogConfig.url}${post.status.permalink}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="group relative flex items-center gap-2 px-2.5 py-[10px] rounded-xl cursor-pointer"
+                            className="prism-panel prism-interactive group relative flex items-center gap-2 rounded-[14px] px-2.5 py-[10px]"
                             initial={{ opacity: 0, y: 5 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{
@@ -140,8 +140,6 @@ export function BlogCard() {
                                 stiffness: 300,
                                 damping: 26,
                             }}
-                            whileHover={{ backgroundColor: "var(--surface-bg)" }}
-                            style={{ borderRadius: 12 }}
                         >
                             {/* Content */}
                             <div className="flex-1 min-w-0">
@@ -177,12 +175,6 @@ export function BlogCard() {
                                 </div>
                             </div>
 
-                            {/* Hover arrow — slides in from left */}
-                            <ChevronRight
-                                size={13}
-                                className="shrink-0 transition-all duration-150 opacity-0 -translate-x-1.5 group-hover:opacity-45 group-hover:translate-x-0"
-                                style={{ color: "var(--text-tertiary)" }}
-                            />
                         </motion.a>
                     ))
                 ) : (

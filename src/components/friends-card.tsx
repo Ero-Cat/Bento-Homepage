@@ -33,7 +33,7 @@ export function FriendsCard() {
                         whileTap="tap"
                         variants={{
                             initial: { scale: 1 },
-                            hover: { scale: 1.008 },
+                            hover: { scale: 1.01 },
                             tap: { scale: 0.96 },
                         }}
                         transition={SPRING_GENTLE}
@@ -47,8 +47,8 @@ export function FriendsCard() {
                                     transition: { type: "spring", stiffness: 200, damping: 24 },
                                 },
                                 hover: {
-                                    rotate: 1.5,
-                                    scale: 1.05,
+                                    rotate: 0,
+                                    scale: 1.025,
                                     transition: { type: "spring", stiffness: 110, damping: 18 },
                                 },
                                 tap: {

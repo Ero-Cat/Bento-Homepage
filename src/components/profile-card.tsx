@@ -60,22 +60,22 @@ export function ProfileCard({ avatarImages }: ProfileCardProps) {
             <AvatarCarousel images={images} alt={name} />
 
             {/* Info */}
-            <div className="flex flex-col gap-2 flex-1 min-w-0">
+            <div className="flex w-full max-w-full flex-1 min-w-0 flex-col gap-2">
                 {/* Line 1: Hello 👋 */}
                 <p className="text-xl font-medium text-text-secondary animate-fade-in">
                     {hello}{" "}
                     <span className="inline-block animate-wave origin-[70%_70%]">👋</span>
                 </p>
                 {/* Line 2: I'm + Name */}
-                <h1 className="text-[2.2rem] md:text-[2.6rem] font-bold tracking-tight text-text-primary leading-none">
+                <h1 className="max-w-full break-words text-[2rem] font-bold tracking-tight text-text-primary leading-tight md:text-[2.6rem] md:leading-none">
                     <span className="text-text-secondary font-medium">{iam}</span>{" "}
                     {aliases && aliases.length > 0 ? (
-                        <Typewriter aliases={aliases} />
+                        <Typewriter aliases={aliases} className="inline-block max-w-full break-all align-baseline" />
                     ) : (
                         name
                     )}
                 </h1>
-                <p className="text-lg font-semibold text-text-secondary tracking-[-0.01em]">{title}</p>
+                <p className="break-words text-base font-semibold text-text-secondary md:text-lg">{title}</p>
                 {location && (
                     <p className="flex items-center justify-center gap-1.5 text-[15px] text-text-tertiary md:justify-start">
                         <MapPin size={14} className="shrink-0" style={{ color: "var(--tint-color)" }} />

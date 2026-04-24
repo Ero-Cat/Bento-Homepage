@@ -21,10 +21,15 @@ import {
   resolveGlassVariant,
 } from "@/lib/liquid-glass";
 import {
+  beginScrollGeometryTracking,
   expandScissorRect,
   resolveLiquidGlassQuality,
+  resolveLiquidGlassViewport,
+  stepScrollGeometryTracking,
   type LiquidGlassQualityProfile,
+  type LiquidGlassViewportState,
   type ScissorRect,
+  type ScrollGeometryTrackingState,
 } from "@/lib/liquid-glass-runtime";
 import BG_FRAG from "@/shaders/glass-bg.glsl";
 import VBLUR_FRAG from "@/shaders/glass-vblur.glsl";
@@ -80,6 +85,11 @@ interface GLState {
   >;
   width: number;
   height: number;
+  cssWidth: number;
+  cssHeight: number;
+  dpr: number;
+  viewportOffsetLeft: number;
+  viewportOffsetTop: number;
   blurWidth: number;
   blurHeight: number;
   quality: LiquidGlassQualityProfile;
@@ -248,15 +258,43 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
         saveData: getSaveData(),
       });
 
+    const readVisualViewport = () => {
+      const viewport = window.visualViewport;
+      return viewport
+        ? {
+            width: viewport.width,
+            height: viewport.height,
+            offsetLeft: viewport.offsetLeft,
+            offsetTop: viewport.offsetTop,
+          }
+        : undefined;
+    };
+
+    const resolveViewportState = (dprCap: number): LiquidGlassViewportState =>
+      resolveLiquidGlassViewport({
+        innerWidth: window.innerWidth,
+        innerHeight: window.innerHeight,
+        devicePixelRatio: window.devicePixelRatio || 1,
+        dprCap,
+        visualViewport: readVisualViewport(),
+      });
+
+    const applyCanvasViewportStyle = (viewport: LiquidGlassViewportState) => {
+      canvas.style.width = `${viewport.cssWidth}px`;
+      canvas.style.height = `${viewport.cssHeight}px`;
+      canvas.style.transform = `translate3d(${viewport.offsetLeft}px, ${viewport.offsetTop}px, 0)`;
+    };
+
     const initialQuality = resolveQuality();
-    const initialDpr = Math.min(window.devicePixelRatio || 1, initialQuality.dprCap);
-    const initialWidth = Math.max(1, Math.round(window.innerWidth * initialDpr));
-    const initialHeight = Math.max(1, Math.round(window.innerHeight * initialDpr));
+    const initialViewport = resolveViewportState(initialQuality.dprCap);
+    const initialWidth = initialViewport.width;
+    const initialHeight = initialViewport.height;
     const initialBlurWidth = Math.max(1, Math.round(initialWidth * initialQuality.blurBufferScale));
     const initialBlurHeight = Math.max(1, Math.round(initialHeight * initialQuality.blurBufferScale));
 
     canvas.width = initialWidth;
     canvas.height = initialHeight;
+    applyCanvasViewportStyle(initialViewport);
 
     const state: GLState = {
       gl,
@@ -287,6 +325,11 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
       textureCache: new Map(),
       width: initialWidth,
       height: initialHeight,
+      cssWidth: initialViewport.cssWidth,
+      cssHeight: initialViewport.cssHeight,
+      dpr: initialViewport.dpr,
+      viewportOffsetLeft: initialViewport.offsetLeft,
+      viewportOffsetTop: initialViewport.offsetTop,
       blurWidth: initialBlurWidth,
       blurHeight: initialBlurHeight,
       quality: initialQuality,
@@ -299,14 +342,18 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
     let hasCommittedReady = false;
     let sceneDirty = true;
     let cardsDirty = true;
-    // Track real scroll position across wheel/momentum scrolling.
-    // Mouse wheel scrolling on macOS/Chrome is compositor-driven and may continue with
-    // inertia between discrete DOM scroll events. If we only redraw on each event, the
-    // shared canvas visibly "catches up" in steps. Instead, once scrolling starts we keep
-    // rendering for a short settle window and compare the latest window.scrollY every frame.
-    let lastRenderedScrollY = window.scrollY;
-    let scrollTrackingFramesRemaining = 0;
-    const SCROLL_TRACK_FRAMES = 12;
+    // Track real scroll/viewport geometry across compositor-driven momentum scrolling.
+    // Mobile browser chrome changes and inertial scroll can keep moving after the last
+    // scroll event, so the renderer follows actual geometry until it has been idle.
+    const SCROLL_TRACK_FRAMES = coarsePointerMedia.matches ? 150 : 96;
+    const SCROLL_IDLE_FRAMES = coarsePointerMedia.matches ? 14 : 8;
+    let scrollGeometryState: ScrollGeometryTrackingState = {
+      lastScrollY: window.scrollY,
+      lastViewportOffsetTop: initialViewport.offsetTop,
+      lastViewportOffsetLeft: initialViewport.offsetLeft,
+      framesRemaining: 0,
+      idleFrames: 0,
+    };
 
     let resizeObserver: ResizeObserver | null = null;
     let intersectionObserver: IntersectionObserver | null = null;
@@ -341,9 +388,8 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
 
     const applyCanvasSizing = () => {
       const nextQuality = resolveQuality();
-      const dpr = Math.min(window.devicePixelRatio || 1, nextQuality.dprCap);
-      const width = Math.max(1, Math.round(window.innerWidth * dpr));
-      const height = Math.max(1, Math.round(window.innerHeight * dpr));
+      const viewport = resolveViewportState(nextQuality.dprCap);
+      const { width, height } = viewport;
       const blurWidth = Math.max(1, Math.round(width * nextQuality.blurBufferScale));
       const blurHeight = Math.max(1, Math.round(height * nextQuality.blurBufferScale));
       const qualityChanged =
@@ -351,13 +397,28 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
         nextQuality.blurBufferScale !== state.quality.blurBufferScale ||
         nextQuality.preferHalfFloat !== state.quality.preferHalfFloat;
       const sizeChanged = width !== state.width || height !== state.height;
+      const viewportChanged =
+        viewport.cssWidth !== state.cssWidth ||
+        viewport.cssHeight !== state.cssHeight ||
+        viewport.offsetLeft !== state.viewportOffsetLeft ||
+        viewport.offsetTop !== state.viewportOffsetTop ||
+        viewport.dpr !== state.dpr;
 
-      if (!qualityChanged && !sizeChanged) {
+      if (!qualityChanged && !sizeChanged && !viewportChanged) {
         return;
       }
 
-      canvas.width = width;
-      canvas.height = height;
+      applyCanvasViewportStyle(viewport);
+      state.cssWidth = viewport.cssWidth;
+      state.cssHeight = viewport.cssHeight;
+      state.dpr = viewport.dpr;
+      state.viewportOffsetLeft = viewport.offsetLeft;
+      state.viewportOffsetTop = viewport.offsetTop;
+
+      if (sizeChanged) {
+        canvas.width = width;
+        canvas.height = height;
+      }
       state.width = width;
       state.height = height;
 
@@ -372,7 +433,7 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
       }
 
       state.sceneVeil = readSceneVeil();
-      sceneDirty = true;
+      sceneDirty = sceneDirty || qualityChanged || sizeChanged;
       cardsDirty = true;
     };
 
@@ -478,8 +539,12 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
     };
 
     const refreshCardGeometry = (card: HTMLElement, entry: CardRenderState) => {
-      const dpr = state.width / Math.max(window.innerWidth, 1);
+      const dpr = state.dpr;
       const rect = card.getBoundingClientRect();
+      const left = rect.left - state.viewportOffsetLeft;
+      const top = rect.top - state.viewportOffsetTop;
+      const right = left + rect.width;
+      const bottom = top + rect.height;
       const variant = resolveGlassVariant(card.dataset.glassVariant);
       const config = GLASS_VARIANTS[variant] ?? GLASS_VARIANTS[DEFAULT_GLASS_VARIANT];
       const radiusPx = Math.min(
@@ -488,8 +553,8 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
       );
       const scissorRect = expandScissorRect(
         {
-          left: rect.left * dpr,
-          top: rect.top * dpr,
+          left: left * dpr,
+          top: top * dpr,
           width: rect.width * dpr,
           height: rect.height * dpr,
         },
@@ -501,15 +566,15 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
       entry.radiusPx = radiusPx;
       entry.scissorRect = scissorRect;
       entry.visible =
-        rect.bottom > -LIQUID_GLASS_CANVAS.scissorPaddingPx &&
-        rect.top < window.innerHeight + LIQUID_GLASS_CANVAS.scissorPaddingPx &&
-        rect.right > -LIQUID_GLASS_CANVAS.scissorPaddingPx &&
-        rect.left < window.innerWidth + LIQUID_GLASS_CANVAS.scissorPaddingPx;
+        bottom > -LIQUID_GLASS_CANVAS.scissorPaddingPx &&
+        top < state.cssHeight + LIQUID_GLASS_CANVAS.scissorPaddingPx &&
+        right > -LIQUID_GLASS_CANVAS.scissorPaddingPx &&
+        left < state.cssWidth + LIQUID_GLASS_CANVAS.scissorPaddingPx;
       entry.uvRect = [
-        rect.left / Math.max(window.innerWidth, 1),
-        1 - (rect.top + rect.height) / Math.max(window.innerHeight, 1),
-        rect.width / Math.max(window.innerWidth, 1),
-        rect.height / Math.max(window.innerHeight, 1),
+        left / state.cssWidth,
+        1 - (top + rect.height) / state.cssHeight,
+        rect.width / state.cssWidth,
+        rect.height / state.cssHeight,
       ];
       entry.dirty = false;
       entry.dynamicFrames = Math.max(entry.dynamicFrames - 1, 0);
@@ -562,17 +627,17 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
       requestRender();
     };
 
-    const onWheel = () => {
-      scrollTrackingFramesRemaining = Math.max(scrollTrackingFramesRemaining, SCROLL_TRACK_FRAMES);
+    const beginScrollTracking = () => {
+      scrollGeometryState = beginScrollGeometryTracking(scrollGeometryState, SCROLL_TRACK_FRAMES);
       cardsDirty = true;
       requestRender();
     };
 
-    const onScroll = () => {
-      scrollTrackingFramesRemaining = Math.max(scrollTrackingFramesRemaining, SCROLL_TRACK_FRAMES);
-      cardsDirty = true;
-      requestRender();
-    };
+    const onWheel = beginScrollTracking;
+
+    const onScroll = beginScrollTracking;
+
+    const onTouchMove = beginScrollTracking;
 
     const onThemeChange = () => {
       state.sceneVeil = readSceneVeil();
@@ -589,8 +654,11 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
     window.addEventListener("resize", onResize, { passive: true });
     window.addEventListener("wheel", onWheel, { passive: true });
     window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("touchmove", onTouchMove, { passive: true });
     window.addEventListener(LIQUID_GLASS_CANVAS.registryChangeEventName, onRegistryChange);
     coarsePointerMedia.addEventListener("change", onResize);
+    window.visualViewport?.addEventListener("resize", onResize, { passive: true });
+    window.visualViewport?.addEventListener("scroll", onScroll, { passive: true });
 
     const themeMedia = window.matchMedia("(prefers-color-scheme: dark)");
     themeMedia.addEventListener("change", onThemeChange);
@@ -599,11 +667,20 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
       rafRef.current = 0;
       if (destroyed) return;
 
-      const currentScrollY = window.scrollY;
-      if (currentScrollY !== lastRenderedScrollY) {
-        lastRenderedScrollY = currentScrollY;
+      applyCanvasSizing();
+      const viewportForScroll = resolveViewportState(state.quality.dprCap);
+      const scrollResult = stepScrollGeometryTracking(
+        scrollGeometryState,
+        {
+          scrollY: window.scrollY,
+          viewportOffsetTop: viewportForScroll.offsetTop,
+          viewportOffsetLeft: viewportForScroll.offsetLeft,
+        },
+        { idleFrameLimit: SCROLL_IDLE_FRAMES },
+      );
+      scrollGeometryState = scrollResult.state;
+      if (scrollResult.geometryChanged) {
         cardsDirty = true;
-        scrollTrackingFramesRemaining = SCROLL_TRACK_FRAMES;
       }
 
       const bgState = detectBgState();
@@ -712,7 +789,7 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
         bindTexture(gl, state.mainProg, "u_bg", state.fbo0.texture, 0);
         bindTexture(gl, state.mainProg, "u_blurredBg", state.fbo2.texture, 1);
         gl.uniform2f(state.mainProg.uniforms["u_resolution"]!, state.width, state.height);
-        gl.uniform1f(state.mainProg.uniforms["u_dpr"]!, state.width / Math.max(window.innerWidth, 1));
+        gl.uniform1f(state.mainProg.uniforms["u_dpr"]!, state.dpr);
 
         gl.enable(gl.SCISSOR_TEST);
 
@@ -759,9 +836,8 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
       sceneDirty = false;
       cardsDirty = false;
 
-      const shouldContinueScrollTracking = scrollTrackingFramesRemaining > 0;
+      const shouldContinueScrollTracking = scrollResult.shouldContinue;
       if (shouldContinueScrollTracking) {
-        scrollTrackingFramesRemaining -= 1;
         cardsDirty = true;
       }
 
@@ -782,8 +858,11 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
       window.removeEventListener("resize", onResize);
       window.removeEventListener("wheel", onWheel);
       window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("touchmove", onTouchMove);
       window.removeEventListener(LIQUID_GLASS_CANVAS.registryChangeEventName, onRegistryChange);
       coarsePointerMedia.removeEventListener("change", onResize);
+      window.visualViewport?.removeEventListener("resize", onResize);
+      window.visualViewport?.removeEventListener("scroll", onScroll);
       themeMedia.removeEventListener("change", onThemeChange);
       resizeObserver?.disconnect();
       intersectionObserver?.disconnect();
@@ -809,13 +888,15 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
       aria-hidden="true"
       style={{
         position: "fixed",
-        inset: 0,
-        width: "100vw",
-        height: "100vh",
+        left: 0,
+        top: 0,
+        width: "100dvw",
+        height: "100dvh",
         zIndex: 1,
         pointerEvents: "none",
         display: "block",
         opacity: 0,
+        transformOrigin: "left top",
       }}
     />
   );
