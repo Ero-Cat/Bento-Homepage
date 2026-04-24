@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { motion } from "framer-motion";
+import Image from "next/image";
 import { GlassCard } from "@/components/glass-card";
 import { ImageIcon } from "lucide-react";
 
@@ -10,6 +11,11 @@ import { ImageIcon } from "lucide-react";
    ============================================================ */
 const CARD_OFFSET = 8
 const ROTATION_FACTOR = 4;
+const IMAGE_EXT_RE = /\.(jpe?g|png|webp|avif)$/i;
+
+function optimizedPhotoUrl(filename: string) {
+    return `/optimized/photos/${filename.replace(IMAGE_EXT_RE, ".webp")}`;
+}
 
 /** Deterministic pseudo-random rotation based on index */
 function getRotation(index: number): number {
@@ -33,7 +39,7 @@ export function PhotoStackCard({ photos }: PhotoStackCardProps) {
         () =>
             photos.map((filename, index) => ({
                 id: index,
-                imageUrl: `/photos/${filename}`,
+                imageUrl: optimizedPhotoUrl(filename),
                 rotation: getRotation(index),
             })),
         [photos]
@@ -91,15 +97,16 @@ export function PhotoStackCard({ photos }: PhotoStackCardProps) {
                             onDragEnd={() => moveToEnd(index)}
                             onMouseDown={(e) => e.stopPropagation()}
                         >
-                            <img
+                            <Image
                                 src={card.imageUrl}
                                 alt={`Photo ${card.id + 1}`}
-                                className="w-full h-full rounded-2xl object-cover shadow-lg select-none pointer-events-none"
+                                fill
+                                sizes="(min-width: 768px) 1376px, calc(100vw - 32px)"
+                                className="rounded-2xl object-cover shadow-lg select-none pointer-events-none"
                                 style={{
-                                    aspectRatio: "16 / 9",
                                     border: "1px solid var(--glass-inner-border)",
                                 }}
-                                loading={index === cards.length - 1 ? "eager" : "lazy"}
+                                loading="lazy"
                                 draggable={false}
                             />
                         </motion.li>

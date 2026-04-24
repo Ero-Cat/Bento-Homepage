@@ -15,6 +15,7 @@
 - **Variant 化玻璃参数** — `hero` / `panel` / `media` / `dense` / `immersive` 通过 `src/lib/liquid-glass.ts` 集中管理，不在业务卡片里散落光学参数
 - **按需渲染调度** — 共享画布只在背景切换、resize、scroll、卡片几何变化和首屏入场稳定阶段重绘，不再常驻空转
 - **运行时质量分级** — 根据设备 DPR、指针类型、设备内存和卡片数量自动切换 blur 降采样与 FBO 精度
+- **低端设备质量分级** — 省流量、低内存/低核心数、移动高 DPR 等场景仍保留 WebGL Liquid Glass，只降低 DPR、FBO 和 blur buffer 成本
 - **按卡片范围绘制** — `mainPass` 结合几何缓存与 scissor 裁剪，只绘制实际可见的 glass 区域
 - **渐进增强 fallback** — WebGL2 不可用时自动退回 CSS blur / border / shadow 玻璃壳层
 - **Bento Grid 布局** — 响应式 CSS Grid（桌面 4 列 → 移动端 1 列）
@@ -24,8 +25,8 @@
 - **📊 GitHub 贡献热力图** — 无需 Token，自动加载过去一年的贡献数据
 - **📝 博客卡片** — 集成 Halo 2.x Content API，展示最近博文（可选启用）
 - **多头像轮播** — 3D 旋转动画的头像切换效果
-- **照片堆叠** — 点击展开/收起的交互式照片堆叠卡片
-- **背景轮播** — 自动扫描 `public/bg/` 目录下所有图片，随机顺序交叉淡入轮播
+- **照片堆叠** — 点击展开/收起的交互式照片堆叠卡片，运行时优先使用 `public/optimized/photos/` WebP 资源
+- **背景轮播** — 自动扫描 `public/bg/` 目录下所有图片，运行时使用 `public/optimized/bg/` 轻量 WebP 副本并同步给 Liquid Glass 背景纹理
 - **多语言问候 & 简介** — 根据浏览器语言自动切换问候语和个人简介（中/英/日等）
 - **打字机效果** — 名称 / 别名自动循环打字展示
 - **明暗自动切换** — 跟随系统 `prefers-color-scheme`，双套设计令牌
@@ -33,10 +34,10 @@
 - **扁平化内层控件** — 标签、按钮、项目卡内层表面统一收敛为更安静的系统控件风格
 - **硬件标签一致性** — 硬件清单使用与兴趣标签相同的 Pill Tag 样式和 hover 动效
 - **入场动画** — 交错 fade-in + slide-up，弹簧物理驱动
-- **性能优化** — 共享单 WebGL 画布、稳定背景源发布、失效驱动渲染、降采样 blur、几何缓存、rAF 驱动零渲染进度条
+- **性能优化** — 共享单 WebGL 画布、低端质量分级、稳定背景源发布、失效驱动渲染、降采样 blur、几何缓存、轻量 WebP 运行时资源、Mapbox 视口懒加载、rAF 驱动零渲染进度条
 - **SEO 就绪** — Open Graph、Twitter Card、`<meta>` 标签全部从配置生成
 - **全静态导出** — `next build` 输出纯 HTML/CSS/JS，无需服务器
-- **🗺️ 足迹地图** — Mapbox Standard 互动地图，标记去过的城市，脉冲标记 + 毛玻璃弹窗，自动跟随浏览器语言切换地名，**IP 距离显示**（自动计算并展示访客与标记城市的直线距离）
+- **🗺️ 足迹地图** — Mapbox Standard 互动地图，接近视口后才动态加载 Mapbox，标记去过的城市，脉冲标记 + 毛玻璃弹窗，自动跟随浏览器语言切换地名，**IP 距离显示**（自动计算并展示访客与标记城市的直线距离）
 - **🌤️ 实时天气卡片** — 基于 [open-meteo.com](https://open-meteo.com) 免费 API，无需 Token，Apple Weather 风格渐变，动态天气动效（晴/多云/雨/雪/雷暴）
 - **🐍 GitHub Heatmap Snake** — 贡献热力图上的 Snake 游戏巡游动效
 - **GitHub Pages CI/CD** — 推送到 `main` 分支即自动构建部署
@@ -89,7 +90,8 @@ Bento-Homepage/
 │   ├── CNAME                     # 自定义域名配置
 │   ├── avatar/                   # 多头像目录（3D 轮播）
 │   ├── bg/                       # 背景图目录（多张自动轮播）
-│   └── photos/                   # 照片堆叠目录
+│   ├── photos/                   # 照片堆叠目录
+│   └── optimized/                # 降采样 WebP 运行时资源（bg/photos）
 ├── src/
 │   ├── app/
 │   │   ├── globals.css           # 设计令牌（明/暗）、Prism micro-surface utility、动画关键帧
@@ -157,6 +159,7 @@ Bento-Homepage/
 - `ResizeObserver` / `IntersectionObserver` / registry 事件共同维护卡片几何缓存，避免每帧对所有卡片调用布局读取
 - `mainPass` 对每张卡启用 scissor 裁剪，GPU 只处理该卡的实际屏幕区域
 - `vBlur` / `hBlur` FBO 会按质量档位降采样，优先在移动端和高 DPR 下控制填充率
+- 省流量、移动高 DPR、低内存/低核心数或高卡片密度时进入更低的 WebGL 质量档位，保留 Liquid Glass 折射/Fresnel/glare，同时降低 DPR、FBO 和 blur buffer 成本
 - 当前 pass 管线为：
   - `glass-bg.glsl`
   - `glass-vblur.glsl`

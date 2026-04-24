@@ -119,7 +119,8 @@ Bento-Homepage/
 │   ├── CNAME                     # 自定义域名 (iacg.moe)
 │   ├── avatar/                   # 多头像目录（3D 轮播）
 │   ├── bg/                       # 背景图目录（多张自动轮播）
-│   └── photos/                   # 照片堆叠目录
+│   ├── photos/                   # 照片堆叠目录
+│   └── optimized/                # WebP 降采样运行时资源（bg/photos）
 ├── src/
 │   ├── app/
 │   │   ├── globals.css           # 设计令牌（明/暗）、Prism micro-surface utility、动画关键帧
@@ -183,6 +184,13 @@ Bento-Homepage/
 - **降采样 blur**：背景 blur pass 根据运行时质量档位使用降采样 FBO，在移动端/高 DPR/高卡片密度下自动降低填充成本
 - **纯光学壳层**：WebGL2 就绪后，`GlassCard` 的旧 DOM 玻璃外观必须静音，只保留结构与命中区域，光学效果完全由 Canvas 负责
 - **CSS fallback**：WebGL2 不可用时退回 CSS blur/border/shadow 玻璃壳层，保证内容可读
+- **低端质量分级**：在省流量、低内存、低核心数、移动高 DPR 或高卡片密度场景下，仍保留 WebGL Liquid Glass，只降低 DPR、FBO 精度和 blur buffer 成本；禁止用静态壳层替代正常 liquid shell
+
+### Asset & Lazy Runtime 优化
+- **优化图片副本**：`public/optimized/bg` 与 `public/optimized/photos` 存放降采样 WebP 运行时资源；背景、LiquidGlassCanvas 背景纹理、照片堆叠均优先使用该目录，原图仍保留作源素材
+- **Mapbox 延迟加载**：`MapCard` 只在卡片接近视口后通过动态 `import("mapbox-gl")` 加载地图运行时，首屏 bundle 禁止静态引入 Mapbox
+- **地理位置无打扰**：动态位置默认使用 HTTPS IP 定位；仅当浏览器地理位置权限已授予时才读取 Geolocation，禁止首屏主动弹权限请求
+- **常驻动效节流**：GitHub Heatmap Snake 仅在卡片可见、未启用省流量/减少动态效果时运行，并以低频 interval 更新；天气粒子动效在移动粗指针、省流量或减少动态效果下关闭
 
 ### Shader Source of Truth
 - `src/shaders/*.glsl` 是 Liquid Glass shader 的唯一源码来源

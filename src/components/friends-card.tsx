@@ -62,6 +62,8 @@ export function FriendsCard() {
                                 src={friend.avatar}
                                 alt={friend.name}
                                 className="object-cover w-full h-full"
+                                loading="lazy"
+                                decoding="async"
                             />
                         </motion.div>
                         <span className="text-[13px] font-medium text-text-secondary group-hover:text-text-primary transition-colors duration-200 text-center line-clamp-1 w-full">

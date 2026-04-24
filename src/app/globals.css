@@ -14,7 +14,7 @@
   /* Glass shape token — used by card border-radius */
   --glass-radius: 28px;
   /* Fallback glass — luminous frosted white */
-  --glass-fallback-bg: rgba(255, 255, 255, 0.68);
+  --glass-fallback-bg: rgba(255, 255, 255, 0.24);
   --glass-fallback-border: rgba(0, 0, 0, 0.05);
   --glass-fallback-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
   /* Shell (WebGL backing) */
@@ -26,25 +26,25 @@
   --glass-inner-bg: rgba(255, 255, 255, 0.28);
   --glass-inner-border: rgba(255, 255, 255, 0.44);
   --glass-divider: rgba(0, 0, 0, 0.06);
-  --glass-floating-bg: rgba(255, 255, 255, 0.80);
+  --glass-floating-bg: rgba(255, 255, 255, 0.26);
   --glass-floating-border: rgba(0, 0, 0, 0.05);
   --glass-scene-veil-strength: 1.08;
   /* Prism micro-surface — Apple-grade frosted panels */
-  --prism-fill: rgba(255, 255, 255, 0.14);
-  --prism-fill-strong: rgba(255, 255, 255, 0.22);
-  --prism-border: rgba(255, 255, 255, 0.34);
-  --prism-highlight: rgba(255, 255, 255, 0.58);
-  --prism-shadow: rgba(0, 0, 0, 0.04);
-  --prism-tint-rgb: 194, 0, 101;
-  --prism-orb-glow: rgba(194, 0, 101, 0.10);
-  --prism-press-depth: 0.982;
+  --prism-fill: rgba(255, 255, 255, 0.1);
+  --prism-fill-strong: rgba(255, 255, 255, 0.14);
+  --prism-border: rgba(255, 255, 255, 0.22);
+  --prism-highlight: rgba(255, 255, 255, 0.28);
+  --prism-shadow: rgba(15, 23, 42, 0.05);
+  --prism-tint-rgb: 190, 24, 93;
+  --prism-orb-glow: rgba(255, 255, 255, 0);
+  --prism-press-depth: 0.985;
   /* Surface tokens — minimal inner glass surfaces (replaces prism noise) */
   --surface-bg: rgba(0, 0, 0, 0.05);
   --surface-bg-strong: rgba(0, 0, 0, 0.09);
   --surface-border: rgba(0, 0, 0, 0.07);
   --surface-border-hover: rgba(0, 0, 0, 0.13);
   /* iOS media card material — Apple Music frosted glass */
-  --ios-material-bg: rgba(255, 255, 255, 0.42);
+  --ios-material-bg: rgba(255, 255, 255, 0.3);
   --ios-material-border: rgba(255, 255, 255, 0.60);
   --ios-material-shadow: 0 16px 48px rgba(0, 0, 0, 0.10), 0 4px 12px rgba(0, 0, 0, 0.06);
   --ios-material-highlight: rgba(255, 255, 255, 0.80);
@@ -59,13 +59,13 @@
 
   /* Typography — Apple canonical label colors */
   --text-primary: #1d1d1f;
-  --text-secondary: #424245;
-  --text-tertiary: #6e6e73;
+  --text-secondary: #1e293b;
+  --text-tertiary: #475569;
 
   /* Background overlay for bg image — Light */
-  --bg-overlay: rgba(250, 250, 252, 0.28);
-  --bg-overlay-gradient-top: rgba(255, 255, 255, 0.72);
-  --bg-overlay-gradient-bottom: rgba(245, 245, 247, 0.56);
+  --bg-overlay: rgba(244, 247, 251, 0.38);
+  --bg-overlay-gradient-top: rgba(248, 250, 252, 0.76);
+  --bg-overlay-gradient-bottom: rgba(241, 245, 249, 0.62);
 
   /* Scrollbar */
   --scrollbar-thumb: rgba(0, 0, 0, 0.18);
@@ -107,14 +107,14 @@
     --glass-floating-border: rgba(255, 255, 255, 0.09);
     --glass-scene-veil-strength: 1.06;
     /* Prism micro-surface — darker, luminous highlight edges */
-    --prism-fill: rgba(255, 255, 255, 0.042);
-    --prism-fill-strong: rgba(255, 255, 255, 0.072);
-    --prism-border: rgba(255, 255, 255, 0.10);
-    --prism-highlight: rgba(255, 255, 255, 0.16);
-    --prism-shadow: rgba(0, 0, 0, 0.48);
-    --prism-tint-rgb: 255, 55, 95;
-    --prism-orb-glow: rgba(255, 55, 95, 0.16);
-    --prism-press-depth: 0.982;
+    --prism-fill: rgba(255, 255, 255, 0.035);
+    --prism-fill-strong: rgba(255, 255, 255, 0.055);
+    --prism-border: rgba(255, 255, 255, 0.09);
+    --prism-highlight: rgba(255, 255, 255, 0.12);
+    --prism-shadow: rgba(2, 6, 23, 0.16);
+    --prism-tint-rgb: 251, 113, 133;
+    --prism-orb-glow: rgba(255, 255, 255, 0);
+    --prism-press-depth: 0.985;
     /* Surface tokens — luminous inner glass surfaces */
     --surface-bg: rgba(255, 255, 255, 0.08);
     --surface-bg-strong: rgba(255, 255, 255, 0.13);
@@ -232,6 +232,28 @@ body {
   text-rendering: optimizeLegibility;
   -webkit-tap-highlight-color: transparent;
   font-feature-settings: "kern" 1, "liga" 1;
+}
+
+.bg-image-layer {
+  object-fit: cover;
+  object-position: center;
+  transform: translateZ(0);
+  will-change: opacity;
+}
+
+.bg-image-layer--current {
+  opacity: 1;
+}
+
+.bg-image-layer--previous {
+  opacity: 1;
+  animation: bg-fade-out 2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes bg-fade-out {
+  to {
+    opacity: 0;
+  }
 }
 
 /* ============================================================
@@ -708,6 +730,27 @@ body {
   width: 100%;
   height: 100%;
   border-radius: var(--glass-radius);
+}
+
+.map-placeholder {
+  width: 100%;
+  height: 100%;
+  border-radius: var(--glass-radius);
+  background:
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--surface-bg-strong) 72%, transparent),
+      color-mix(in srgb, var(--surface-bg) 46%, transparent)
+    ),
+    radial-gradient(circle at 32% 28%, rgba(var(--tint-rgb), 0.16), transparent 34%),
+    linear-gradient(
+      90deg,
+      transparent 0 12%,
+      color-mix(in srgb, var(--glass-divider) 78%, transparent) 12% 12.5%,
+      transparent 12.5% 28%,
+      color-mix(in srgb, var(--glass-divider) 66%, transparent) 28% 28.4%,
+      transparent 28.4% 100%
+    );
 }
 
 .map-header {

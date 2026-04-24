@@ -53,6 +53,7 @@ export function GitHubHeatmapCard() {
         count: number;
     } | null>(null);
     const svgRef = useRef<SVGSVGElement>(null);
+    const [animateSnake, setAnimateSnake] = useState(false);
 
     useEffect(() => {
         if (!username) return;
@@ -69,9 +70,31 @@ export function GitHubHeatmapCard() {
     const wrapperRef = useRef<HTMLDivElement>(null);
     const snakeLayerRef = useRef<SVGGElement>(null);
 
+    useEffect(() => {
+        if (!data) return;
+        const nav = navigator as Navigator & { connection?: { saveData?: boolean } };
+        const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        if (prefersReducedMotion || nav.connection?.saveData) return;
+
+        const node = wrapperRef.current;
+        if (!node || !("IntersectionObserver" in window)) {
+            const timer = window.setTimeout(() => setAnimateSnake(true), 0);
+            return () => window.clearTimeout(timer);
+        }
+
+        const observer = new IntersectionObserver(
+            ([entry]) => setAnimateSnake(Boolean(entry?.isIntersecting)),
+            { root: null, rootMargin: "120px 0px" },
+        );
+        observer.observe(node);
+        return () => {
+            observer.disconnect();
+        };
+    }, [data]);
+
     // =========== Snake Animation Logic ===========
     useEffect(() => {
-        if (!data || !snakeLayerRef.current) return;
+        if (!data || !animateSnake || !snakeLayerRef.current) return;
 
         const width = Math.ceil(data.contributions.length / ROWS);
         const height = ROWS;
@@ -256,12 +279,12 @@ export function GitHubHeatmapCard() {
             renderSnake();
         };
 
-        const intervalId = setInterval(tick, 60);
+        const intervalId = setInterval(tick, 160);
         return () => {
             clearInterval(intervalId);
             isRunning = false;
         };
-    }, [data]);
+    }, [data, animateSnake]);
 
     // =============================================
 

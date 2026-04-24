@@ -143,7 +143,24 @@ function WeatherAnimations({ code }: { code: number }) {
 export function WeatherCard() {
     const [data, setData] = useState<WeatherData | null>(null);
     const [error, setError] = useState(false);
+    const [effectsEnabled, setEffectsEnabled] = useState(true);
     const location = useDynamicLocation();
+
+    useEffect(() => {
+        const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+        const coarseQuery = window.matchMedia("(pointer: coarse)");
+        const nav = navigator as Navigator & { connection?: { saveData?: boolean } };
+        const update = () => {
+            setEffectsEnabled(!motionQuery.matches && !coarseQuery.matches && !nav.connection?.saveData);
+        };
+        update();
+        motionQuery.addEventListener("change", update);
+        coarseQuery.addEventListener("change", update);
+        return () => {
+            motionQuery.removeEventListener("change", update);
+            coarseQuery.removeEventListener("change", update);
+        };
+    }, []);
 
     useEffect(() => {
         // Only fetch weather if location is loaded
@@ -195,7 +212,7 @@ export function WeatherCard() {
             />
 
             {/* Dynamic Weather Animations */}
-            {data && <WeatherAnimations code={data.code} />}
+            {data && effectsEnabled && <WeatherAnimations code={data.code} />}
 
             {/* Content — own flex layout, own padding, on top of background */}
             <div className="relative z-10 flex flex-col justify-between h-full p-5 text-slate-950 dark:text-white">

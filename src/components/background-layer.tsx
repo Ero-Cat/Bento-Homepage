@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
 import { LIQUID_GLASS_CANVAS } from "@/lib/liquid-glass";
 
 
@@ -17,6 +17,11 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 const INTERVAL_MS = 10_000; // 10 seconds per image
+const IMAGE_EXT_RE = /\.(jpe?g|png|webp|avif)$/i;
+
+function optimizedBgUrl(filename: string) {
+    return `/optimized/bg/${filename.replace(IMAGE_EXT_RE, ".webp")}`;
+}
 
 interface BackgroundLayerProps {
     images: string[];
@@ -26,6 +31,8 @@ export function BackgroundLayer({ images }: BackgroundLayerProps) {
     const [shuffled, setShuffled] = useState<string[]>([]);
     const [index, setIndex] = useState(0);
     const previousUrlRef = useRef("");
+    const previousImageRef = useRef("");
+    const [fadingImage, setFadingImage] = useState("");
 
     // Shuffle on mount (client only) to avoid hydration mismatch
     useEffect(() => {
@@ -47,8 +54,8 @@ export function BackgroundLayer({ images }: BackgroundLayerProps) {
     useEffect(() => {
         if (shuffled.length <= 1) return;
         const nextIdx = (index + 1) % shuffled.length;
-        const img = new Image();
-        img.src = `/bg/${shuffled[nextIdx]}`;
+        const img = new window.Image();
+        img.src = optimizedBgUrl(shuffled[nextIdx]);
     }, [index, shuffled]);
 
     const currentImage = shuffled.length > 0 ? shuffled[index] : images[0];
@@ -57,9 +64,10 @@ export function BackgroundLayer({ images }: BackgroundLayerProps) {
 
     useEffect(() => {
         const root = document.documentElement;
-        const activeUrl = currentImage ? `/bg/${currentImage}` : "";
-        const nextUrl = nextImage ? `/bg/${nextImage}` : "";
+        const activeUrl = currentImage ? optimizedBgUrl(currentImage) : "";
+        const nextUrl = nextImage ? optimizedBgUrl(nextImage) : "";
         const previousUrl = previousUrlRef.current;
+        const previousImage = previousImageRef.current;
         let cleanupTimer: number | undefined;
 
         if (activeUrl) {
@@ -75,6 +83,9 @@ export function BackgroundLayer({ images }: BackgroundLayerProps) {
         }
 
         if (previousUrl && previousUrl !== activeUrl) {
+            if (previousImage) {
+                setFadingImage(previousImage);
+            }
             root.dataset[LIQUID_GLASS_CANVAS.previousBackgroundDatasetKey] = previousUrl;
             root.dataset[LIQUID_GLASS_CANVAS.backgroundTransitionDurationDatasetKey] =
                 `${LIQUID_GLASS_CANVAS.backgroundTransitionMs}`;
@@ -84,13 +95,16 @@ export function BackgroundLayer({ images }: BackgroundLayerProps) {
                     delete root.dataset[LIQUID_GLASS_CANVAS.previousBackgroundDatasetKey];
                     delete root.dataset[LIQUID_GLASS_CANVAS.backgroundTransitionDurationDatasetKey];
                 }
+                setFadingImage((image) => (image === previousImage ? "" : image));
             }, LIQUID_GLASS_CANVAS.backgroundTransitionMs);
         } else {
+            setFadingImage("");
             delete root.dataset[LIQUID_GLASS_CANVAS.previousBackgroundDatasetKey];
             delete root.dataset[LIQUID_GLASS_CANVAS.backgroundTransitionDurationDatasetKey];
         }
 
         previousUrlRef.current = activeUrl;
+        previousImageRef.current = currentImage;
 
         return () => {
             if (cleanupTimer) {
@@ -112,21 +126,29 @@ export function BackgroundLayer({ images }: BackgroundLayerProps) {
     return (
         <div className="fixed inset-0 z-0" aria-hidden="true">
             {/* Crossfade background images */}
-            <AnimatePresence initial={false} mode="sync">
-                <motion.div
-                    key={currentImage}
-                    className="absolute inset-0"
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 2, ease: "easeInOut" }}
-                    style={{
-                        backgroundImage: `url('/bg/${currentImage}')`,
-                        backgroundSize: "cover",
-                        backgroundPosition: "center",
-                        backgroundRepeat: "no-repeat",
-                    }}
+            {fadingImage && (
+                <Image
+                    key={`prev-${fadingImage}`}
+                    src={optimizedBgUrl(fadingImage)}
+                    alt=""
+                    fill
+                    sizes="100vw"
+                    className="bg-image-layer bg-image-layer--previous"
+                    aria-hidden="true"
                 />
-            </AnimatePresence>
+            )}
+            {currentImage && (
+                <Image
+                    key={`current-${currentImage}`}
+                    src={optimizedBgUrl(currentImage)}
+                    alt=""
+                    fill
+                    sizes="100vw"
+                    priority
+                    className="bg-image-layer bg-image-layer--current"
+                    aria-hidden="true"
+                />
+            )}
 
             {/* Gradient overlay — adapts to light/dark via CSS vars */}
             <div

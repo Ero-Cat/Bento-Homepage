@@ -40,6 +40,22 @@ test("resolveLiquidGlassQuality keeps high quality on capable desktop devices", 
   });
 });
 
+test("resolveLiquidGlassQuality keeps liquid glass enabled with an ultra-low profile on constrained hardware", () => {
+  const profile = resolveLiquidGlassQuality({
+    cardCount: 14,
+    devicePixelRatio: 3,
+    hasCoarsePointer: true,
+    deviceMemory: 2,
+    hardwareConcurrency: 4,
+  });
+
+  assert.deepEqual(profile, {
+    blurBufferScale: 0.38,
+    dprCap: 1.1,
+    preferHalfFloat: false,
+  });
+});
+
 test("springIsSettled returns false while the pointer spring is still moving", () => {
   assert.equal(
     springIsSettled({

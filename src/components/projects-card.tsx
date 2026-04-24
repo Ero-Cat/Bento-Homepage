@@ -7,7 +7,6 @@ import { siteConfig } from "@/config/site";
 import { GlassCard } from "@/components/glass-card";
 import { ExternalLink, Star, GitFork } from "lucide-react";
 import { SPRING_GENTLE } from "@/lib/motion";
-import { cn } from "@/lib/utils";
 
 interface RepoStats {
     stars: number;
@@ -84,7 +83,7 @@ export function ProjectsCard() {
                                 href={project.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="group relative flex flex-col gap-1.5 rounded-xl px-3 py-3 -mx-1 transition-colors hover:bg-[var(--surface-bg)] cursor-pointer"
+                                className="prism-panel prism-interactive group relative flex flex-col gap-1.5 rounded-xl px-3 py-3 -mx-1 cursor-pointer"
                                 whileHover={{ x: 2 }}
                                 whileTap={{ scale: 0.97 }}
                                 transition={SPRING_GENTLE}
@@ -131,12 +130,7 @@ export function ProjectsCard() {
                                         {project.tags.map((tag) => (
                                             <span
                                                 key={tag}
-                                                className="inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-medium"
-                                                style={{
-                                                    background: "rgba(var(--tint-rgb), 0.08)",
-                                                    color: "var(--tint-color)",
-                                                    border: "1px solid rgba(var(--tint-rgb), 0.16)",
-                                                }}
+                                                className="prism-badge prism-static inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-medium"
                                             >
                                                 {tag}
                                             </span>

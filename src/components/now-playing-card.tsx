@@ -85,7 +85,6 @@ export function NowPlayingCard() {
         const audio = audioRef.current;
         const t = tracks[currentIdx];
         if (!audio || !t) return;
-        setAudioDuration(0);
         audio.src = getSongUrl(t.songId);
         audio.load();
         audio.play()
@@ -166,6 +165,7 @@ export function NowPlayingCard() {
         if (barRef.current) barRef.current.style.width = "0%";
         if (timeRef.current) timeRef.current.textContent = "0:00";
         setIsPlaying(false);
+        setAudioDuration(0);
         pendingPlayRef.current = true;
         setCurrentIdx((i) => (i + 1) % tracks.length);
     }, [tracks.length]);
@@ -179,6 +179,7 @@ export function NowPlayingCard() {
         if (barRef.current) barRef.current.style.width = "0%";
         if (timeRef.current) timeRef.current.textContent = "0:00";
         setIsPlaying(false);
+        setAudioDuration(0);
         pendingPlayRef.current = true;
         setCurrentIdx((i) => (i - 1 + tracks.length) % tracks.length);
     }, [tracks.length]);

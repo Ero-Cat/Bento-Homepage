@@ -158,6 +158,18 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
+    const getDeviceMemory = () => {
+      const nav = navigator as Navigator & { deviceMemory?: number };
+      return nav.deviceMemory;
+    };
+    const getSaveData = () => {
+      const nav = navigator as Navigator & {
+        connection?: { saveData?: boolean };
+      };
+      return nav.connection?.saveData;
+    };
+    const coarsePointerMedia = window.matchMedia("(pointer: coarse)");
+
     const gl = canvas.getContext("webgl2", {
       alpha: true,
       premultipliedAlpha: true,
@@ -216,11 +228,6 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
       return;
     }
 
-    const getDeviceMemory = () => {
-      const nav = navigator as Navigator & { deviceMemory?: number };
-      return nav.deviceMemory;
-    };
-
     const readSceneVeil = () => {
       const styles = getComputedStyle(document.documentElement);
       return {
@@ -231,14 +238,14 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
       };
     };
 
-    const coarsePointerMedia = window.matchMedia("(pointer: coarse)");
-
     const resolveQuality = () =>
       resolveLiquidGlassQuality({
         cardCount: cardsRef.current.size,
         devicePixelRatio: window.devicePixelRatio || 1,
         hasCoarsePointer: coarsePointerMedia.matches,
         deviceMemory: getDeviceMemory(),
+        hardwareConcurrency: navigator.hardwareConcurrency,
+        saveData: getSaveData(),
       });
 
     const initialQuality = resolveQuality();

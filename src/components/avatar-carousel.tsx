@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
 
 /* ============================================================
    Animation Config — Replicates ericwu.me rotation effect
@@ -96,12 +97,14 @@ export function AvatarCarousel({
                     exit="exit"
                     transition={spring}
                 >
-                    <img
+                    <Image
                         src={images[index]}
                         alt={alt}
                         width={size}
                         height={size}
+                        sizes={`${size}px`}
                         className="rounded-full border-2 object-cover"
+                        priority={index === 0}
                         style={{
                             width: size,
                             height: size,

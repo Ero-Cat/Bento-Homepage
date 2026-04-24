@@ -27,14 +27,19 @@ function notifyListeners(loc: LocationData) {
 
 /**
  * Core fetch logic with 3-tier fallback:
- * 1. Browser Geolocation API (triggers permission prompt)
- * 2. IP-based geolocation via ip-api.com
+ * 1. Browser Geolocation API, but only when permission was already granted
+ * 2. IP-based geolocation via ipapi.co
  * 3. Static config from siteConfig.weather
  */
 async function fetchLocation(): Promise<LocationData> {
-    // 1. Try Browser Geolocation
-    if ("geolocation" in navigator) {
+    // 1. Try Browser Geolocation without showing a first-load permission prompt.
+    if ("geolocation" in navigator && "permissions" in navigator) {
         try {
+            const permission = await navigator.permissions.query({ name: "geolocation" });
+            if (permission.state !== "granted") {
+                throw new Error("Geolocation permission is not pre-granted");
+            }
+
             const pos = await new Promise<GeolocationPosition>(
                 (resolve, reject) => {
                     navigator.geolocation.getCurrentPosition(resolve, reject, {
@@ -63,27 +68,31 @@ async function fetchLocation(): Promise<LocationData> {
                 return { lat, lon, city: "当前位置", source: "geolocation" };
             }
         } catch {
-            // Geolocation denied or timed out — fall through to IP
-            console.log("Geolocation failed, falling back to IP…");
+            // Permission missing or request failed — fall through to IP.
         }
     }
 
     // 2. Fallback: IP-based geolocation
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 2500);
     try {
         const ipRes = await fetch(
-            "https://ip-api.com/json/?fields=city,lat,lon&lang=zh-CN"
+            "https://ipapi.co/json/",
+            { signal: controller.signal },
         );
         const ipData = await ipRes.json();
-        if (ipData.lat && ipData.lon) {
+        if (ipData.latitude && ipData.longitude) {
             return {
-                lat: ipData.lat,
-                lon: ipData.lon,
-                city: ipData.city || "当前位置",
+                lat: ipData.latitude,
+                lon: ipData.longitude,
+                city: ipData.city || ipData.region || "当前位置",
                 source: "ip",
             };
         }
-    } catch (e) {
-        console.error("IP fallback failed:", e);
+    } catch {
+        // Network failures fall through to static config.
+    } finally {
+        window.clearTimeout(timeout);
     }
 
     // 3. Ultimate fallback: site config

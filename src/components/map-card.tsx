@@ -1,21 +1,15 @@
 "use client";
 
 import { useRef, useEffect, useState, useCallback, useMemo } from "react";
+import type { GeoJSONSource, Map as MapboxMap } from "mapbox-gl";
 import { GlassCard } from "@/components/glass-card";
 import { siteConfig } from "@/config/site";
 import { useDynamicLocation } from "@/hooks/use-dynamic-location";
-import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 
-/* ============================================================
-   Map Card — Interactive Mapbox GL map showing visited cities
-   + IP geolocation arc & distance badge
-   Style: Mapbox Standard (auto dark/light + i18n)
-   ============================================================ */
+type MapboxApi = typeof import("mapbox-gl")["default"];
+type MapConfig = NonNullable<typeof siteConfig.map>;
 
-// ── Helpers ──────────────────────────────────────────────────
-
-/** Haversine distance in km */
 function haversineKm(a: [number, number], b: [number, number]) {
     const R = 6371;
     const dLat = ((b[1] - a[1]) * Math.PI) / 180;
@@ -28,24 +22,18 @@ function haversineKm(a: [number, number], b: [number, number]) {
     return Math.round(R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x)));
 }
 
-/**
- * Generate a curved arc between two [lng,lat] points.
- * Uses sine-wave offset along the perpendicular (normal) direction
- * to simulate a 3D "arched" appearance on a 2D map.
- */
 function generateArc(
     start: [number, number],
     end: [number, number],
-    steps = 100
+    steps = 72
 ): [number, number][] {
     const coords: [number, number][] = [];
     const dx = end[0] - start[0];
     const dy = end[1] - start[1];
-    const len = Math.sqrt(dx * dx + dy * dy);
-    // Scale arc height to distance (cap at 2.5° for very long arcs)
+    const len = Math.max(Math.sqrt(dx * dx + dy * dy), 0.0001);
     const maxOffset = Math.min(len * 0.25, 2.5);
-    const nx = -dy / len; // normal x
-    const ny = dx / len;  // normal y
+    const nx = -dy / len;
+    const ny = dx / len;
 
     for (let i = 0; i <= steps; i++) {
         const t = i / steps;
@@ -57,41 +45,83 @@ function generateArc(
     return coords;
 }
 
-// ── Types ────────────────────────────────────────────────────
-
-// (VisitorGeo replaced by shared LocationData from useDynamicLocation)
-
-// ── Hooks ────────────────────────────────────────────────────
-
-/** Detect system dark mode preference */
 function useIsDark() {
     const [dark, setDark] = useState(false);
     useEffect(() => {
         const mq = window.matchMedia("(prefers-color-scheme: dark)");
-        setTimeout(() => setDark(mq.matches), 0);
+        const initialTimer = window.setTimeout(() => setDark(mq.matches), 0);
         const handler = (e: MediaQueryListEvent) => setDark(e.matches);
         mq.addEventListener("change", handler);
-        return () => mq.removeEventListener("change", handler);
+        return () => {
+            window.clearTimeout(initialTimer);
+            mq.removeEventListener("change", handler);
+        };
     }, []);
     return dark;
 }
 
-// ── Component ────────────────────────────────────────────────
-
 export function MapCard() {
     const mapConfig = siteConfig.map;
+    const cardRef = useRef<HTMLDivElement>(null);
+    const [shouldLoadMap, setShouldLoadMap] = useState(false);
+
+    useEffect(() => {
+        if (!mapConfig || shouldLoadMap) return;
+        const node = cardRef.current;
+        if (!node || !("IntersectionObserver" in window)) {
+            const timer = window.setTimeout(() => setShouldLoadMap(true), 0);
+            return () => window.clearTimeout(timer);
+        }
+
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (!entry?.isIntersecting) return;
+                setShouldLoadMap(true);
+                observer.disconnect();
+            },
+            { root: null, rootMargin: "420px 0px" },
+        );
+        observer.observe(node);
+        return () => observer.disconnect();
+    }, [mapConfig, shouldLoadMap]);
+
+    if (!mapConfig) return null;
+
+    return (
+        <GlassCard
+            variant="media"
+            className="map-card relative !p-0 h-full"
+            contentClassName="glass-media-mask relative h-full"
+            innerClip
+        >
+            <div ref={cardRef} className="relative h-full">
+                <div className="map-header">
+                    <span className="text-sm text-text-tertiary">
+                        {mapConfig.markers.length} 个城市
+                    </span>
+                </div>
+                {shouldLoadMap ? (
+                    <InteractiveMap mapConfig={mapConfig} />
+                ) : (
+                    <div className="map-placeholder" aria-hidden="true" />
+                )}
+            </div>
+        </GlassCard>
+    );
+}
+
+function InteractiveMap({ mapConfig }: { mapConfig: MapConfig }) {
     const containerRef = useRef<HTMLDivElement>(null);
-    const mapRef = useRef<mapboxgl.Map | null>(null);
+    const mapRef = useRef<MapboxMap | null>(null);
+    const mapboxRef = useRef<MapboxApi | null>(null);
     const isDark = useIsDark();
     const visitorLocation = useDynamicLocation();
 
-    // Find 合肥 from config markers
     const hefeiCoords: [number, number] = useMemo(() => {
-        const hefeiMarker = mapConfig?.markers.find((m) => m.name === "合肥");
+        const hefeiMarker = mapConfig.markers.find((m) => m.name === "合肥");
         return hefeiMarker ? hefeiMarker.coordinates : [117.2272, 31.8206];
-    }, [mapConfig?.markers]);
+    }, [mapConfig.markers]);
 
-    // Distance calculation
     const visitorCoords: [number, number] | null = useMemo(() => {
         return visitorLocation ? [visitorLocation.lon, visitorLocation.lat] : null;
     }, [visitorLocation]);
@@ -100,16 +130,14 @@ export function MapCard() {
         return visitorCoords ? haversineKm(hefeiCoords, visitorCoords) : null;
     }, [hefeiCoords, visitorCoords]);
 
-    // Draw the arc + visitor marker once both map and geo are ready
     const drawArc = useCallback(
-        (map: mapboxgl.Map) => {
+        (map: MapboxMap, mapboxgl: MapboxApi) => {
             if (!visitorCoords) return;
 
-            // Cleanup old markers if re-drawing (e.g. theme change)
-            const oldMarkers = document.querySelectorAll(".map-dynamic-marker");
-            oldMarkers.forEach((m) => m.remove());
+            containerRef.current
+                ?.querySelectorAll(".map-dynamic-marker")
+                .forEach((marker) => marker.remove());
 
-            // --- Visitor marker ---
             const el = document.createElement("div");
             el.className = "map-visitor-marker map-dynamic-marker";
             el.setAttribute("aria-label", visitorLocation!.city);
@@ -122,22 +150,17 @@ export function MapCard() {
                         closeButton: false,
                         className: "map-popup",
                     }).setHTML(
-                        `<span class="map-popup-content">📍 ${visitorLocation!.city}（你的位置）</span>`
+                        `<span class="map-popup-content">${visitorLocation!.city}（你的位置）</span>`
                     )
                 )
                 .addTo(map);
 
-            // --- Arc line ---
-            const arcCoords = generateArc(hefeiCoords, visitorCoords, 120);
-            const midIndex = Math.floor(arcCoords.length / 2);
-            const midPoint = arcCoords[midIndex];
+            const arcCoords = generateArc(hefeiCoords, visitorCoords);
+            const midPoint = arcCoords[Math.floor(arcCoords.length / 2)];
 
-            // --- Distance Midpoint Label ---
             if (distanceKm) {
                 const lang = navigator.language || "en";
-                const isZh = lang.startsWith("zh");
-                const labelText = isZh ? "与您距离我" : "Distance from me:";
-
+                const labelText = lang.startsWith("zh") ? "与您距离我" : "Distance from me:";
                 const labelEl = document.createElement("div");
                 labelEl.className = "map-arc-distance map-dynamic-marker";
                 labelEl.innerHTML = `<span class="opacity-80 mr-1 text-[11px] font-normal tracking-wide">${labelText}</span><span class="font-bold text-[12px]">${distanceKm}</span><span class="text-[10px] opacity-80 ml-[2px]">km</span>`;
@@ -146,139 +169,120 @@ export function MapCard() {
                     .addTo(map);
             }
 
+            const lineColor = isDark
+                ? "rgba(251, 113, 133, 0.7)"
+                : "rgba(190, 24, 93, 0.6)";
+
             if (map.getSource("visitor-arc")) {
-                (map.getSource("visitor-arc") as mapboxgl.GeoJSONSource).setData({
+                (map.getSource("visitor-arc") as GeoJSONSource).setData({
                     type: "Feature",
                     properties: {},
                     geometry: { type: "LineString", coordinates: arcCoords },
                 });
-
-                // Update line color if theme changed
-                map.setPaintProperty("visitor-arc-line", "line-color", isDark
-                    ? "rgba(251, 113, 133, 0.7)"
-                    : "rgba(190, 24, 93, 0.6)"
-                );
-            } else {
-                map.addSource("visitor-arc", {
-                    type: "geojson",
-                    data: {
-                        type: "Feature",
-                        properties: {},
-                        geometry: { type: "LineString", coordinates: arcCoords },
-                    },
-                });
-
-                map.addLayer({
-                    id: "visitor-arc-line",
-                    type: "line",
-                    source: "visitor-arc",
-                    paint: {
-                        "line-color": isDark
-                            ? "rgba(251, 113, 133, 0.7)"
-                            : "rgba(190, 24, 93, 0.6)",
-                        "line-width": 2,
-                        "line-dasharray": [2, 2],
-                    },
-                });
+                map.setPaintProperty("visitor-arc-line", "line-color", lineColor);
+                return;
             }
+
+            map.addSource("visitor-arc", {
+                type: "geojson",
+                data: {
+                    type: "Feature",
+                    properties: {},
+                    geometry: { type: "LineString", coordinates: arcCoords },
+                },
+            });
+
+            map.addLayer({
+                id: "visitor-arc-line",
+                type: "line",
+                source: "visitor-arc",
+                paint: {
+                    "line-color": lineColor,
+                    "line-width": 2,
+                    "line-dasharray": [2, 2],
+                },
+            });
         },
-        [visitorCoords, isDark, hefeiCoords, distanceKm, visitorLocation]
+        [visitorCoords, visitorLocation, hefeiCoords, distanceKm, isDark],
     );
 
-    /* Initialize map */
     useEffect(() => {
-        if (!mapConfig || !containerRef.current) return;
+        if (!containerRef.current) return;
+        let cancelled = false;
+        let map: MapboxMap | null = null;
 
-        mapboxgl.accessToken = mapConfig.accessToken;
+        async function initMap() {
+            const mapboxgl = (await import("mapbox-gl")).default;
+            if (cancelled || !containerRef.current) return;
 
-        const map = new mapboxgl.Map({
-            container: containerRef.current,
-            style: "mapbox://styles/mapbox/standard",
-            center: mapConfig.center,
-            zoom: mapConfig.zoom,
-            attributionControl: false,
-            logoPosition: "bottom-left",
-            pitchWithRotate: false,
-            dragRotate: false,
-        });
+            mapboxRef.current = mapboxgl;
+            mapboxgl.accessToken = mapConfig.accessToken;
 
-        /* Hide Mapbox logo via DOM after init */
-        const logoEl = containerRef.current.querySelector(".mapboxgl-ctrl-logo");
-        if (logoEl) (logoEl as HTMLElement).style.display = "none";
+            map = new mapboxgl.Map({
+                container: containerRef.current,
+                style: "mapbox://styles/mapbox/standard",
+                center: mapConfig.center,
+                zoom: mapConfig.zoom,
+                attributionControl: false,
+                logoPosition: "bottom-left",
+                pitchWithRotate: false,
+                dragRotate: false,
+                interactive: true,
+            });
+            mapRef.current = map;
 
-        /* Configure Standard style: theme + language */
-        map.on("style.load", () => {
-            map.setConfigProperty("basemap", "lightPreset",
-                isDark ? "night" : "day"
-            );
+            map.on("style.load", () => {
+                if (!map) return;
+                map.setConfigProperty("basemap", "lightPreset", isDark ? "night" : "day");
 
-            const lang = navigator.language || "en";
-            const mapLang = lang.startsWith("zh-TW") || lang.startsWith("zh-Hant")
-                ? "zh-Hant"
-                : lang.startsWith("zh")
-                    ? "zh-Hans"
-                    : lang.split("-")[0];
-            map.setConfigProperty("basemap", "language", mapLang);
+                const lang = navigator.language || "en";
+                const mapLang = lang.startsWith("zh-TW") || lang.startsWith("zh-Hant")
+                    ? "zh-Hant"
+                    : lang.startsWith("zh")
+                        ? "zh-Hans"
+                        : lang.split("-")[0];
+                map.setConfigProperty("basemap", "language", mapLang);
 
-            // City markers
-            for (const marker of mapConfig.markers) {
-                const el = document.createElement("div");
-                el.className = "map-marker";
-                el.setAttribute("aria-label", marker.name);
+                for (const marker of mapConfig.markers) {
+                    const el = document.createElement("div");
+                    el.className = "map-marker";
+                    el.setAttribute("aria-label", marker.name);
 
-                new mapboxgl.Marker({ element: el })
-                    .setLngLat(marker.coordinates)
-                    .setPopup(
-                        new mapboxgl.Popup({
-                            offset: 20,
-                            closeButton: false,
-                            className: "map-popup",
-                        }).setHTML(
-                            `<span class="map-popup-content">${marker.emoji ?? "📍"} ${marker.name}</span>`
+                    new mapboxgl.Marker({ element: el })
+                        .setLngLat(marker.coordinates)
+                        .setPopup(
+                            new mapboxgl.Popup({
+                                offset: 20,
+                                closeButton: false,
+                                className: "map-popup",
+                            }).setHTML(
+                                `<span class="map-popup-content">${marker.emoji ?? ""} ${marker.name}</span>`
+                            )
                         )
-                    )
-                    .addTo(map);
-            }
+                        .addTo(map);
+                }
 
-            // Draw arc if geo already loaded
-            drawArc(map);
-        });
+                drawArc(map, mapboxgl);
+            });
+        }
 
-        mapRef.current = map;
+        initMap();
 
         return () => {
-            map.remove();
+            cancelled = true;
+            map?.remove();
             mapRef.current = null;
         };
     }, [mapConfig, isDark, drawArc]);
 
-    // If visitor geo arrives after map is ready, draw the arc
     useEffect(() => {
         const map = mapRef.current;
-        if (!map || !visitorLocation) return;
+        const mapboxgl = mapboxRef.current;
+        if (!map || !mapboxgl || !visitorLocation) return;
         if (map.isStyleLoaded()) {
-            drawArc(map);
+            drawArc(map, mapboxgl);
         }
     }, [visitorLocation, drawArc]);
 
-    if (!mapConfig) return null;
-
-    return (
-        <GlassCard
-            variant="media"
-            className="map-card relative !p-0 h-full"
-            contentClassName="glass-media-mask relative h-full"
-            innerClip
-        >
-            {/* Floating header overlay */}
-            <div className="map-header">
-                <span className="text-sm text-text-tertiary">
-                    {mapConfig.markers.length} 个城市
-                </span>
-            </div>
-
-            {/* Map container */}
-            <div ref={containerRef} className="map-container" />
-        </GlassCard>
-    );
+    return <div ref={containerRef} className="map-container" />;
 }

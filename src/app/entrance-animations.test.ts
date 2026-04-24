@@ -24,6 +24,16 @@ test("background layer does not fade in from an empty frame on first paint", () 
   );
 });
 
+test("background layer uses optimized image assets for paint and glass texture source", () => {
+  const source = readFileSync(new URL("src/components/background-layer.tsx", projectRoot), "utf8");
+
+  assert.match(
+    source,
+    /\/optimized\/bg\//,
+    "Expected BackgroundLayer to use downscaled WebP background assets",
+  );
+});
+
 test("layout primes liquid glass into a loading state before hydration", () => {
   const source = readFileSync(new URL("src/app/layout.tsx", projectRoot), "utf8");
 
@@ -64,6 +74,39 @@ test("shared canvas stays hidden until the runtime has a composed liquid glass f
     cssSource,
     /:root\[data-liquid-glass="ready"\]\s+\.liquid-glass-canvas\s*\{[\s\S]*opacity:\s*1;/,
     "Expected the shared canvas to appear only after the runtime declares the frame ready",
+  );
+});
+
+test("liquid glass runtime does not replace WebGL with a static shell for optimization", () => {
+  const cssSource = readFileSync(new URL("src/app/globals.css", projectRoot), "utf8");
+  const canvasSource = readFileSync(new URL("src/components/liquid-glass-canvas.tsx", projectRoot), "utf8");
+
+  assert.doesNotMatch(
+    canvasSource,
+    /data(?:set)?\[LIQUID_GLASS_CANVAS\.rootDatasetKey\]\s*=\s*"static"|data-liquid-glass="static"/,
+    "Expected optimization to preserve the WebGL liquid glass renderer instead of forcing a static shell",
+  );
+
+  assert.doesNotMatch(
+    cssSource,
+    /:root\[data-liquid-glass="static"\]/,
+    "Expected globals.css not to define a static state that can hide the liquid glass effect",
+  );
+});
+
+test("mapbox is imported lazily instead of entering the initial client bundle", () => {
+  const source = readFileSync(new URL("src/components/map-card.tsx", projectRoot), "utf8");
+
+  assert.doesNotMatch(
+    source,
+    /import\s+mapboxgl\s+from\s+"mapbox-gl"/,
+    "Expected MapCard not to statically import the heavy Mapbox runtime",
+  );
+
+  assert.match(
+    source,
+    /import\("mapbox-gl"\)/,
+    "Expected MapCard to lazy-load Mapbox after the card approaches the viewport",
   );
 });
 

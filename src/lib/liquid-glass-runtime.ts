@@ -3,6 +3,9 @@ export interface LiquidGlassQualityInput {
   devicePixelRatio: number;
   hasCoarsePointer: boolean;
   deviceMemory?: number;
+  hardwareConcurrency?: number;
+  prefersReducedMotion?: boolean;
+  saveData?: boolean;
 }
 
 export interface LiquidGlassQualityProfile {
@@ -47,8 +50,21 @@ export function resolveLiquidGlassQuality({
   devicePixelRatio,
   hasCoarsePointer,
   deviceMemory,
+  hardwareConcurrency,
+  saveData,
 }: LiquidGlassQualityInput): LiquidGlassQualityProfile {
   const lowMemory = typeof deviceMemory === "number" && deviceMemory > 0 && deviceMemory <= 4;
+  const veryLowMemory = typeof deviceMemory === "number" && deviceMemory > 0 && deviceMemory <= 2;
+  const lowCoreCount =
+    typeof hardwareConcurrency === "number" && hardwareConcurrency > 0 && hardwareConcurrency <= 4;
+
+  if (saveData || veryLowMemory || (hasCoarsePointer && lowCoreCount && devicePixelRatio >= 2)) {
+    return {
+      blurBufferScale: 0.38,
+      dprCap: 1.1,
+      preferHalfFloat: false,
+    };
+  }
 
   if (hasCoarsePointer || lowMemory || cardCount >= 10 || devicePixelRatio >= 3) {
     return {
