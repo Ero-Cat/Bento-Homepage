@@ -45,6 +45,10 @@ export const LIQUID_GLASS_CANVAS = {
   },
 } as const;
 
+export function toDataAttributeName(datasetKey: string): string {
+  return `data-${datasetKey.replace(/[A-Z]/g, (value) => `-${value.toLowerCase()}`)}`;
+}
+
 export const GLASS_VARIANTS: Record<GlassVariant, GlassVariantConfig> = {
   hero: {
     cssRadius: SHARED_GLASS_RADIUS_CSS,
@@ -54,9 +58,9 @@ export const GLASS_VARIANTS: Record<GlassVariant, GlassVariantConfig> = {
     refFactor: 1.68,
     refDispersion: 1.72,
     fresnelRange: 158,
-    fresnelFactor: 0.26,
+    fresnelFactor: 0.12,
     fresnelHardness: -0.08,
-    glareFactor: 0.22,
+    glareFactor: 0.10,
     glareAngle: -0.16,
     glareConvergence: 0.66,
     glareRange: 90,
@@ -74,9 +78,9 @@ export const GLASS_VARIANTS: Record<GlassVariant, GlassVariantConfig> = {
     refFactor: 1.62,
     refDispersion: 1.28,
     fresnelRange: 152,
-    fresnelFactor: 0.22,
+    fresnelFactor: 0.10,
     fresnelHardness: -0.09,
-    glareFactor: 0.17,
+    glareFactor: 0.08,
     glareAngle: -0.10,
     glareConvergence: 0.60,
     glareRange: 92,
@@ -94,9 +98,9 @@ export const GLASS_VARIANTS: Record<GlassVariant, GlassVariantConfig> = {
     refFactor: 1.56,
     refDispersion: 1.12,
     fresnelRange: 146,
-    fresnelFactor: 0.17,
+    fresnelFactor: 0.08,
     fresnelHardness: -0.10,
-    glareFactor: 0.14,
+    glareFactor: 0.06,
     glareAngle: 0.06,
     glareConvergence: 0.52,
     glareRange: 88,
@@ -114,9 +118,9 @@ export const GLASS_VARIANTS: Record<GlassVariant, GlassVariantConfig> = {
     refFactor: 1.52,
     refDispersion: 0.94,
     fresnelRange: 144,
-    fresnelFactor: 0.14,
+    fresnelFactor: 0.06,
     fresnelHardness: -0.11,
-    glareFactor: 0.11,
+    glareFactor: 0.05,
     glareAngle: 0.0,
     glareConvergence: 0.48,
     glareRange: 86,
@@ -134,9 +138,9 @@ export const GLASS_VARIANTS: Record<GlassVariant, GlassVariantConfig> = {
     refFactor: 1.72,
     refDispersion: 1.82,
     fresnelRange: 162,
-    fresnelFactor: 0.34,
+    fresnelFactor: 0.16,
     fresnelHardness: -0.05,
-    glareFactor: 0.28,
+    glareFactor: 0.12,
     glareAngle: -0.22,
     glareConvergence: 0.68,
     glareRange: 92,

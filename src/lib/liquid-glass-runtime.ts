@@ -65,6 +65,22 @@ export interface ScissorRect {
   height: number;
 }
 
+export interface CardRenderGeometryInput {
+  rect: RectLike;
+  viewport: LiquidGlassViewportState;
+  dpr: number;
+  viewportOffsetLeft: number;
+  viewportOffsetTop: number;
+  scissorPaddingPx: number;
+}
+
+export interface CardRenderGeometry {
+  visible: boolean;
+  uvRect: readonly [number, number, number, number];
+  shaderRectPx: readonly [number, number, number, number];
+  scissorRect: ScissorRect | null;
+}
+
 export interface ScrollFollowMotionState {
   offset: number;
   velocity: number;
@@ -86,6 +102,14 @@ export interface ScrollGeometrySnapshot {
 
 export interface ScrollGeometryTrackingOptions {
   idleFrameLimit?: number;
+}
+
+export interface DocumentCardRectInput {
+  rect: RectLike;
+  scrollX: number;
+  scrollY: number;
+  canvasDocumentLeft?: number;
+  canvasDocumentTop?: number;
 }
 
 export function resolveLiquidGlassQuality({
@@ -267,5 +291,70 @@ export function expandScissorRect(
     y: viewport.height - bottom,
     width,
     height,
+  };
+}
+
+export function resolveDocumentCardRect({
+  rect,
+  scrollX,
+  scrollY,
+  canvasDocumentLeft = 0,
+  canvasDocumentTop = 0,
+}: DocumentCardRectInput): RectLike {
+  return {
+    left: rect.left + scrollX - canvasDocumentLeft,
+    top: rect.top + scrollY - canvasDocumentTop,
+    width: rect.width,
+    height: rect.height,
+  };
+}
+
+export function resolveCardRenderGeometry({
+  rect,
+  viewport,
+  dpr,
+  viewportOffsetLeft,
+  viewportOffsetTop,
+  scissorPaddingPx,
+}: CardRenderGeometryInput): CardRenderGeometry {
+  const leftCss = rect.left - viewportOffsetLeft;
+  const topCss = rect.top - viewportOffsetTop;
+  const rightCss = leftCss + rect.width;
+  const bottomCss = topCss + rect.height;
+
+  const visible =
+    bottomCss > -scissorPaddingPx &&
+    topCss < viewport.cssHeight + scissorPaddingPx &&
+    rightCss > -scissorPaddingPx &&
+    leftCss < viewport.cssWidth + scissorPaddingPx;
+
+  const shaderRectPx = [
+    leftCss * dpr,
+    topCss * dpr,
+    rect.width * dpr,
+    rect.height * dpr,
+  ] as const;
+
+  const scissorRect = expandScissorRect(
+    {
+      left: shaderRectPx[0],
+      top: shaderRectPx[1],
+      width: shaderRectPx[2],
+      height: shaderRectPx[3],
+    },
+    { width: viewport.width, height: viewport.height },
+    scissorPaddingPx * dpr,
+  );
+
+  return {
+    visible,
+    uvRect: [
+      shaderRectPx[0] / viewport.width,
+      1 - (shaderRectPx[1] + shaderRectPx[3]) / viewport.height,
+      shaderRectPx[2] / viewport.width,
+      shaderRectPx[3] / viewport.height,
+    ],
+    shaderRectPx,
+    scissorRect,
   };
 }

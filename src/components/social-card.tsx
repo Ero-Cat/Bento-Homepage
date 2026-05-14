@@ -89,7 +89,7 @@ export function SocialCard() {
                         >
                             {/* Icon orb — round circle, brand color on hover */}
                             <motion.div
-                                className="prism-orb-button prism-interactive flex h-11 w-11 items-center justify-center rounded-full"
+                                className="flex h-11 w-11 items-center justify-center rounded-full border border-[var(--glass-inner-border)] bg-[var(--glass-inner-bg)] transition-[background,border-color,box-shadow] duration-200 group-hover:border-[var(--glass-shell-border)] group-hover:bg-[var(--glass-shell-fill)]"
                                 style={{ color: "var(--text-secondary)" }}
                                 whileHover={{ scale: 1.04, color: brandColor }}
                                 whileTap={{ scale: 0.96 }}

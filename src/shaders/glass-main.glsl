@@ -102,7 +102,11 @@ void main() {
   float merged = d / u_resolution.y;
   float nmerged = -1.0 * merged * (u_resolution.y / u_dpr);
 
-  vec4 outColor;
+  float edgeDistancePx = max(-d, 0.0);
+  float interiorEdgeFade =
+    (1.0 - smoothstep(18.0 * u_dpr, 64.0 * u_dpr, edgeDistancePx)) * shapeAlpha;
+  vec4 outColor = vec4(texture(u_bg, v_uv).rgb, 0.0);
+  float interiorAlpha = 0.0;
 
   if (merged < 0.005) {
     float x_R_ratio = 1.0 - nmerged / u_refThickness;
@@ -114,14 +118,15 @@ void main() {
     }
 
     if (edgeFactor <= 0.0) {
-      /* Interior fill: strong frosted glass */
+      /* Transparent interior: only the edge-adjacent body gets a subtle optical delta. */
       vec4 sharpBase = texture(u_bg, v_uv);
       vec4 softBase = texture(u_blurredBg, v_uv);
-      outColor = mix(sharpBase, softBase, 0.68);
-      /* Boost saturation slightly for Apple-style vibrancy */
+      outColor = mix(sharpBase, softBase, interiorEdgeFade * 0.18);
+      /* Keep vibrancy without repainting the whole card as a milky layer. */
       float lum = dot(outColor.rgb, vec3(0.299, 0.587, 0.114));
-      outColor.rgb = mix(vec3(lum), outColor.rgb, 1.12);
-      outColor = mix(outColor, vec4(u_tint, 1.0), u_tintAlpha * 0.6);
+      outColor.rgb = mix(vec3(lum), outColor.rgb, 1.04);
+      outColor = mix(outColor, vec4(u_tint, 1.0), u_tintAlpha * 0.12 * interiorEdgeFade);
+      interiorAlpha = (0.002 + u_tintAlpha * 0.06) * interiorEdgeFade;
     } else {
       /* Edge refraction zone */
       float edgeH = nmerged / u_refThickness;
@@ -131,7 +136,7 @@ void main() {
       vec2 normalDir = normalLen > 0.001 ? normalize(normal) : vec2(0.0);
 
       /* Stronger refraction offset for visible light bending */
-      vec2 refractOffset = -normalDir * edgeFactor * 0.08 * u_dpr *
+      vec2 refractOffset = -normalDir * edgeFactor * 0.45 * u_dpr *
         vec2(u_resolution.y / (u_resolution.x / u_dpr), 1.0);
 
       vec4 blurredPixel = getTextureDispersion(
@@ -151,10 +156,12 @@ void main() {
           5.0
         ), 0.0, 1.0
       );
+      float edgeLum = dot(outColor.rgb, vec3(0.299, 0.587, 0.114));
+      vec3 fresnelTint = mix(outColor.rgb, vec3(edgeLum), 0.22) * 1.045;
       outColor = mix(
         outColor,
-        vec4(1.0),
-        fresnelFactor * u_fresnelFactor * 0.32 * rim * (0.4 + 0.5 * normalLen)
+        vec4(fresnelTint, 1.0),
+        fresnelFactor * u_fresnelFactor * 0.12 * rim * (0.30 + 0.38 * normalLen)
       );
 
       /* Glare — directional stripe highlight */
@@ -180,23 +187,36 @@ void main() {
         0.0, 1.0
       );
 
+      vec3 glareTint = mix(outColor.rgb, vec3(edgeLum), 0.16) * 1.06;
       outColor = mix(
         outColor,
-        vec4(1.0),
-        glareAngleFactor * glareGeoFactor * rim * (0.15 + 0.45 * normalLen)
+        vec4(glareTint, 1.0),
+        glareAngleFactor * glareGeoFactor * rim * (0.045 + 0.18 * normalLen)
       );
 
-      /* Blend edge refraction into frosted center via rim */
-      vec4 centerBase = mix(texture(u_bg, v_uv), texture(u_blurredBg, v_uv), 0.62);
-      float lum2 = dot(centerBase.rgb, vec3(0.299, 0.587, 0.114));
-      centerBase.rgb = mix(vec3(lum2), centerBase.rgb, 1.12);
-      outColor = mix(centerBase, outColor, 0.28 + rim * 0.72);
+      /* Blend edge refraction back into the real scene instead of a frosted center fill. */
+      outColor = mix(texture(u_bg, v_uv), outColor, 0.43 + rim * 0.57);
+      interiorAlpha = max(interiorAlpha, (0.023 + rim * 0.162) * shapeAlpha);
     }
   } else {
-    outColor = texture(u_bg, v_uv);
+    outColor = vec4(texture(u_bg, v_uv).rgb, 0.0);
   }
 
   /* shapeAlpha handles the soft edge fade — no extra smoothstep needed */
+  float shellHighlight = (1.0 - smoothstep(0.0, 14.0 * u_dpr, edgeDistancePx)) * shapeAlpha;
+  float innerShadow = (1.0 - smoothstep(8.0 * u_dpr, 48.0 * u_dpr, edgeDistancePx)) * shapeAlpha;
+  float topLeftLight = clamp(
+    0.5 - 0.35 * (localPx.x / max(halfSizePx.x, 1.0)) +
+      0.35 * (localPx.y / max(halfSizePx.y, 1.0)),
+    0.0,
+    1.0
+  );
+
+  float shellLum = dot(outColor.rgb, vec3(0.299, 0.587, 0.114));
+  vec3 shellLight = mix(outColor.rgb, vec3(shellLum), 0.18) * 1.035;
+  outColor.rgb = mix(outColor.rgb, shellLight, shellHighlight * (0.014 + 0.010 * topLeftLight));
+  outColor.rgb = mix(outColor.rgb, vec3(0.0), innerShadow * 0.058);
+  outColor.a = max(interiorAlpha, shellHighlight * 0.044 + innerShadow * 0.066);
   outColor.a *= shapeAlpha;
 
   fragColor = vec4(outColor.rgb * outColor.a, outColor.a);

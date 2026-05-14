@@ -14,7 +14,8 @@
 - **背景切换同步** — 页面背景和 liquid glass 共用一套背景切换时序，切图时玻璃内部不再慢半拍
 - **Variant 化玻璃参数** — `hero` / `panel` / `media` / `dense` / `immersive` 通过 `src/lib/liquid-glass.ts` 集中管理，不在业务卡片里散落光学参数
 - **按需渲染调度** — 共享画布只在背景切换、resize、scroll、卡片几何变化和首屏入场稳定阶段重绘，不再常驻空转
-- **移动端几何同步** — `LiquidGlassCanvas` 跟随 `visualViewport` 动态尺寸，并在滚动惯性结束前持续刷新卡片几何，避免玻璃壳层与内容上下错位
+- **稳定首帧启动** — WebGL renderer 启动时先创建 1×1 fallback GPU 背景纹理，真实背景异步加载失败或延迟时也能完成首个 composed frame，不会卡在 `data-liquid-glass="loading"`
+- **滚动同步架构** — 卡片几何缓存为文档坐标，滚轮输入先预测 scroll target 并用 compositor transform 移动上一帧 glass bitmap，scroll 事件再校准真实位置，避免 glass shell 落后内容上下抖动
 - **运行时质量分级** — 根据设备 DPR、指针类型、设备内存和卡片数量自动切换 blur 降采样与 FBO 精度
 - **低端设备质量分级** — 省流量、低内存/低核心数、移动高 DPR 等场景仍保留 WebGL Liquid Glass，只降低 DPR、FBO 和 blur buffer 成本
 - **按卡片范围绘制** — `mainPass` 结合几何缓存与 scissor 裁剪，只绘制实际可见的 glass 区域
@@ -32,8 +33,8 @@
 - **打字机效果** — 名称 / 别名自动循环打字展示
 - **明暗自动切换** — 跟随系统 `prefers-color-scheme`，双套设计令牌
 - **GitHub 实时数据** — 项目卡片自动拉取 ⭐ Stars 和 🍴 Forks 数据
-- **扁平化内层控件** — 标签、按钮、项目卡内层表面统一收敛为更安静的系统控件风格
-- **硬件标签一致性** — 硬件清单使用与兴趣标签相同的静态 Prism Pill 样式，避免信息标签呈现为可点击控件
+- **克制的内层控件** — 标签、按钮、项目卡内层元素使用组件局部样式与现有 glass token，避免额外共享视觉体系
+- **硬件标签一致性** — 硬件清单使用与兴趣标签相同的静态标签样式，避免信息标签呈现为可点击控件
 - **入场动画** — 交错 fade-in + slide-up，弹簧物理驱动
 - **性能优化** — 共享单 WebGL 画布、低端质量分级、稳定背景源发布、失效驱动渲染、降采样 blur、几何缓存、轻量 WebP 运行时资源、Mapbox 视口懒加载、rAF 驱动零渲染进度条
 - **SEO 就绪** — Open Graph、Twitter Card、`<meta>` 标签全部从配置生成
@@ -56,7 +57,7 @@
 | 📊 贡献图 | `github-heatmap-card.tsx` | GitHub 过去一年贡献热力图 |
 | 📝 博客 | `blog-card.tsx` | Halo 2.x 最近博文列表 |
 | 🔗 社交链接 | `social-card.tsx` | GitHub / Telegram / Twitter / VRChat 等平台图标 |
-| ✨ 兴趣标签 | `skills-card.tsx` | 静态 Prism Pill 标签，保持内容扫描优先 |
+| ✨ 兴趣标签 | `skills-card.tsx` | 静态标签，保持内容扫描优先 |
 | 🖥️ 硬件清单 | `hardware-card.tsx` | 分类展示硬件设备，Pill Tag 样式与兴趣标签一致 |
 | 🚀 项目展示 | `projects-card.tsx` | 项目名称、描述、标签、外链、GitHub Stars/Forks |
 | 🤝 友链 | `friends-card.tsx` | 好友头像网格，轻微悬停反馈 |
@@ -95,7 +96,7 @@ Bento-Homepage/
 │   └── optimized/                # 降采样 WebP 运行时资源（bg/photos）
 ├── src/
 │   ├── app/
-│   │   ├── globals.css           # 设计令牌（明/暗）、Prism micro-surface utility、动画关键帧
+│   │   ├── globals.css           # 设计令牌（明/暗）、玻璃样式、动画关键帧
 │   │   ├── layout.tsx            # 根布局、SEO 元数据、背景图扫描
 │   │   └── page.tsx              # 首页 — Bento Grid 组装 + 数据 fetch
 │   ├── components/
@@ -111,11 +112,11 @@ Bento-Homepage/
 │   │   ├── github-heatmap-card.tsx # GitHub 贡献热力图
 │   │   ├── vrchat-status-card.tsx  # VRChat 实时状态
 │   │   ├── blog-card.tsx         # 博客最新文章（Halo 2.x）
-│   │   ├── social-card.tsx       # 社交图标链接（Prism orb buttons）
-│   │   ├── skills-card.tsx       # 兴趣标签（Prism pills）
-│   │   ├── hardware-card.tsx     # 硬件清单（Prism pills）
-│   │   ├── projects-card.tsx     # 项目展示（Prism panels + badges）
-│   │   ├── friends-card.tsx      # 友情链接（Prism avatar discs）
+│   │   ├── social-card.tsx       # 社交图标链接
+│   │   ├── skills-card.tsx       # 兴趣标签
+│   │   ├── hardware-card.tsx     # 硬件清单
+│   │   ├── projects-card.tsx     # 项目展示
+│   │   ├── friends-card.tsx      # 友情链接
 │   │   ├── map-card.tsx          # Mapbox 互动地图（足迹标记 + IP 距离显示）
 │   │   ├── weather-card.tsx      # 实时天气（open-meteo，动态渐变动效）
 │   │   ├── software-card.tsx     # 常用应用展示
@@ -126,7 +127,7 @@ Bento-Homepage/
 │   │   └── site.ts               # ⭐ 唯一配置文件
 │   └── lib/
 │       ├── liquid-glass.ts       # Liquid Glass variant / optical token SSoT
-│       ├── liquid-glass-runtime.ts # 运行时质量档位、viewport/scroll 几何、scissor 边界 helper
+│       ├── liquid-glass-runtime.ts # 运行时质量档位、文档坐标投影、viewport/scissor 边界 helper
 │       ├── gl-utils.ts           # WebGL2 shader/FBO/texture helper
 │       ├── motion.ts             # 弹簧物理预设 & 动画变体
 │       └── utils.ts              # cn() 类名合并工具
@@ -156,8 +157,11 @@ Bento-Homepage/
 
 - `LiquidGlassCanvas` 固定在背景层之上、内容层之下
 - 所有卡片共用一个 WebGL2 context，避免每张卡片单独建画布
+- active background texture 在 GL 状态里始终非空：启动先使用 1×1 fallback GPU texture，真实背景纹理 ready 后再替换，避免异步图片加载阻塞 `ready` 提交
 - 渲染器使用失效驱动调度：背景、窗口尺寸、滚动、卡片几何和首屏入场动画变化时才请求下一帧
-- 移动端使用 `visualViewport` 解析动态视口尺寸；滚动开始后按真实 scroll/viewport offset 追踪到空闲帧，减少惯性滚动中的 glass/content 抖动
+- resize / fullscreen / visibility 恢复统一走同一条重绘路径：更新 viewport/FBO、标脏所有卡片文档几何并请求新帧，避免全屏切换后画布被清空但壳层不重绘
+- 移动端使用 `visualViewport` 解析动态视口尺寸；卡片位置缓存为稳定文档坐标，滚动时按当前 scroll 投影到视口，避免把布局读取放进滚动热路径
+- wheel 事件先预测浏览器即将提交的 scroll target，并立即用 CSS transform 对上一帧 WebGL bitmap 做 compositor 级同步；scroll 事件再用真实 scroll 校准，下一帧 WebGL 重绘完成后提交新的 scroll 基准，避免 glass shell 落后 DOM 内容
 - `ResizeObserver` / `IntersectionObserver` / registry 事件共同维护卡片几何缓存，避免每帧对所有卡片调用布局读取
 - `mainPass` 对每张卡启用 scissor 裁剪，GPU 只处理该卡的实际屏幕区域
 - `vBlur` / `hBlur` FBO 会按质量档位降采样，优先在移动端和高 DPR 下控制填充率

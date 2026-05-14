@@ -29,20 +29,6 @@
   --glass-floating-bg: rgba(255, 255, 255, 0.26);
   --glass-floating-border: rgba(0, 0, 0, 0.05);
   --glass-scene-veil-strength: 1.08;
-  /* Prism micro-surface — Apple-grade frosted panels */
-  --prism-fill: rgba(255, 255, 255, 0.1);
-  --prism-fill-strong: rgba(255, 255, 255, 0.14);
-  --prism-border: rgba(255, 255, 255, 0.22);
-  --prism-highlight: rgba(255, 255, 255, 0.28);
-  --prism-shadow: rgba(15, 23, 42, 0.05);
-  --prism-tint-rgb: 190, 24, 93;
-  --prism-orb-glow: rgba(255, 255, 255, 0);
-  --prism-press-depth: 0.985;
-  /* Surface tokens — minimal inner glass surfaces (replaces prism noise) */
-  --surface-bg: rgba(255, 255, 255, 0.10);
-  --surface-bg-strong: rgba(255, 255, 255, 0.16);
-  --surface-border: rgba(255, 255, 255, 0.16);
-  --surface-border-hover: rgba(255, 255, 255, 0.24);
   /* iOS media card material — Apple Music frosted glass */
   --ios-material-bg: rgba(255, 255, 255, 0.3);
   --ios-material-border: rgba(255, 255, 255, 0.60);
@@ -106,20 +92,6 @@
     --glass-floating-bg: rgba(28, 28, 30, 0.80);
     --glass-floating-border: rgba(255, 255, 255, 0.09);
     --glass-scene-veil-strength: 1.06;
-    /* Prism micro-surface — darker, luminous highlight edges */
-    --prism-fill: rgba(255, 255, 255, 0.035);
-    --prism-fill-strong: rgba(255, 255, 255, 0.055);
-    --prism-border: rgba(255, 255, 255, 0.09);
-    --prism-highlight: rgba(255, 255, 255, 0.12);
-    --prism-shadow: rgba(2, 6, 23, 0.16);
-    --prism-tint-rgb: 251, 113, 133;
-    --prism-orb-glow: rgba(255, 255, 255, 0);
-    --prism-press-depth: 0.985;
-    /* Surface tokens — luminous inner glass surfaces */
-    --surface-bg: rgba(255, 255, 255, 0.052);
-    --surface-bg-strong: rgba(255, 255, 255, 0.082);
-    --surface-border: rgba(255, 255, 255, 0.082);
-    --surface-border-hover: rgba(255, 255, 255, 0.13);
     /* iOS media card material — Apple Music dark */
     --ios-material-bg: rgba(28, 28, 30, 0.68);
     --ios-material-border: rgba(255, 255, 255, 0.10);
@@ -258,14 +230,9 @@ body {
 
 /* ============================================================
    Glass Card — Liquid Glass (WebGL2 canvas-driven)
-   The glass surface is rendered by LiquidGlassCanvas.
+   The glass shell is rendered by LiquidGlassCanvas.
    This rule only sets the z-index stack for content.
    ============================================================ */
-.glass-card > * {
-  position: relative;
-  z-index: 2;
-}
-
 .glass-card {
   border-radius: var(--glass-radius);
   isolation: isolate;
@@ -385,130 +352,6 @@ body {
   opacity: 1;
 }
 
-/* When WebGL glass is active, disable Prism inner backdrop-filter
-   to avoid double-blur artifacts inside the glass shell */
-:root[data-liquid-glass="ready"] .glass-card .prism-panel,
-:root[data-liquid-glass="ready"] .glass-card .prism-badge,
-:root[data-liquid-glass="ready"] .glass-card .prism-orb-button,
-:root[data-liquid-glass="ready"] .glass-card .prism-pill,
-:root[data-liquid-glass="ready"] .glass-card .prism-avatar-disc {
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-}
-
-/* ============================================================
-   Prism Micro-Surface System — Clarity-First
-   Three semantic layers:
-     prism-panel / prism-orb-button / prism-avatar-disc → neutral glass
-     prism-pill  → tinted capsule (iOS filter chip, accent-hued)
-     prism-badge → accent categorical label
-   Zero pseudo-elements. Zero backdrop-filter (avoids perf hit on
-   small elements and double-blur inside glass shell).
-   ============================================================ */
-
-/* Shared structural base */
-.prism-panel,
-.prism-badge,
-.prism-orb-button,
-.prism-pill,
-.prism-avatar-disc {
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;
-  color: inherit;
-}
-
-/* Disable pseudo-elements — no noise */
-.prism-panel::before, .prism-panel::after,
-.prism-badge::before, .prism-badge::after,
-.prism-orb-button::before, .prism-orb-button::after,
-.prism-pill::before, .prism-pill::after,
-.prism-avatar-disc::before, .prism-avatar-disc::after {
-  content: none;
-}
-
-/* Neutral glass surfaces */
-.prism-panel,
-.prism-orb-button,
-.prism-avatar-disc {
-  background: var(--surface-bg);
-  border: 1px solid var(--surface-border);
-}
-
-/* Tinted capsule — iOS 17-style filter chip */
-.prism-pill {
-  background: rgba(var(--tint-rgb), 0.08);
-  border: 1px solid rgba(var(--tint-rgb), 0.20);
-  color: var(--text-secondary);
-}
-
-/* Accent micro-label — categorical badge */
-.prism-badge {
-  background: rgba(var(--tint-rgb), 0.09);
-  border: 1px solid rgba(var(--tint-rgb), 0.18);
-  color: var(--tint-color);
-}
-
-.prism-static {
-  transform: translateZ(0);
-}
-
-.prism-interactive {
-  transform: translateZ(0);
-  cursor: pointer;
-  user-select: none;
-  -webkit-user-select: none;
-  /* NOTE: no 'transform' here — Framer Motion owns all transform animations.
-     Adding transform to CSS transition would hijack FM spring physics. */
-  transition:
-    background 180ms ease,
-    border-color 180ms ease,
-    box-shadow 180ms ease,
-    opacity 200ms ease;
-}
-
-.prism-interactive:focus-visible {
-  outline: 2px solid rgba(var(--tint-rgb), 0.32);
-  outline-offset: 2px;
-}
-
-/* Press feedback — opacity only; scale is handled by Framer Motion whileTap */
-.prism-interactive:active {
-  opacity: 0.82;
-  transition: opacity 55ms ease-out;
-}
-
-/* Panel / orb / avatar — neutral hover intensify */
-.prism-panel.prism-interactive:hover,
-.prism-orb-button.prism-interactive:hover,
-.prism-avatar-disc.prism-interactive:hover {
-  background: var(--surface-bg-strong);
-  border-color: var(--surface-border);
-}
-
-/* Pill — tint-intensify on hover + soft glow */
-.prism-pill.prism-interactive:hover {
-  background: rgba(var(--tint-rgb), 0.11);
-  border-color: rgba(var(--tint-rgb), 0.24);
-}
-
-/* Panel: subtle edge highlight */
-.prism-panel {
-  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--prism-highlight) 56%, transparent);
-}
-
-/* Orb button: platform color glow on hover */
-.prism-orb-button {
-  transition:
-    background 200ms cubic-bezier(0.25, 0.1, 0.25, 1),
-    border-color 200ms cubic-bezier(0.25, 0.1, 0.25, 1),
-    box-shadow 200ms cubic-bezier(0.25, 0.1, 0.25, 1);
-}
-
-.prism-orb-button.prism-interactive:hover {
-  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--prism-highlight) 62%, transparent);
-}
-
 /* Interactive glass card — content dims on press (canvas renders separately, not affected) */
 .glass-card[data-glass-interactive="true"] {
   transition: filter 240ms ease;
@@ -527,9 +370,9 @@ body {
   background: var(--glass-floating-bg);
   border: 1px solid var(--glass-floating-border);
   box-shadow:
-    inset 0 1px 0 color-mix(in srgb, var(--prism-highlight) 72%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--glass-shell-highlight) 44%, transparent),
     inset 0 -1px 0 rgba(0, 0, 0, 0.04),
-    0 12px 32px color-mix(in srgb, var(--prism-shadow) 80%, transparent);
+    0 12px 32px color-mix(in srgb, var(--glass-shell-shadow) 80%, transparent);
   backdrop-filter: blur(20px) saturate(1.6);
   -webkit-backdrop-filter: blur(20px) saturate(1.6);
 }
@@ -563,7 +406,7 @@ body {
     linear-gradient(160deg,
       var(--ios-material-highlight) 0%,
       rgba(255, 255, 255, 0.04) 36%,
-      rgba(var(--prism-tint-rgb), 0.012) 100%);
+      rgba(var(--tint-rgb), 0.012) 100%);
   opacity: 0.7;
 }
 
@@ -640,7 +483,7 @@ body {
 
 /* ============================================================
    Liquid Glass — Light Sweep Animation
-   Moves the diagonal gloss stripe across the card surface
+   Moves the diagonal gloss stripe across the card shell
    ============================================================ */
 @keyframes liquid-shine {
   0% {
@@ -738,8 +581,8 @@ body {
   background:
     linear-gradient(
       145deg,
-      color-mix(in srgb, var(--surface-bg-strong) 72%, transparent),
-      color-mix(in srgb, var(--surface-bg) 46%, transparent)
+      color-mix(in srgb, var(--glass-inner-bg) 72%, transparent),
+      color-mix(in srgb, var(--glass-shell-fill) 46%, transparent)
     ),
     radial-gradient(circle at 32% 28%, rgba(var(--tint-rgb), 0.16), transparent 34%),
     linear-gradient(
@@ -813,8 +656,8 @@ body {
   border-radius: 12px;
   padding: 8px 14px;
   box-shadow:
-    inset 0 1px 0 color-mix(in srgb, var(--prism-highlight) 66%, transparent),
-    0 10px 22px color-mix(in srgb, var(--prism-shadow) 72%, transparent);
+    inset 0 1px 0 color-mix(in srgb, var(--glass-shell-highlight) 42%, transparent),
+    0 10px 22px color-mix(in srgb, var(--glass-shell-shadow) 72%, transparent);
 }
 
 .map-popup .mapboxgl-popup-tip {
@@ -878,8 +721,8 @@ body {
   color: var(--text-primary);
   z-index: 10;
   box-shadow:
-    inset 0 1px 0 color-mix(in srgb, var(--prism-highlight) 66%, transparent),
-    0 10px 22px color-mix(in srgb, var(--prism-shadow) 72%, transparent);
+    inset 0 1px 0 color-mix(in srgb, var(--glass-shell-highlight) 42%, transparent),
+    0 10px 22px color-mix(in srgb, var(--glass-shell-shadow) 72%, transparent);
   pointer-events: none;
   animation: fade-in 0.6s ease-out both;
   animation-delay: 0.3s;
@@ -921,8 +764,8 @@ body {
   font-weight: 600;
   color: var(--text-primary);
   box-shadow:
-    inset 0 1px 0 color-mix(in srgb, var(--prism-highlight) 66%, transparent),
-    0 8px 18px color-mix(in srgb, var(--prism-shadow) 72%, transparent);
+    inset 0 1px 0 color-mix(in srgb, var(--glass-shell-highlight) 42%, transparent),
+    0 8px 18px color-mix(in srgb, var(--glass-shell-shadow) 72%, transparent);
   pointer-events: none;
   font-family: var(--font-sans);
 }

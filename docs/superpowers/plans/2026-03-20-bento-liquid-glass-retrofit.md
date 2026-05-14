@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Convert the homepage from a partial card-shell liquid-glass experiment into a coherent liquid-glass Bento system, with the grid, card shell, inner surfaces, and responsive behavior all following one visual model.
+**Goal:** Convert the homepage from a partial card-shell liquid-glass experiment into a coherent liquid-glass Bento system, with the grid, card shell, inner controls, and responsive behavior all following one visual model.
 
-**Architecture:** Keep the existing shared `LiquidGlassCanvas` approach instead of replacing it. Extend it so the shader layer, `GlassCard` API, background source, and card internals all share the same token system and variant model. Use WebGL for outer shell optics and CSS for inner content surfaces, chips, dividers, and media masks.
+**Architecture:** Keep the existing shared `LiquidGlassCanvas` approach instead of replacing it. Extend it so the shader layer, `GlassCard` API, background source, and card internals all share the same token system and variant model. Use WebGL for outer shell optics and CSS for inner content controls, chips, dividers, and media masks.
 
 **Tech Stack:** Next.js 16, React 19, TypeScript, Tailwind CSS 4, Framer Motion 12, WebGL2, GLSL
 
@@ -36,7 +36,7 @@
 - Modify: `src/shaders/glass-main.glsl`
   - Make shader files the single source of truth and remove drift with inline strings.
 - Modify: `src/app/globals.css`
-  - Add liquid-glass tokens and shared inner-surface utilities.
+  - Add liquid-glass tokens and inner control styling.
 - Modify: `src/components/bento-grid.tsx`
   - Tune grid spacing, row rhythm, and container framing for the new glass system.
 - Modify: `src/app/page.tsx`
@@ -55,7 +55,7 @@
 - Modify: `src/components/vrchat-status-card.tsx`
 - Modify: `src/components/blog-card.tsx`
 - Modify: `src/components/hardware-card.tsx`
-  - Migrate each card’s internals from legacy glassmorphism fragments to liquid-glass-compatible inner surfaces.
+  - Migrate each card’s internals from legacy glassmorphism fragments to liquid-glass-compatible inner controls.
 - Modify: `AGENTS.md`
 - Modify: `README.md`
   - Sync docs after implementation is complete.
@@ -77,7 +77,7 @@ Expected: list of every card using the shared shell.
 
 Define:
 - `GlassVariant = "hero" | "panel" | "media" | "dense" | "immersive"`
-- per-variant radius, tint alpha, blur radius, glare, and inner-surface defaults
+- per-variant radius, tint alpha, blur radius, glare, and inner control defaults
 - helper for mapping card props to DOM dataset/CSS variables
 
 - [ ] **Step 3: Extend `GlassCard` to accept explicit visual variants**
@@ -90,7 +90,7 @@ Add props such as:
 
 Expected result: cards stop encoding glass behavior only through raw `className`.
 
-- [ ] **Step 4: Add shared CSS utilities for inner liquid surfaces**
+- [ ] **Step 4: Add shared CSS utilities for inner liquid controls**
 
 Add utilities in `src/app/globals.css` for:
 - inner content plates
@@ -99,13 +99,13 @@ Add utilities in `src/app/globals.css` for:
 - media masks
 - icon buttons
 
-Expected result: cards can reuse the same micro-surface language instead of inline background styles.
+Expected result: cards can use consistent inner control styling instead of ad hoc background styles.
 
 - [ ] **Step 5: Run lint after the API refactor**
 
 Run: `pnpm lint`
 
-Expected: no new lint failures from the new shared API surface.
+Expected: no new lint failures from the new shared API.
 
 ## Task 2: Make the Shared Canvas Production-Ready
 
@@ -158,7 +158,7 @@ Run:
 
 Expected: no lag spikes from resize, no stale card rects, no broken background texture after slideshow transitions.
 
-## Task 3: Convert Simple Cards to the New Inner-Surface Language
+## Task 3: Convert Simple Cards to the New Inner Control Language
 
 **Files:**
 - Modify: `src/components/profile-card.tsx`
@@ -224,7 +224,7 @@ Plan:
 - keep the outer shell responsible for registration and geometry
 - move clipping to child wrappers using `borderRadius: inherit`
 
-- [ ] **Step 2: Convert hardcoded fills into liquid-compatible inner surfaces**
+- [ ] **Step 2: Convert hardcoded fills into liquid-compatible inner controls**
 
 Current examples:
 - `NowPlayingCard` hardcodes `rgb(30,30,30)`
@@ -288,7 +288,7 @@ Current examples:
 - tooltip and badge backgrounds in heatmap
 - old border/background combinations in status or blog rows
 
-Expected result: denser, cleaner inner surfaces.
+Expected result: denser, cleaner inner controls.
 
 - [ ] **Step 4: Manually verify text contrast on both light and dark backgrounds**
 
@@ -353,19 +353,19 @@ Document:
 - the new liquid-glass architecture
 - which files own the shader pipeline
 - how cards opt into variants
-- any new constraints for inner clipping or micro-surfaces
+- any new constraints for inner clipping or controls
 
 - [ ] **Step 4: Create a focused commit sequence**
 
 Recommended commits:
 - `feat: stabilize liquid glass core api`
-- `feat: migrate simple cards to liquid glass surfaces`
+- `feat: migrate simple cards to liquid glass controls`
 - `feat: refactor media cards for liquid glass`
 - `docs: sync liquid glass architecture docs`
 
 ## Notes for Execution
 
 - Do not reset or overwrite the existing uncommitted liquid-glass foundation.
-- Prefer CSS for inner surfaces and WebGL for shell optics; do not push every micro-element into the shader.
-- Use the existing Bento layout as the baseline. Only change card ordering or spans if the upgraded surfaces expose a real hierarchy problem.
+- Prefer CSS for inner controls and WebGL for shell optics; do not push every micro-element into the shader.
+- Use the existing Bento layout as the baseline. Only change card ordering or spans if the upgraded controls expose a real hierarchy problem.
 - Keep `GlassCard` content accessible and DOM-based; the shader layer is visual infrastructure, not the content host.

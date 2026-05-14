@@ -39,7 +39,7 @@ export function SkillsCard() {
                     <motion.span
                         key={interest}
                         variants={item}
-                        className="prism-pill prism-static inline-flex items-center rounded-full px-3.5 py-1.5 text-[13px] font-medium select-none"
+                        className="inline-flex select-none items-center rounded-full border border-[rgba(var(--tint-rgb),0.20)] bg-[rgba(var(--tint-rgb),0.08)] px-3.5 py-1.5 text-[13px] font-medium text-text-secondary"
                     >
                         {interest}
                     </motion.span>

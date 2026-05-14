@@ -83,16 +83,20 @@ export function BackgroundLayer({ images }: BackgroundLayerProps) {
         }
 
         if (previousUrl && previousUrl !== activeUrl) {
+            const startedAt = performance.now();
             if (previousImage) {
                 setFadingImage(previousImage);
             }
             root.dataset[LIQUID_GLASS_CANVAS.previousBackgroundDatasetKey] = previousUrl;
+            root.dataset[LIQUID_GLASS_CANVAS.backgroundTransitionStartedAtDatasetKey] =
+                `${startedAt}`;
             root.dataset[LIQUID_GLASS_CANVAS.backgroundTransitionDurationDatasetKey] =
                 `${LIQUID_GLASS_CANVAS.backgroundTransitionMs}`;
 
             cleanupTimer = window.setTimeout(() => {
                 if (root.dataset[LIQUID_GLASS_CANVAS.activeBackgroundDatasetKey] === activeUrl) {
                     delete root.dataset[LIQUID_GLASS_CANVAS.previousBackgroundDatasetKey];
+                    delete root.dataset[LIQUID_GLASS_CANVAS.backgroundTransitionStartedAtDatasetKey];
                     delete root.dataset[LIQUID_GLASS_CANVAS.backgroundTransitionDurationDatasetKey];
                 }
                 setFadingImage((image) => (image === previousImage ? "" : image));
@@ -100,6 +104,7 @@ export function BackgroundLayer({ images }: BackgroundLayerProps) {
         } else {
             setFadingImage("");
             delete root.dataset[LIQUID_GLASS_CANVAS.previousBackgroundDatasetKey];
+            delete root.dataset[LIQUID_GLASS_CANVAS.backgroundTransitionStartedAtDatasetKey];
             delete root.dataset[LIQUID_GLASS_CANVAS.backgroundTransitionDurationDatasetKey];
         }
 
@@ -119,6 +124,7 @@ export function BackgroundLayer({ images }: BackgroundLayerProps) {
             delete root.dataset[LIQUID_GLASS_CANVAS.activeBackgroundDatasetKey];
             delete root.dataset[LIQUID_GLASS_CANVAS.nextBackgroundDatasetKey];
             delete root.dataset[LIQUID_GLASS_CANVAS.previousBackgroundDatasetKey];
+            delete root.dataset[LIQUID_GLASS_CANVAS.backgroundTransitionStartedAtDatasetKey];
             delete root.dataset[LIQUID_GLASS_CANVAS.backgroundTransitionDurationDatasetKey];
         };
     }, []);

@@ -13,6 +13,9 @@
 - **Shared Liquid Glass Renderer** — All `GlassCard` shells are rendered through a single `LiquidGlassCanvas` with `bgPass → vBlurPass → hBlurPass → mainPass`
 - **Synchronized Background Crossfade** — Page background and liquid glass now share the same transition timing when images rotate
 - **Demand-Driven Rendering** — The shared canvas only redraws when backgrounds, geometry, scroll position, or initial entrance settling actually change
+- **Wheel-Synchronous Scroll** — Wheel input predicts the next scroll target and moves the previous WebGL bitmap on the compositor before the scroll event lands, then the next WebGL frame commits the exact geometry
+- **Stable First Frame** — The WebGL renderer seeds startup with a 1×1 fallback GPU background texture, so delayed or failed async background images cannot leave the page stuck in `data-liquid-glass="loading"`
+- **Fullscreen-Safe Recomposition** — resize, fullscreen transitions, and visibility restore share one recomposition path that refreshes viewport/FBO sizing, dirties card geometry, and requests a fresh frame
 - **Runtime Quality Tiers** — Blur downsampling and FBO precision are adjusted from device DPR, pointer type, memory, and card density
 - **Per-Card Scissor Rendering** — The main pass clips work to each card’s actual screen region instead of rasterizing every card as a full-screen draw
 - **Bento Grid Layout** — Responsive CSS Grid (4 → 1 columns) for desktop / mobile
@@ -29,7 +32,7 @@
 - **Light / Dark Auto** — Follows system `prefers-color-scheme` with dual-mode design tokens
 - **Live GitHub Stats** — Project cards auto-fetch ⭐ Stars and 🍴 Forks from GitHub API
 - **Entrance Animations** — Staggered fade-in + slide-up with spring physics via Framer Motion
-- **Flattened Inner Controls** — Tags, buttons, and embedded surfaces are kept visually quiet instead of glossy or bulbous
+- **Flattened Inner Controls** — Tags, buttons, and embedded elements are kept visually quiet instead of glossy or bulbous
 - **Performance Optimized** — shared WebGL canvas, invalidation-driven rendering, geometry caching, blur downsampling, and rAF-driven zero-render progress bar
 - **SEO Ready** — Open Graph, Twitter Card, and `<meta>` tags driven from config
 - **Static Export** — `next build` outputs pure HTML/CSS/JS; no server required
@@ -102,11 +105,11 @@ Bento-Homepage/
 │   │   ├── github-heatmap-card.tsx # GitHub contribution heatmap
 │   │   ├── vrchat-status-card.tsx  # VRChat live status
 │   │   ├── blog-card.tsx         # Blog recent posts (Halo 2.x)
-│   │   ├── social-card.tsx       # Social link icons (Prism orb buttons)
-│   │   ├── skills-card.tsx       # Interest tags (Prism pills)
-│   │   ├── hardware-card.tsx     # Hardware inventory (Prism pills)
-│   │   ├── projects-card.tsx     # Featured projects (Prism panels + badges)
-│   │   ├── friends-card.tsx      # Friend links (Prism avatar discs)
+│   │   ├── social-card.tsx       # Social link icons
+│   │   ├── skills-card.tsx       # Interest tags
+│   │   ├── hardware-card.tsx     # Hardware inventory
+│   │   ├── projects-card.tsx     # Featured projects
+│   │   ├── friends-card.tsx      # Friend links
 │   │   ├── map-card.tsx          # Mapbox interactive map (footprints + IP distance)
 │   │   ├── weather-card.tsx      # Live weather (open-meteo, dynamic gradient animations)
 │   │   ├── software-card.tsx     # Frequently used apps

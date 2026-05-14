@@ -111,14 +111,14 @@ export function BlogCard() {
                                     className="h-3.5 rounded-full animate-pulse"
                                     style={{
                                         width: `${58 + ((i * 13) % 32)}%`,
-                                        background: "var(--surface-bg-strong)",
+                                        background: "var(--glass-inner-bg)",
                                     }}
                                 />
                                 <div
                                     className="h-2.5 rounded-full animate-pulse"
                                     style={{
                                         width: `${36 + ((i * 9) % 22)}%`,
-                                        background: "var(--surface-bg)",
+                                        background: "rgba(var(--tint-rgb), 0.08)",
                                     }}
                                 />
                             </div>
@@ -131,7 +131,7 @@ export function BlogCard() {
                             href={`${blogConfig.url}${post.status.permalink}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="prism-panel prism-interactive group relative flex items-center gap-2 rounded-[14px] px-2.5 py-[10px]"
+                            className="group relative flex items-center gap-2 rounded-[14px] border border-transparent px-2.5 py-[10px] transition-[background,border-color] duration-200 hover:border-[var(--glass-inner-border)] hover:bg-[var(--glass-inner-bg)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgba(var(--tint-rgb),0.32)]"
                             initial={{ opacity: 0, y: 5 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{
@@ -160,7 +160,7 @@ export function BlogCard() {
                                             >
                                                 ·
                                             </span>
-                                            <span className="prism-badge rounded-[5px] px-1.5 py-0.5 text-[10px] font-semibold tracking-wide leading-none">
+                                            <span className="rounded-[5px] border border-[rgba(var(--tint-rgb),0.18)] bg-[rgba(var(--tint-rgb),0.08)] px-1.5 py-0.5 text-[10px] font-semibold leading-none tracking-wide text-tint">
                                                 {post.categories[0].spec.displayName}
                                             </span>
                                         </>

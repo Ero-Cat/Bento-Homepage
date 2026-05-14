@@ -61,7 +61,7 @@ export function PhotoStackCard({ photos }: PhotoStackCardProps) {
             <GlassCard variant="media" className="flex flex-col items-center justify-center gap-3 p-12">
                 <ImageIcon size={40} className="text-text-tertiary" />
                 <p className="text-sm text-text-tertiary">
-                    Place photos in <code className="prism-badge prism-static rounded-md px-1.5 py-0.5 text-xs">public/photos/</code>
+                    Place photos in <code className="rounded-md border border-[rgba(var(--tint-rgb),0.18)] bg-[rgba(var(--tint-rgb),0.08)] px-1.5 py-0.5 text-xs text-tint">public/photos/</code>
                 </p>
             </GlassCard>
         );
@@ -104,7 +104,7 @@ export function PhotoStackCard({ photos }: PhotoStackCardProps) {
                                 sizes="(min-width: 768px) 1376px, calc(100vw - 32px)"
                                 className="rounded-2xl object-cover shadow-md select-none pointer-events-none"
                                 style={{
-                                    border: "1px solid var(--surface-border)",
+                                    border: "1px solid var(--glass-inner-border)",
                                 }}
                                 loading="lazy"
                                 draggable={false}

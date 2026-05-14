@@ -22,7 +22,7 @@ function getToken(mode: "light" | "dark", name: string): string {
   return match[1].trim();
 }
 
-test("light mode uses denser glass surfaces and deeper text tokens", () => {
+test("light mode uses denser glass controls and deeper text tokens", () => {
   assert.equal(getToken("light", "glass-fallback-bg"), "rgba(255, 255, 255, 0.24)");
   assert.equal(getToken("light", "glass-floating-bg"), "rgba(255, 255, 255, 0.26)");
   assert.equal(getToken("light", "ios-material-bg"), "rgba(255, 255, 255, 0.3)");
@@ -36,65 +36,13 @@ test("light mode background veil stays strong enough for busy photography", () =
   assert.equal(getToken("light", "bg-overlay-gradient-bottom"), "rgba(241, 245, 249, 0.62)");
 });
 
-test("prism tokens are defined for light and dark mode", () => {
-  const expectedLight = {
-    "prism-fill": "rgba(255, 255, 255, 0.1)",
-    "prism-fill-strong": "rgba(255, 255, 255, 0.14)",
-    "prism-border": "rgba(255, 255, 255, 0.22)",
-    "prism-highlight": "rgba(255, 255, 255, 0.28)",
-    "prism-shadow": "rgba(15, 23, 42, 0.05)",
-    "prism-tint-rgb": "190, 24, 93",
-    "prism-orb-glow": "rgba(255, 255, 255, 0)",
-    "prism-press-depth": "0.985",
-  };
-  const expectedDark = {
-    "prism-fill": "rgba(255, 255, 255, 0.035)",
-    "prism-fill-strong": "rgba(255, 255, 255, 0.055)",
-    "prism-border": "rgba(255, 255, 255, 0.09)",
-    "prism-highlight": "rgba(255, 255, 255, 0.12)",
-    "prism-shadow": "rgba(2, 6, 23, 0.16)",
-    "prism-tint-rgb": "251, 113, 133",
-    "prism-orb-glow": "rgba(255, 255, 255, 0)",
-    "prism-press-depth": "0.985",
-  };
-
-  for (const [name, value] of Object.entries(expectedLight)) {
-    assert.equal(getToken("light", name), value);
-  }
-
-  for (const [name, value] of Object.entries(expectedDark)) {
-    assert.equal(getToken("dark", name), value);
-  }
-});
-
-test("flat micro surfaces avoid loud glow and decorative gradients", () => {
-  assert.match(globalsCss, /\.prism-orb-button\s*\{/);
-  assert.doesNotMatch(
-    globalsCss,
-    /radial-gradient\(circle at 76% 78%, rgba\(var\(--prism-tint-rgb\), 0\.18\)/,
-  );
-  assert.doesNotMatch(
-    globalsCss,
-    /0 0 10px var\(--prism-orb-glow\)/,
-  );
-  assert.doesNotMatch(
-    globalsCss,
-    /0 0 0 1px rgba\(255, 255, 255, 0\.04\),\s*0 0 10px var\(--prism-orb-glow\)/,
-  );
-});
-
-test("globals.css defines the prism surface selectors", () => {
-  for (const selector of [
-    ".prism-panel",
-    ".prism-badge",
-    ".prism-orb-button",
-    ".prism-pill",
-    ".prism-avatar-disc",
-    ".prism-interactive",
-    ".prism-static",
-  ]) {
-    assert.match(globalsCss, new RegExp(`\\${selector}\\b`));
-  }
+test("legacy prism inner-control systems are removed from global styling", () => {
+  assert.doesNotMatch(globalsCss, /--prism-/);
+  assert.doesNotMatch(globalsCss, /\.prism-/);
+  assert.doesNotMatch(globalsCss, new RegExp(`\\.glass-inner-${"sur"}${"face"}`));
+  assert.doesNotMatch(globalsCss, /\.glass-chip/);
+  assert.doesNotMatch(globalsCss, /\.glass-icon-button/);
+  assert.doesNotMatch(globalsCss, /\.pill-tag/);
 });
 
 test("glass-card fallback shell keeps the shared liquid glass radius", () => {
@@ -148,24 +96,7 @@ test("ios media card highlight stays inside the shell edge", () => {
   );
 });
 
-test("affected components migrate from glass utilities to prism surfaces", () => {
-  const expectedClassUsage = [
-    ["src/components/skills-card.tsx", "prism-pill"],
-    ["src/components/hardware-card.tsx", "prism-pill"],
-    ["src/components/social-card.tsx", "prism-orb-button"],
-    ["src/components/projects-card.tsx", "prism-panel"],
-    ["src/components/projects-card.tsx", "prism-badge"],
-    ["src/components/software-card.tsx", "prism-panel"],
-    ["src/components/friends-card.tsx", "prism-avatar-disc"],
-    ["src/components/blog-card.tsx", "prism-badge"],
-    ["src/components/photo-stack-card.tsx", "prism-badge"],
-  ] as const;
-
-  for (const [path, className] of expectedClassUsage) {
-    const source = readFileSync(new URL(path, projectRoot), "utf8");
-    assert.match(source, new RegExp(`\\b${className}\\b`), `Expected ${path} to use ${className}`);
-  }
-
+test("affected components do not use legacy shared inner-control classes", () => {
   for (const path of [
     "src/components/skills-card.tsx",
     "src/components/hardware-card.tsx",
@@ -179,28 +110,28 @@ test("affected components migrate from glass utilities to prism surfaces", () =>
     const source = readFileSync(new URL(path, projectRoot), "utf8");
 
     for (const removedClassName of [
-      "glass-inner-surface",
+      "prism-",
+      `glass-inner-${"sur"}${"face"}`,
       "glass-chip",
       "glass-icon-button",
       "pill-tag",
     ]) {
       assert.doesNotMatch(
         source,
-        new RegExp(`\\b${removedClassName}\\b`),
+        new RegExp(removedClassName.replace("-", "\\-")),
         `Expected ${path} to stop using ${removedClassName}`,
       );
     }
   }
 });
 
-test("informational chips render as static prism surfaces instead of clickable hover controls", () => {
+test("informational chips stay static instead of clickable hover controls", () => {
   for (const path of [
     "src/components/skills-card.tsx",
     "src/components/hardware-card.tsx",
   ]) {
     const source = readFileSync(new URL(path, projectRoot), "utf8");
 
-    assert.match(source, /\bprism-pill prism-static\b/, `Expected ${path} to use static Prism pills`);
     assert.doesNotMatch(source, /whileHover=\{\{\s*scale:/, `Expected ${path} not to scale static chips on hover`);
     assert.doesNotMatch(source, /whileTap=\{\{\s*scale:/, `Expected ${path} not to press static chips`);
   }
@@ -213,7 +144,7 @@ test("dense list cards avoid directional hover shifts and decorative hover arrow
   assert.doesNotMatch(projectsSource, /whileHover=\{\{\s*x:/, "Expected project rows not to slide horizontally on hover");
   assert.doesNotMatch(projectsSource, /Left tint accent/, "Expected project rows not to add a decorative hover-only accent rail");
   assert.doesNotMatch(blogSource, /group-hover:translate-x/, "Expected blog rows not to reveal sliding hover arrows");
-  assert.doesNotMatch(blogSource, /whileHover=\{\{\s*backgroundColor:/, "Expected blog rows to use shared Prism hover styling");
+  assert.doesNotMatch(blogSource, /whileHover=\{\{\s*backgroundColor:/, "Expected blog rows to use CSS hover styling");
 });
 
 test("profile hero text can wrap inside narrow mobile cards", () => {

@@ -39,7 +39,7 @@ export function FriendsCard() {
                         transition={SPRING_GENTLE}
                     >
                         <motion.div
-                            className="prism-avatar-disc relative h-16 w-16 overflow-hidden rounded-full"
+                            className="relative h-16 w-16 overflow-hidden rounded-full border border-[var(--glass-inner-border)] bg-[var(--glass-inner-bg)] shadow-[0_8px_22px_var(--glass-shell-shadow)]"
                             variants={{
                                 initial: {
                                     rotate: 0,

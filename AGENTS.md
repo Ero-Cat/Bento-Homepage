@@ -70,7 +70,7 @@
 - 所有组件 API 仅从 `siteConfig` 读取数据，禁止组件内硬编码文本
 - 外层 `GlassCard` 负责液态玻璃壳层与注册，不负责媒体裁剪；媒体裁剪必须下沉到子容器并使用 `borderRadius: inherit`
 - 玻璃光学参数必须通过 `GlassVariant` / CSS 变量集中管理，禁止在业务卡片中复制 shader 参数
-- 内层微表面必须通过 `globals.css` 中的共享 `Prism` material classes（如 `prism-panel` / `prism-badge` / `prism-orb-button` / `prism-pill`）统一管理，禁止在业务卡片中重新拼装一套局部玻璃参数
+- 内层控件使用组件局部样式并复用现有 glass / tint token；禁止重新引入 Prism 风格玻璃参数或新的共享内层视觉体系
 
 ---
 
@@ -123,7 +123,7 @@ Bento-Homepage/
 │   └── optimized/                # WebP 降采样运行时资源（bg/photos）
 ├── src/
 │   ├── app/
-│   │   ├── globals.css           # 设计令牌（明/暗）、Prism micro-surface utility、动画关键帧
+│   │   ├── globals.css           # 设计令牌（明/暗）、玻璃样式、动画关键帧
 │   │   ├── layout.tsx            # 根布局、SEO 元数据、背景图扫描、主题注入
 │   │   └── page.tsx              # 首页 — Bento Grid 组装 + 数据 fetch
 │   ├── components/
@@ -140,11 +140,11 @@ Bento-Homepage/
 │   │   ├── github-heatmap-card.tsx # GitHub 贡献热力图（无需 Token）
 │   │   ├── vrchat-status-card.tsx  # VRChat 实时在线状态（VRCX-Cloud API）
 │   │   ├── blog-card.tsx         # 博客最新文章（Halo 2.x API）
-│   │   ├── social-card.tsx       # 社交图标链接（Prism orb buttons）
-│   │   ├── skills-card.tsx       # 兴趣标签（Prism pills）
-│   │   ├── hardware-card.tsx     # 硬件清单（Prism pills，与 Interests 一致）
-│   │   ├── projects-card.tsx     # 项目展示（Prism panels + badges，含 GitHub Stars/Forks API）
-│   │   ├── friends-card.tsx      # 友情链接（Prism avatar discs + 轻量 hover 反馈）
+│   │   ├── social-card.tsx       # 社交图标链接
+│   │   ├── skills-card.tsx       # 兴趣标签
+│   │   ├── hardware-card.tsx     # 硬件清单（与 Interests 一致）
+│   │   ├── projects-card.tsx     # 项目展示（含 GitHub Stars/Forks API）
+│   │   ├── friends-card.tsx      # 友情链接（轻量 hover 反馈）
 │   │   ├── map-card.tsx          # Mapbox 互动地图（城市标记 + 脉冲弹窗 + IP 距离显示）
 │   │   ├── weather-card.tsx      # 实时天气卡片（open-meteo API，Apple Weather 风格渐变）
 │   │   ├── footer.tsx            # 版权信息
@@ -178,9 +178,12 @@ Bento-Homepage/
 - **失效驱动渲染**：共享画布不再常驻 60fps 全量重绘；仅在背景切换、resize、scroll、卡片几何变化和首屏入场稳定阶段才重新调度渲染
 - **变体化参数**：`hero` / `panel` / `media` / `dense` / `immersive` 通过 `src/lib/liquid-glass.ts` 集中管理半径、折射、Fresnel、glare 与 fallback blur
 - **稳定背景源**：`BackgroundLayer` 将当前背景图 URL 发布到根节点 dataset，Canvas 不再通过脆弱 DOM 查询推断背景
+- **非阻塞首帧纹理**：`LiquidGlassCanvas` 启动时必须先创建 1×1 fallback GPU background texture；`GLState.bgTex` 保持非空，真实背景异步加载完成后替换，禁止重新引入 `if (!state.bgTex) return` 这类 loading 死锁
 - **背景切换同步**：`BackgroundLayer` 同步发布当前/上一张背景与过渡时间，Canvas 在 `bgPass` 内执行同时序 crossfade，避免 glass 与页面背景不同步
-- **几何缓存与可见性裁剪**：卡片 rect / radius 在注册后缓存，配合 `ResizeObserver`、`IntersectionObserver` 和滚动脏标记更新，避免每帧对所有卡片执行布局读取
-- **移动端视口同步**：Canvas 使用 `visualViewport` 解析动态视口尺寸和 offset，并在滚动惯性结束前持续追踪 scroll/viewport 几何，避免 mobile 与滚动场景下 glass shell 和 DOM 内容错位
+- **文档坐标几何缓存**：卡片 rect / radius 在显式布局变化时缓存为文档坐标，滚动热路径只做 scroll 投影，避免每帧对所有卡片执行布局读取
+- **滚轮输入阶段同步**：wheel 事件先预测浏览器即将提交的 scroll target，并立即用 CSS transform 移动上一帧 WebGL bitmap；scroll 事件再用真实 scroll 校准，下一帧 WebGL 重绘后提交新的 scroll 基准，避免滚轮滚动时 glass shell 落后 DOM 内容产生上下抖动
+- **全屏与 resize 重绘**：resize、fullscreenchange、visibility 恢复必须统一走 viewport/FBO 更新、全卡片几何标脏、requestRender 的重绘路径，避免 PC 全屏切换后 canvas 清空但 glass 壳层不重新提交
+- **移动端视口同步**：Canvas 使用 `visualViewport` 解析动态视口尺寸和 offset，配合文档坐标投影保持 mobile 与滚动场景下 glass shell 和 DOM 内容同步
 - **按卡片范围绘制**：`mainPass` 通过 scissor 限定到每张卡片的实际屏幕区域，避免“每张卡都绘制一次全屏 quad”的 GPU 浪费
 - **降采样 blur**：背景 blur pass 根据运行时质量档位使用降采样 FBO，在移动端/高 DPR/高卡片密度下自动降低填充成本
 - **纯光学壳层**：WebGL2 就绪后，`GlassCard` 的旧 DOM 玻璃外观必须静音，只保留结构与命中区域，光学效果完全由 Canvas 负责
@@ -201,13 +204,12 @@ Bento-Homepage/
 ### NowPlayingCard 优化
 - **独立材质系统**：`NowPlayingCard` 不注册到 `LiquidGlassCanvas`，改用独立 iOS media card 材质，避免和 refractive bento 壳层混用
 - **rAF 进度条**：`requestAnimationFrame` + `ref` 直写 DOM，播放期间零 React 重渲染
-- **媒体控件层级**：封面、按钮、进度条使用专用 media-card token，不复用 liquid-glass micro-surface
+- **媒体控件层级**：封面、按钮、进度条使用专用 media-card token，不复用 Bento glass 壳层样式
 
-### Prism Micro-Surface 系统
-- 内层交互面与内容承载面统一使用 `Prism` 体系：`prism-panel`、`prism-badge`、`prism-orb-button`、`prism-pill`、`prism-avatar-disc`
-- `Prism` token 在 `globals.css` 中独立维护，与外层 `GlassCard` shader 壳层分层；不得复用旧 `glass-chip` / `pill-tag` 语义
-- `Prism` 默认走扁平化系统控件语言：弱高光、弱阴影、弱色偏，避免内层微表面与外层 liquid shell 抢戏
-- 信息型标签（Interests / Hardware）使用 `prism-static`，禁止做成带 scale/glow 的伪按钮；列表型卡片 hover 只保留低噪声色彩反馈，避免装饰箭头和方向位移
+### Inner Control Styling
+- 内层交互面与内容承载面使用组件局部 Tailwind 样式，并复用现有 `glass-*` / `tint` token。
+- 禁止重新引入 Prism、`glass-chip`、`pill-tag` 或额外共享内层控件体系。
+- 信息型标签（Interests / Hardware）保持静态，禁止做成带 scale/glow 的伪按钮；列表型卡片 hover 只保留低噪声色彩反馈，避免装饰箭头和方向位移。
 
 ### GitHubHeatmapCard 优化
 - 使用第三方公开 API（`github-contributions-api.jogruber.de`），无需 GitHub Token
@@ -256,4 +258,4 @@ Bento-Homepage/
 11. **Shared Liquid Glass Variants**: 所有使用共享液态玻璃壳层的卡片必须显式选择或继承 `GlassVariant`。业务组件不得直接硬编码整套折射、glare、radius 和 tint 参数；`NowPlayingCard` 是独立 iOS media card 例外
 12. **Shell vs Content Separation**: 外层 `GlassCard` 只负责液态玻璃壳层与命中区域；内容层、chip、按钮、divider、媒体裁剪必须由内层 DOM 结构负责
 13. **Stable Background Contract**: 共享画布只能通过 `BackgroundLayer` 发布的 active background dataset 读取背景，禁止重新引入 `querySelector + computedStyle` 推断链路
-14. **Prism Surface SSoT**: 所有内层微表面必须复用 `Prism` class 和对应 token；禁止重新引入 `glass-inner-surface`、`glass-chip`、`glass-icon-button`、`pill-tag` 作为业务组件接口
+14. **Inner Control Styling**: 内层控件样式应保持组件局部化并复用现有 glass / tint token；禁止重新引入 Prism、旧 glass inner class、`glass-chip`、`glass-icon-button`、`pill-tag` 或新的共享内层控件接口

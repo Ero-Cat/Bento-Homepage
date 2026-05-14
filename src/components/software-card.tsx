@@ -72,7 +72,7 @@ export function SoftwareCard() {
         >
             {/* ── macOS Title Bar with traffic lights ── */}
             <div
-                className="prism-panel prism-static flex items-center px-4 py-2.5"
+                className="flex items-center bg-[var(--glass-inner-bg)] px-4 py-2.5"
                 style={{ borderBottom: "1px solid var(--glass-divider)" }}
             >
                 {/* Traffic lights */}

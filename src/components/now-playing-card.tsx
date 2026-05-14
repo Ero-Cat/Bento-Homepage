@@ -44,9 +44,7 @@ export function NowPlayingCard() {
         []
     );
 
-    const [currentIdx, setCurrentIdx] = useState(() =>
-        tracks.length > 1 ? Math.floor(Math.random() * tracks.length) : 0
-    );
+    const [currentIdx, setCurrentIdx] = useState(0);
     const [isPlaying, setIsPlaying] = useState(false);
     const [isMuted, setIsMuted] = useState(false);
     // Real audio duration from loadedmetadata (track.duration is 0 in config)

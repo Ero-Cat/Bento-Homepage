@@ -5,6 +5,8 @@ import {
   addScrollFollowImpulse,
   beginScrollGeometryTracking,
   expandScissorRect,
+  resolveDocumentCardRect,
+  resolveCardRenderGeometry,
   resolveLiquidGlassQuality,
   resolveLiquidGlassViewport,
   stepScrollGeometryTracking,
@@ -170,6 +172,78 @@ test("expandScissorRect returns null when the clipped area disappears", () => {
     ),
     null,
   );
+});
+
+test("resolveCardRenderGeometry keeps shader rects in DOM top-left coordinates and scissor in WebGL bottom-left coordinates", () => {
+  const geometry = resolveCardRenderGeometry({
+    rect: { left: 80, top: 120, width: 320, height: 180 },
+    viewport: { cssWidth: 1000, cssHeight: 700, width: 2000, height: 1400 },
+    dpr: 2,
+    viewportOffsetLeft: 0,
+    viewportOffsetTop: 0,
+    scissorPaddingPx: 10,
+  });
+
+  assert.deepEqual(geometry.shaderRectPx, [160, 240, 640, 360]);
+  assert.deepEqual(geometry.uvRect, [0.08, 0.5714285714285714, 0.32, 0.2571428571428571]);
+  assert.deepEqual(geometry.scissorRect, { x: 140, y: 780, width: 680, height: 400 });
+  assert.equal(geometry.visible, true);
+});
+
+test("resolveCardRenderGeometry follows scrolled DOM rects without adding scroll twice", () => {
+  const before = resolveCardRenderGeometry({
+    rect: { left: 80, top: 420, width: 320, height: 180 },
+    viewport: { cssWidth: 1000, cssHeight: 700, width: 2000, height: 1400 },
+    dpr: 2,
+    viewportOffsetLeft: 0,
+    viewportOffsetTop: 0,
+    scissorPaddingPx: 10,
+  });
+  const afterWheelScroll = resolveCardRenderGeometry({
+    rect: { left: 80, top: 120, width: 320, height: 180 },
+    viewport: { cssWidth: 1000, cssHeight: 700, width: 2000, height: 1400 },
+    dpr: 2,
+    viewportOffsetLeft: 0,
+    viewportOffsetTop: 0,
+    scissorPaddingPx: 10,
+  });
+
+  assert.equal(before.shaderRectPx[1], 840);
+  assert.equal(afterWheelScroll.shaderRectPx[1], 240);
+  assert.equal(before.scissorRect?.y, 180);
+  assert.equal(afterWheelScroll.scissorRect?.y, 780);
+});
+
+test("resolveDocumentCardRect stores card geometry in the scrolling document coordinate space", () => {
+  assert.deepEqual(
+    resolveDocumentCardRect({
+      rect: { left: 80, top: 120, width: 320, height: 180 },
+      scrollX: 0,
+      scrollY: 600,
+      canvasDocumentLeft: 0,
+      canvasDocumentTop: 0,
+    }),
+    { left: 80, top: 720, width: 320, height: 180 },
+  );
+});
+
+test("resolveDocumentCardRect is stable when viewport scroll changes but the element document position is unchanged", () => {
+  const before = resolveDocumentCardRect({
+    rect: { left: 80, top: 420, width: 320, height: 180 },
+    scrollX: 0,
+    scrollY: 300,
+    canvasDocumentLeft: 0,
+    canvasDocumentTop: 0,
+  });
+  const after = resolveDocumentCardRect({
+    rect: { left: 80, top: 120, width: 320, height: 180 },
+    scrollX: 0,
+    scrollY: 600,
+    canvasDocumentLeft: 0,
+    canvasDocumentTop: 0,
+  });
+
+  assert.deepEqual(before, after);
 });
 
 test("addScrollFollowImpulse clamps large scroll deltas into a bounded velocity", () => {

@@ -77,7 +77,7 @@ function CategoryRow({
                 {group.items.map((item) => (
                     <span
                         key={item}
-                        className="prism-pill prism-static inline-flex items-center rounded-full px-3 py-1 text-[13px] font-medium"
+                        className="inline-flex items-center rounded-full border px-3 py-1 text-[13px] font-medium text-text-secondary"
                         style={{
                             background: `${accent}10`,
                             borderColor: `${accent}28`,

@@ -8,7 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test:unit": "node --experimental-strip-types --test src/lib/liquid-glass-runtime.test.ts src/app/globals.test.ts src/app/entrance-animations.test.ts"
+    "test:unit": "node --experimental-strip-types --test src/lib/liquid-glass.test.ts src/lib/liquid-glass-runtime.test.ts src/app/globals.test.ts src/app/entrance-animations.test.ts"
   },
   "dependencies": {
     "@callstack/liquid-glass": "^0.7.1",

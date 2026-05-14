@@ -34,7 +34,7 @@ export default function Home() {
   const photoImages = scanImages("photos");
 
   return (
-    <main className="relative z-10 flex min-h-dvh flex-col items-center justify-start py-8 sm:py-10 md:py-14">
+    <main className="relative flex min-h-dvh flex-col items-center justify-start py-8 sm:py-10 md:py-14">
       <BentoGrid>
         {/*
          *  Grid: 4 cols × 100px rows. Each row-span-N = N×100px.

@@ -81,7 +81,7 @@ export function ProjectsCard() {
                                 href={project.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="prism-panel prism-interactive group relative flex flex-col gap-1.5 rounded-[14px] px-3 py-2.5 -mx-1"
+                                className="group relative -mx-1 flex flex-col gap-1.5 rounded-[14px] border border-transparent px-3 py-2.5 transition-[background,border-color] duration-200 hover:border-[var(--glass-inner-border)] hover:bg-[var(--glass-inner-bg)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgba(var(--tint-rgb),0.32)]"
                             >
                                 {/* Name + external icon */}
                                 <div className="flex items-center justify-between gap-2">
@@ -119,7 +119,7 @@ export function ProjectsCard() {
                                         {project.tags.map((tag) => (
                                             <span
                                                 key={tag}
-                                                className="prism-badge prism-static inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-medium"
+                                                className="inline-flex items-center rounded-md border border-[rgba(var(--tint-rgb),0.18)] bg-[rgba(var(--tint-rgb),0.08)] px-2 py-0.5 text-[11px] font-medium text-tint"
                                             >
                                                 {tag}
                                             </span>

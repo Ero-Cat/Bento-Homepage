@@ -57,8 +57,8 @@ export function GlassCard({
        states across unrelated sub-elements inside the card. */
     /* Layout */
     "p-4 md:p-5",
-    /* Content above canvas */
-    "[&>*]:relative [&>*]:z-[2] [&>.glass-card__content]:relative [&>.glass-card__content]:z-[2]",
+    /* Card sits above the shared canvas; explicit content wrappers sit above local shell layers. */
+    "z-[3] [&>.glass-card__content]:relative [&>.glass-card__content]:z-[4]",
     (interactive ?? Boolean(href || onClick)) && "cursor-pointer",
     className,
   );
