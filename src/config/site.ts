@@ -300,6 +300,9 @@ export const siteConfig: SiteConfig = {
             { name: "阜阳", coordinates: [115.8140, 32.8908], emoji: "🌻" },
             { name: "北京", coordinates: [116.4074, 39.9042], emoji: "🏛" },
             { name: "南京", coordinates: [118.7969, 32.0603], emoji: "🏯" },
+            { name: "重庆", coordinates: [106.5516, 29.5630], emoji: "🍲" },
+            { name: "张家界", coordinates: [110.4792, 29.1171], emoji: "🏞️" },
+            { name: "武汉", coordinates: [114.3055, 30.5928], emoji: "🌸" },
         ],
     },
 
