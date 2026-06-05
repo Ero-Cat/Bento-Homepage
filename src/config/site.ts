@@ -117,13 +117,13 @@ export const siteConfig: SiteConfig = {
         },
         avatar: "/cat.png",
         aliases: ["EroCat", "DoKiDoKi", "大黄猫", "老王"],
-        location: "China | VRChat",
+        location: "China Anhui | VRChat",
     },
 
     interests: [
         "Vibe Coding",
         "DIY",
-        "Spring Boot",
+        "Developer",
         "3D Print",
         "CS2",
         "VRChat",
@@ -131,7 +131,7 @@ export const siteConfig: SiteConfig = {
         "Minecraft",
         "OpenWrt",
         "Home Assistant",
-        "QQ Bot",
+        "QQ Bot Dev",
         "ESXi Server",
     ],
 
@@ -139,7 +139,8 @@ export const siteConfig: SiteConfig = {
         { category: "Apple", icon: "Apple", items: ["MacBook Pro M5", "Mac Mini M2", "Air Pods 3 Pro", "iPhone 15 Pro (Europe)"] },
         { category: "Desktop", icon: "Monitor", items: ["R7-9800X3D", "RTX 3090 24G", "32GB DDR5", "ROG STRIX B650-A Gaming WIFI", "DELL R720XD Server | 100G | 22T"] },
         { category: "Peripherals", icon: "Keyboard", items: ["Quest 3", "HHKB", "NIZ PLUM", "Razer DeathAdder V3", "Logitech G502", "Logitech M720"] },
-        { category: "DIY & Maker", icon: "Printer", items: ["Xtool M1 Ultra", "Bambu Lab A1 AMS", "Bambu Lab A1 mini AMS", "EPSON L8058"] },
+        { category: "DIY & Maker", icon: "Printer", items: ["Xtool M1 Ultra", "Bambu Lab A1 AMS", "Bambu Lab A1 mini AMS", "Snapmaker U1", "EPSON L8058"] },
+        { category: "Wearable", icon: "Watch", items: ["Garmin Enduro 2"] },
         { category: "Network", icon: "Wifi", items: ["GL·iNet AX1800", "GL·iNet MT3000", "N5105"] },
     ],
 
@@ -232,6 +233,12 @@ export const siteConfig: SiteConfig = {
             url: "https://github.com/Ero-Cat/bento-Homepage",
             tags: ["Next.js", "React", "TypeScript", "Bento Grid"],
         },
+        {
+            name: "ESXi UPS Automation",
+            description: "ESXi 服务器 UPS 断电自动化管理工具，支持 NUT 监控 UPS 状态并在断电时自动安全关闭虚拟机与宿主机，保障数据安全。",
+            url: "https://github.com/Ero-Cat/ESXi-UPS-Automation",
+            tags: ["ESXi", "UPS", "Automation", "Shell"],
+        },
     ],
 
     netease: {
@@ -269,7 +276,7 @@ export const siteConfig: SiteConfig = {
 
     blog: {
         url: "https://blog.iacg.moe",
-        size: 5,
+        size: 8,
     },
 
     vrchat: {

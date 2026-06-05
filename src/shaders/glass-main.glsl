@@ -121,12 +121,12 @@ void main() {
       /* Transparent interior: only the edge-adjacent body gets a subtle optical delta. */
       vec4 sharpBase = texture(u_bg, v_uv);
       vec4 softBase = texture(u_blurredBg, v_uv);
-      outColor = mix(sharpBase, softBase, interiorEdgeFade * 0.18);
+      outColor = mix(sharpBase, softBase, interiorEdgeFade * 0.22);
       /* Keep vibrancy without repainting the whole card as a milky layer. */
       float lum = dot(outColor.rgb, vec3(0.299, 0.587, 0.114));
       outColor.rgb = mix(vec3(lum), outColor.rgb, 1.04);
-      outColor = mix(outColor, vec4(u_tint, 1.0), u_tintAlpha * 0.12 * interiorEdgeFade);
-      interiorAlpha = (0.002 + u_tintAlpha * 0.06) * interiorEdgeFade;
+      outColor = mix(outColor, vec4(u_tint, 1.0), u_tintAlpha * 0.16 * interiorEdgeFade);
+      interiorAlpha = (0.003 + u_tintAlpha * 0.08) * interiorEdgeFade;
     } else {
       /* Edge refraction zone */
       float edgeH = nmerged / u_refThickness;
@@ -141,7 +141,7 @@ void main() {
 
       vec4 blurredPixel = getTextureDispersion(
         u_bg, u_blurredBg,
-        clamp(0.32 + edgeH * 0.36, 0.0, 0.78),
+        clamp(0.36 + edgeH * 0.36, 0.0, 0.78),
         refractOffset,
         u_refDispersion
       );

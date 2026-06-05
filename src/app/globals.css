@@ -14,12 +14,12 @@
   /* Glass shape token — used by card border-radius */
   --glass-radius: 28px;
   /* Fallback glass — luminous frosted white */
-  --glass-fallback-bg: rgba(255, 255, 255, 0.24);
+  --glass-fallback-bg: rgba(255, 255, 255, 0.28);
   --glass-fallback-border: rgba(0, 0, 0, 0.05);
   --glass-fallback-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
   /* Shell (WebGL backing) */
-  --glass-shell-fill: rgba(255, 255, 255, 0.20);
-  --glass-shell-fill-strong: rgba(255, 255, 255, 0.36);
+  --glass-shell-fill: rgba(255, 255, 255, 0.24);
+  --glass-shell-fill-strong: rgba(255, 255, 255, 0.40);
   --glass-shell-border: rgba(255, 255, 255, 0.58);
   --glass-shell-highlight: rgba(255, 255, 255, 0.88);
   --glass-shell-shadow: rgba(0, 0, 0, 0.06);
@@ -77,12 +77,12 @@
     --tint-color: #ff375f;
     --tint-rgb: 255, 55, 95;
     /* Fallback glass — deep space frosted */
-    --glass-fallback-bg: rgba(0, 0, 0, 0.52);
+    --glass-fallback-bg: rgba(0, 0, 0, 0.56);
     --glass-fallback-border: rgba(255, 255, 255, 0.10);
     --glass-fallback-shadow: 0 8px 40px rgba(0, 0, 0, 0.56), 0 2px 10px rgba(0, 0, 0, 0.36);
     /* Shell */
-    --glass-shell-fill: rgba(255, 255, 255, 0.06);
-    --glass-shell-fill-strong: rgba(255, 255, 255, 0.10);
+    --glass-shell-fill: rgba(255, 255, 255, 0.08);
+    --glass-shell-fill-strong: rgba(255, 255, 255, 0.13);
     --glass-shell-border: rgba(255, 255, 255, 0.11);
     --glass-shell-highlight: rgba(255, 255, 255, 0.16);
     --glass-shell-shadow: rgba(0, 0, 0, 0.64);
