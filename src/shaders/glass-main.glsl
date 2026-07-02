@@ -103,6 +103,7 @@ void main() {
   float nmerged = -1.0 * merged * (u_resolution.y / u_dpr);
 
   float edgeDistancePx = max(-d, 0.0);
+  float edgeEnergy = (1.0 - smoothstep(0.0, 34.0 * u_dpr, edgeDistancePx)) * shapeAlpha;
   float interiorEdgeFade =
     (1.0 - smoothstep(18.0 * u_dpr, 64.0 * u_dpr, edgeDistancePx)) * shapeAlpha;
   vec4 outColor = vec4(texture(u_bg, v_uv).rgb, 0.0);
@@ -136,12 +137,12 @@ void main() {
       vec2 normalDir = normalLen > 0.001 ? normalize(normal) : vec2(0.0);
 
       /* Stronger refraction offset for visible light bending */
-      vec2 refractOffset = -normalDir * edgeFactor * 0.45 * u_dpr *
+      vec2 refractOffset = -normalDir * edgeFactor * (0.50 + 0.16 * edgeEnergy) * u_dpr *
         vec2(u_resolution.y / (u_resolution.x / u_dpr), 1.0);
 
       vec4 blurredPixel = getTextureDispersion(
         u_bg, u_blurredBg,
-        clamp(0.36 + edgeH * 0.36, 0.0, 0.78),
+        clamp(0.38 + edgeH * 0.38 + edgeEnergy * 0.06, 0.0, 0.84),
         refractOffset,
         u_refDispersion
       );
@@ -161,7 +162,7 @@ void main() {
       outColor = mix(
         outColor,
         vec4(fresnelTint, 1.0),
-        fresnelFactor * u_fresnelFactor * 0.12 * rim * (0.30 + 0.38 * normalLen)
+        fresnelFactor * u_fresnelFactor * (0.13 + 0.05 * edgeEnergy) * rim * (0.36 + 0.42 * normalLen)
       );
 
       /* Glare — directional stripe highlight */
@@ -191,12 +192,12 @@ void main() {
       outColor = mix(
         outColor,
         vec4(glareTint, 1.0),
-        glareAngleFactor * glareGeoFactor * rim * (0.045 + 0.18 * normalLen)
+        glareAngleFactor * glareGeoFactor * rim * (0.055 + 0.22 * normalLen + 0.04 * edgeEnergy)
       );
 
       /* Blend edge refraction back into the real scene instead of a frosted center fill. */
       outColor = mix(texture(u_bg, v_uv), outColor, 0.43 + rim * 0.57);
-      interiorAlpha = max(interiorAlpha, (0.023 + rim * 0.162) * shapeAlpha);
+      interiorAlpha = max(interiorAlpha, (0.026 + rim * 0.18 + edgeEnergy * 0.028) * shapeAlpha);
     }
   } else {
     outColor = vec4(texture(u_bg, v_uv).rgb, 0.0);
@@ -204,7 +205,7 @@ void main() {
 
   /* shapeAlpha handles the soft edge fade — no extra smoothstep needed */
   float shellHighlight = (1.0 - smoothstep(0.0, 14.0 * u_dpr, edgeDistancePx)) * shapeAlpha;
-  float innerShadow = (1.0 - smoothstep(8.0 * u_dpr, 48.0 * u_dpr, edgeDistancePx)) * shapeAlpha;
+  float innerShadow = (1.0 - smoothstep(8.0 * u_dpr, 50.0 * u_dpr, edgeDistancePx)) * shapeAlpha;
   float topLeftLight = clamp(
     0.5 - 0.35 * (localPx.x / max(halfSizePx.x, 1.0)) +
       0.35 * (localPx.y / max(halfSizePx.y, 1.0)),
@@ -214,9 +215,9 @@ void main() {
 
   float shellLum = dot(outColor.rgb, vec3(0.299, 0.587, 0.114));
   vec3 shellLight = mix(outColor.rgb, vec3(shellLum), 0.18) * 1.035;
-  outColor.rgb = mix(outColor.rgb, shellLight, shellHighlight * (0.014 + 0.010 * topLeftLight));
-  outColor.rgb = mix(outColor.rgb, vec3(0.0), innerShadow * 0.058);
-  outColor.a = max(interiorAlpha, shellHighlight * 0.044 + innerShadow * 0.066);
+  outColor.rgb = mix(outColor.rgb, shellLight, shellHighlight * (0.016 + 0.012 * topLeftLight + 0.006 * edgeEnergy));
+  outColor.rgb = mix(outColor.rgb, vec3(0.0), innerShadow * (0.068 + 0.022 * edgeEnergy));
+  outColor.a = max(interiorAlpha, shellHighlight * 0.052 + innerShadow * 0.078 + edgeEnergy * 0.018);
   outColor.a *= shapeAlpha;
 
   fragColor = vec4(outColor.rgb * outColor.a, outColor.a);

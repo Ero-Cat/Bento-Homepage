@@ -22,18 +22,19 @@ function getToken(mode: "light" | "dark", name: string): string {
   return match[1].trim();
 }
 
-test("light mode uses denser glass controls and deeper text tokens", () => {
-  assert.equal(getToken("light", "glass-fallback-bg"), "rgba(255, 255, 255, 0.24)");
-  assert.equal(getToken("light", "glass-floating-bg"), "rgba(255, 255, 255, 0.26)");
-  assert.equal(getToken("light", "ios-material-bg"), "rgba(255, 255, 255, 0.3)");
+test("light mode uses clear glass controls and deeper text tokens", () => {
+  assert.equal(getToken("light", "glass-fallback-bg"), "rgba(255, 255, 255, 0.18)");
+  assert.equal(getToken("light", "glass-floating-bg"), "rgba(255, 255, 255, 0.18)");
+  assert.equal(getToken("light", "ios-material-bg"), "rgba(255, 255, 255, 0.24)");
   assert.equal(getToken("light", "text-secondary"), "#1e293b");
   assert.equal(getToken("light", "text-tertiary"), "#475569");
 });
 
-test("light mode background veil stays strong enough for busy photography", () => {
-  assert.equal(getToken("light", "bg-overlay"), "rgba(244, 247, 251, 0.38)");
-  assert.equal(getToken("light", "bg-overlay-gradient-top"), "rgba(248, 250, 252, 0.76)");
-  assert.equal(getToken("light", "bg-overlay-gradient-bottom"), "rgba(241, 245, 249, 0.62)");
+test("light mode background veil stays clear enough for liquid refraction", () => {
+  assert.equal(getToken("light", "bg-overlay"), "rgba(244, 247, 251, 0.18)");
+  assert.equal(getToken("light", "bg-overlay-gradient-top"), "rgba(248, 250, 252, 0.42)");
+  assert.equal(getToken("light", "bg-overlay-gradient-bottom"), "rgba(241, 245, 249, 0.34)");
+  assert.equal(getToken("light", "glass-scene-veil-strength"), "0.88");
 });
 
 test("legacy prism inner-control systems are removed from global styling", () => {

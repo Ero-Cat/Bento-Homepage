@@ -361,3 +361,25 @@ test("liquid glass shader does not paint the shell edge as a hard white border",
     "Expected shell edge opacity to stay subtle instead of creating a visible white stroke",
   );
 });
+
+test("liquid glass shader strengthens edge liquid energy without repainting the center", () => {
+  const shaderSource = readFileSync(new URL("src/shaders/glass-main.glsl", projectRoot), "utf8");
+
+  assert.match(
+    shaderSource,
+    /edgeEnergy/,
+    "Expected the shader to centralize edge liquid energy instead of relying on a white veil",
+  );
+
+  assert.match(
+    shaderSource,
+    /refractOffset[\s\S]*edgeEnergy/,
+    "Expected edge liquid energy to deepen refraction rather than interior fill",
+  );
+
+  assert.match(
+    shaderSource,
+    /innerShadow[\s\S]*edgeEnergy/,
+    "Expected edge liquid energy to deepen the silhouette without hard white borders",
+  );
+});

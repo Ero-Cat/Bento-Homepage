@@ -14,28 +14,28 @@
   /* Glass shape token — used by card border-radius */
   --glass-radius: 28px;
   /* Fallback glass — luminous frosted white */
-  --glass-fallback-bg: rgba(255, 255, 255, 0.28);
-  --glass-fallback-border: rgba(0, 0, 0, 0.05);
-  --glass-fallback-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
+  --glass-fallback-bg: rgba(255, 255, 255, 0.18);
+  --glass-fallback-border: rgba(0, 0, 0, 0.08);
+  --glass-fallback-shadow: 0 10px 34px rgba(0, 0, 0, 0.10), 0 2px 10px rgba(0, 0, 0, 0.06);
   /* Shell (WebGL backing) */
-  --glass-shell-fill: rgba(255, 255, 255, 0.24);
-  --glass-shell-fill-strong: rgba(255, 255, 255, 0.40);
-  --glass-shell-border: rgba(255, 255, 255, 0.58);
-  --glass-shell-highlight: rgba(255, 255, 255, 0.88);
-  --glass-shell-shadow: rgba(0, 0, 0, 0.06);
-  --glass-inner-bg: rgba(255, 255, 255, 0.28);
-  --glass-inner-border: rgba(255, 255, 255, 0.44);
+  --glass-shell-fill: rgba(255, 255, 255, 0.16);
+  --glass-shell-fill-strong: rgba(255, 255, 255, 0.26);
+  --glass-shell-border: rgba(0, 0, 0, 0.09);
+  --glass-shell-highlight: rgba(255, 255, 255, 0.52);
+  --glass-shell-shadow: rgba(0, 0, 0, 0.10);
+  --glass-inner-bg: rgba(255, 255, 255, 0.18);
+  --glass-inner-border: rgba(0, 0, 0, 0.07);
   --glass-divider: rgba(0, 0, 0, 0.06);
-  --glass-floating-bg: rgba(255, 255, 255, 0.26);
-  --glass-floating-border: rgba(0, 0, 0, 0.05);
-  --glass-scene-veil-strength: 1.08;
+  --glass-floating-bg: rgba(255, 255, 255, 0.18);
+  --glass-floating-border: rgba(0, 0, 0, 0.07);
+  --glass-scene-veil-strength: 0.88;
   /* iOS media card material — Apple Music frosted glass */
-  --ios-material-bg: rgba(255, 255, 255, 0.3);
-  --ios-material-border: rgba(255, 255, 255, 0.60);
+  --ios-material-bg: rgba(255, 255, 255, 0.24);
+  --ios-material-border: rgba(0, 0, 0, 0.07);
   --ios-material-shadow: 0 16px 48px rgba(0, 0, 0, 0.10), 0 4px 12px rgba(0, 0, 0, 0.06);
-  --ios-material-highlight: rgba(255, 255, 255, 0.80);
-  --ios-control-bg: rgba(255, 255, 255, 0.32);
-  --ios-control-border: rgba(255, 255, 255, 0.48);
+  --ios-material-highlight: rgba(255, 255, 255, 0.58);
+  --ios-control-bg: rgba(255, 255, 255, 0.24);
+  --ios-control-border: rgba(0, 0, 0, 0.07);
   --ios-progress-track: rgba(0, 0, 0, 0.08);
   --ios-progress-fill: rgba(194, 0, 101, 0.88);
 
@@ -49,16 +49,16 @@
   --text-tertiary: #475569;
 
   /* Background overlay for bg image — Light */
-  --bg-overlay: rgba(244, 247, 251, 0.38);
-  --bg-overlay-gradient-top: rgba(248, 250, 252, 0.76);
-  --bg-overlay-gradient-bottom: rgba(241, 245, 249, 0.62);
+  --bg-overlay: rgba(244, 247, 251, 0.18);
+  --bg-overlay-gradient-top: rgba(248, 250, 252, 0.42);
+  --bg-overlay-gradient-bottom: rgba(241, 245, 249, 0.34);
 
   /* Scrollbar */
   --scrollbar-thumb: rgba(0, 0, 0, 0.18);
 
   /* Social icon bg */
-  --icon-bg: rgba(255, 255, 255, 0.32);
-  --icon-border: rgba(0, 0, 0, 0.04);
+  --icon-bg: rgba(255, 255, 255, 0.22);
+  --icon-border: rgba(0, 0, 0, 0.06);
 }
 
 /* ============================================================
