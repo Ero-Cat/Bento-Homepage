@@ -128,10 +128,13 @@ bgPass -> vBlurPass -> hBlurPass -> mainPass -> shared canvas
 
 窗口级 `pointermove` / `pointerdown` / `pointerup` / `pointercancel` 事件更新目标值。命中检测只使用已缓存的可见卡片 rect，不在 pointer hot path 调用 `getBoundingClientRect()`。
 
+运行时保存最后一个有效的 viewport pointer 坐标。scroll 或 visual viewport 投影更新后，即使指针没有移动，也必须用缓存坐标重新执行命中检测，避免页面在静止指针下滚动后保留错误 hover 状态。`pointerleave`、窗口 `blur`、页面转为 hidden 或 pointer cancel 时必须清空 hover/press target 并调度回弹，不能留下 stuck interaction。
+
 ### 6.2 Behavior
 
 - 任意共享卡片在指针进入后可以获得轻微方向高光和折射响应。
 - 只有 `data-glass-interactive="true"` 的可点击卡片获得更明显的弹性形变和按压压缩。
+- 当前业务页面没有外层 `GlassCard` 使用该 interactive 标记；本次不为业务卡片新增标记或改变交互语义。按压能力作为已有 `GlassCard` 公共契约的条件分支实现。
 - DOM 内容层、卡片尺寸和命中区域保持不动；形变只存在于 shader 壳层。
 - 指针离开后 spring 回到中心/静止状态。
 - 新输入必须立即更新目标，保证动画可中断。
@@ -212,6 +215,7 @@ bgPass -> vBlurPass -> hBlurPass -> mainPass -> shared canvas
 - `hero`、`panel`、`dense`、`media`、`immersive` 的强度层级。
 - 卡片中心文字和图标可读。
 - 缓慢悬停、快速移入移出、跨卡片移动和按压回弹。
+- 按压视觉验收通过测试期间临时设置现有卡片的 `data-glass-interactive="true"` 完成，不把该标记写入业务组件。
 - coarse pointer 与 reduced motion 降级。
 - scroll、background crossfade、resize、fullscreen 和 visibility restore 不错位。
 - canvas 像素非空，卡片轮廓与 DOM 边界匹配。
