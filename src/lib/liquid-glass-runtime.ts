@@ -46,11 +46,29 @@ export interface SpringSettleInput {
   epsilon?: number;
 }
 
+export interface SpringValue {
+  value: number;
+  velocity: number;
+  target: number;
+}
+
 export interface RectLike {
   left: number;
   top: number;
   width: number;
   height: number;
+}
+
+export interface PointerCardHitCandidate {
+  id: string;
+  rect: RectLike;
+  interactive: boolean;
+}
+
+export interface PointerCardHit {
+  id: string;
+  normalized: readonly [number, number];
+  interactive: boolean;
 }
 
 export interface ViewportSize {
@@ -235,6 +253,63 @@ export function springIsSettled({
   }
 
   return true;
+}
+
+export function createSpringValue(value = 0, target = value): SpringValue {
+  return { value, velocity: 0, target };
+}
+
+export function stepSpringValue(
+  state: SpringValue,
+  deltaMs: number,
+  stiffness = 220,
+  damping = 26,
+): SpringValue {
+  const dt = Math.min(Math.max(deltaMs, 1), 64) / 1000;
+  const acceleration = stiffness * (state.target - state.value) - damping * state.velocity;
+  const velocity = state.velocity + acceleration * dt;
+  const value = state.value + velocity * dt;
+
+  if (Math.abs(state.target - value) < 0.0001 && Math.abs(velocity) < 0.0001) {
+    return { value: state.target, velocity: 0, target: state.target };
+  }
+
+  return { value, velocity, target: state.target };
+}
+
+export function springValueIsSettled(state: SpringValue, epsilon = 0.002): boolean {
+  return Math.abs(state.target - state.value) <= epsilon && Math.abs(state.velocity) <= epsilon;
+}
+
+export function resolvePointerCardHit(
+  pointer: readonly [number, number],
+  candidates: readonly PointerCardHitCandidate[],
+): PointerCardHit | null {
+  for (let index = candidates.length - 1; index >= 0; index--) {
+    const candidate = candidates[index];
+    const { left, top, width, height } = candidate.rect;
+    if (
+      width <= 0 ||
+      height <= 0 ||
+      pointer[0] < left ||
+      pointer[0] > left + width ||
+      pointer[1] < top ||
+      pointer[1] > top + height
+    ) {
+      continue;
+    }
+
+    return {
+      id: candidate.id,
+      normalized: [
+        Math.min(1, Math.max(0, (pointer[0] - left) / width)),
+        Math.min(1, Math.max(0, (pointer[1] - top) / height)),
+      ],
+      interactive: candidate.interactive,
+    };
+  }
+
+  return null;
 }
 
 export function addScrollFollowImpulse(

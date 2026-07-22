@@ -4,13 +4,17 @@ import assert from "node:assert/strict";
 import {
   addScrollFollowImpulse,
   beginScrollGeometryTracking,
+  createSpringValue,
   expandScissorRect,
+  resolvePointerCardHit,
   resolveDocumentCardRect,
   resolveCardRenderGeometry,
   resolveLiquidGlassQuality,
   resolveLiquidGlassViewport,
+  springValueIsSettled,
   stepScrollGeometryTracking,
   stepScrollFollowMotion,
+  stepSpringValue,
   springIsSettled,
 } from "./liquid-glass-runtime.ts";
 import { GLASS_VARIANTS } from "./liquid-glass.ts";
@@ -150,6 +154,58 @@ test("springIsSettled returns true once position, target, and velocity converge"
     }),
     true,
   );
+});
+
+test("resolvePointerCardHit returns normalized local coordinates for the topmost matching card", () => {
+  const hit = resolvePointerCardHit(
+    [120, 160],
+    [
+      {
+        id: "panel",
+        rect: { left: 40, top: 80, width: 240, height: 180 },
+        interactive: false,
+      },
+      {
+        id: "hero",
+        rect: { left: 100, top: 140, width: 80, height: 80 },
+        interactive: true,
+      },
+    ],
+  );
+
+  assert.deepEqual(hit, {
+    id: "hero",
+    normalized: [0.25, 0.25],
+    interactive: true,
+  });
+});
+
+test("resolvePointerCardHit returns null outside cached card geometry", () => {
+  assert.equal(
+    resolvePointerCardHit(
+      [8, 12],
+      [{ id: "panel", rect: { left: 40, top: 80, width: 240, height: 180 }, interactive: false }],
+    ),
+    null,
+  );
+});
+
+test("stepSpringValue follows a new target and settles without mutating the input", () => {
+  const initial = createSpringValue(0, 1);
+  const next = stepSpringValue(initial, 16, 220, 26);
+
+  assert.equal(initial.value, 0);
+  assert.equal(next.target, 1);
+  assert.ok(next.value > 0, "Expected the spring to move toward its target");
+  assert.equal(springValueIsSettled(next), false);
+
+  let settled = next;
+  for (let frame = 0; frame < 180; frame++) {
+    settled = stepSpringValue(settled, 16, 220, 26);
+  }
+
+  assert.equal(springValueIsSettled(settled), true);
+  assert.ok(Math.abs(settled.value - 1) < 0.002);
 });
 
 test("expandScissorRect pads and clamps the draw bounds to the viewport", () => {
