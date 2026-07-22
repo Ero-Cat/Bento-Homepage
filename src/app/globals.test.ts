@@ -63,6 +63,17 @@ test("glass-card fallback shell keeps the shared liquid glass radius", () => {
   );
 });
 
+test("glass-card fallback keeps a directional layered-glass highlight", () => {
+  assert.match(getToken("light", "glass-fallback-highlight"), /^rgba\(/);
+  assert.match(getToken("dark", "glass-fallback-highlight"), /^rgba\(/);
+
+  assert.match(
+    globalsCss,
+    /:root\[data-liquid-glass="fallback"\]\s+\.glass-card::before\s*\{[\s\S]*var\(--glass-fallback-highlight\)[\s\S]*inset\s+0\s+1px\s+0/,
+    "Expected the fallback shell to retain an inset directional highlight instead of a flat blur only",
+  );
+});
+
 test("ios media card shell stays borderless", () => {
   const iosMediaCardRule = globalsCss.match(/(?:^|\n)\.ios-media-card\s*\{([\s\S]*?)\n\}/);
   assert.ok(iosMediaCardRule, "Expected globals.css to define the base .ios-media-card rule");

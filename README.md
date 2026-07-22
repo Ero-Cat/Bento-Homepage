@@ -13,9 +13,11 @@
 - **共享 Liquid Glass 壳层** — 全站 `GlassCard` 统一注册到一个 `LiquidGlassCanvas`，通过 `bgPass → vBlurPass → hBlurPass → mainPass` 渲染折射、Fresnel 与 glare
 - **背景切换同步** — 页面背景和 liquid glass 共用一套背景切换时序，切图时玻璃内部不再慢半拍
 - **Variant 化玻璃参数** — `hero` / `panel` / `media` / `dense` / `immersive` 通过 `src/lib/liquid-glass.ts` 集中管理，不在业务卡片里散落光学参数
-- **按需渲染调度** — 共享画布只在背景切换、resize、scroll、卡片几何变化和首屏入场稳定阶段重绘，不再常驻空转
+- **分层厚玻璃光学** — `mainPass` 将壳层拆为外缘色散、bevel 折射与干净中心，避免退化为普通 blur 卡片
+- **弹性指针响应** — 桌面端只为当前卡片平滑更新折射与 glare；内容层不位移，粗指针和减少动态效果下自动回退为静态玻璃
+- **按需渲染调度** — 共享画布只在背景切换、resize、scroll、卡片几何、指针 spring 和首屏入场稳定阶段重绘，不再常驻空转
 - **稳定首帧启动** — WebGL renderer 启动时先创建 1×1 fallback GPU 背景纹理，真实背景异步加载失败或延迟时也能完成首个 composed frame，不会卡在 `data-liquid-glass="loading"`
-- **滚动同步架构** — 卡片几何缓存为文档坐标，滚轮输入先预测 scroll target 并用 compositor transform 移动上一帧 glass bitmap，scroll 事件再校准真实位置，避免 glass shell 落后内容上下抖动
+- **滚动同步架构** — 卡片几何缓存为文档坐标，滚动时按浏览器已提交的 scroll 位置投影，并用最近指针坐标重新命中卡片，避免布局读取与悬停错位
 - **运行时质量分级** — 根据设备 DPR、指针类型、设备内存和卡片数量自动切换 blur 降采样与 FBO 精度
 - **低端设备质量分级** — 省流量、低内存/低核心数、移动高 DPR 等场景仍保留 WebGL Liquid Glass，只降低 DPR、FBO 和 blur buffer 成本
 - **按卡片范围绘制** — `mainPass` 结合几何缓存与 scissor 裁剪，只绘制实际可见的 glass 区域
@@ -159,9 +161,12 @@ Bento-Homepage/
 - 所有卡片共用一个 WebGL2 context，避免每张卡片单独建画布
 - active background texture 在 GL 状态里始终非空：启动先使用 1×1 fallback GPU texture，真实背景纹理 ready 后再替换，避免异步图片加载阻塞 `ready` 提交
 - 渲染器使用失效驱动调度：背景、窗口尺寸、滚动、卡片几何和首屏入场动画变化时才请求下一帧
+- `mainPass` 使用外缘色散、厚 bevel 折射和低扩散中心三段模型；所有光学与指针强度从 variant token 读取
+- 桌面交互只保存一张当前卡片的 pointer spring，不经过 React state；pointer cancel、窗口失焦、页面隐藏与滚动重投影都会安全清除或重新命中
+- 粗指针和 `prefers-reduced-motion` 关闭持续指针追踪，但保留共享 WebGL 壳层
 - resize / fullscreen / visibility 恢复统一走同一条重绘路径：更新 viewport/FBO、标脏所有卡片文档几何并请求新帧，避免全屏切换后画布被清空但壳层不重绘
 - 移动端使用 `visualViewport` 解析动态视口尺寸；卡片位置缓存为稳定文档坐标，滚动时按当前 scroll 投影到视口，避免把布局读取放进滚动热路径
-- wheel 事件先预测浏览器即将提交的 scroll target，并立即用 CSS transform 对上一帧 WebGL bitmap 做 compositor 级同步；scroll 事件再用真实 scroll 校准，下一帧 WebGL 重绘完成后提交新的 scroll 基准，避免 glass shell 落后 DOM 内容
+- scroll 事件只使用浏览器已提交的位置投影文档坐标；不预测 wheel 距离，避免 OS 动量滚动与 glass bitmap 偏离
 - `ResizeObserver` / `IntersectionObserver` / registry 事件共同维护卡片几何缓存，避免每帧对所有卡片调用布局读取
 - `mainPass` 对每张卡启用 scissor 裁剪，GPU 只处理该卡的实际屏幕区域
 - `vBlur` / `hBlur` FBO 会按质量档位降采样，优先在移动端和高 DPR 下控制填充率

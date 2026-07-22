@@ -700,6 +700,18 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
       requestRender();
     };
 
+    const disablePointerInteraction = () => {
+      activePointerCardId = null;
+      pointerRenderCardId = null;
+      lastPointerClient = null;
+      pointerPressed = false;
+      pointerX = createSpringValue(0.5);
+      pointerY = createSpringValue(0.5);
+      pointerHover = createSpringValue(0);
+      pointerPress = createSpringValue(0);
+      requestRender();
+    };
+
     const onPointerMove = (event: PointerEvent) => {
       lastPointerClient = [event.clientX, event.clientY];
       updatePointerTarget();
@@ -790,7 +802,7 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
       if (pointerInteractionEnabled()) {
         updatePointerTarget();
       } else {
-        clearPointerInteraction();
+        disablePointerInteraction();
       }
       onResize();
     };

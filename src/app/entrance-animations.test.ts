@@ -409,6 +409,20 @@ test("liquid glass pointer interaction is event-driven and clears safely", () =>
   );
 });
 
+test("liquid glass disables pointer rendering immediately when motion or pointer capability changes", () => {
+  const source = readFileSync(new URL("src/components/liquid-glass-canvas.tsx", projectRoot), "utf8");
+
+  assert.match(source, /const disablePointerInteraction = \(\) => \{[\s\S]*pointerRenderCardId = null;/);
+
+  const capabilityHandlerStart = source.indexOf("const onPointerCapabilityChange =");
+  const capabilityHandlerEnd = source.indexOf("const onThemeChange =", capabilityHandlerStart);
+  assert.ok(
+    capabilityHandlerStart >= 0 && capabilityHandlerEnd > capabilityHandlerStart,
+    "Expected a pointer capability change handler",
+  );
+  assert.match(source.slice(capabilityHandlerStart, capabilityHandlerEnd), /disablePointerInteraction\(\)/);
+});
+
 test("liquid glass main pass exposes the shared interaction uniform contract", () => {
   const shaderSource = readFileSync(new URL("src/shaders/glass-main.glsl", projectRoot), "utf8");
   const canvasSource = readFileSync(new URL("src/components/liquid-glass-canvas.tsx", projectRoot), "utf8");

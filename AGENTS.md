@@ -175,13 +175,14 @@ Bento-Homepage/
 
 ### LiquidGlassCanvas 优化
 - **共享单画布**：所有 `GlassCard` 通过 DOM 注册到同一个 `LiquidGlassCanvas`，避免每张卡片单独建 WebGL context
-- **失效驱动渲染**：共享画布不再常驻 60fps 全量重绘；仅在背景切换、resize、scroll、卡片几何变化和首屏入场稳定阶段才重新调度渲染
-- **变体化参数**：`hero` / `panel` / `media` / `dense` / `immersive` 通过 `src/lib/liquid-glass.ts` 集中管理半径、折射、Fresnel、glare 与 fallback blur
+- **失效驱动渲染**：共享画布不再常驻 60fps 全量重绘；仅在背景切换、resize、scroll、卡片几何变化、活动指针 spring 和首屏入场稳定阶段才重新调度渲染
+- **变体化参数**：`hero` / `panel` / `media` / `dense` / `immersive` 通过 `src/lib/liquid-glass.ts` 集中管理半径、bevel、折射、中心扩散、色散、Fresnel、glare、指针响应与 fallback blur
+- **三段式壳层**：`mainPass` 必须保持外缘色散、厚 bevel 折射和干净中心三段模型；强光学不得覆盖文字密集中心区域
 - **稳定背景源**：`BackgroundLayer` 将当前背景图 URL 发布到根节点 dataset，Canvas 不再通过脆弱 DOM 查询推断背景
 - **非阻塞首帧纹理**：`LiquidGlassCanvas` 启动时必须先创建 1×1 fallback GPU background texture；`GLState.bgTex` 保持非空，真实背景异步加载完成后替换，禁止重新引入 `if (!state.bgTex) return` 这类 loading 死锁
 - **背景切换同步**：`BackgroundLayer` 同步发布当前/上一张背景与过渡时间，Canvas 在 `bgPass` 内执行同时序 crossfade，避免 glass 与页面背景不同步
 - **文档坐标几何缓存**：卡片 rect / radius 在显式布局变化时缓存为文档坐标，滚动热路径只做 scroll 投影，避免每帧对所有卡片执行布局读取
-- **滚轮输入阶段同步**：wheel 事件先预测浏览器即将提交的 scroll target，并立即用 CSS transform 移动上一帧 WebGL bitmap；scroll 事件再用真实 scroll 校准，下一帧 WebGL 重绘后提交新的 scroll 基准，避免滚轮滚动时 glass shell 落后 DOM 内容产生上下抖动
+- **滚动与指针同步**：scroll 事件只投影浏览器已提交的文档坐标，禁止预测 wheel 距离；有缓存指针位置时必须重新命中当前可见卡片，避免滚动后保留错误 hover 状态
 - **全屏与 resize 重绘**：resize、fullscreenchange、visibility 恢复必须统一走 viewport/FBO 更新、全卡片几何标脏、requestRender 的重绘路径，避免 PC 全屏切换后 canvas 清空但 glass 壳层不重新提交
 - **移动端视口同步**：Canvas 使用 `visualViewport` 解析动态视口尺寸和 offset，配合文档坐标投影保持 mobile 与滚动场景下 glass shell 和 DOM 内容同步
 - **按卡片范围绘制**：`mainPass` 通过 scissor 限定到每张卡片的实际屏幕区域，避免“每张卡都绘制一次全屏 quad”的 GPU 浪费
@@ -189,6 +190,7 @@ Bento-Homepage/
 - **纯光学壳层**：WebGL2 就绪后，`GlassCard` 的旧 DOM 玻璃外观必须静音，只保留结构与命中区域，光学效果完全由 Canvas 负责
 - **CSS fallback**：WebGL2 不可用时退回 CSS blur/border/shadow 玻璃壳层，保证内容可读
 - **低端质量分级**：在省流量、低内存、低核心数、移动高 DPR 或高卡片密度场景下，仍保留 WebGL Liquid Glass，只降低 DPR、FBO 精度和 blur buffer 成本；禁止用静态壳层替代正常 liquid shell
+- **指针交互边界**：桌面端一次只允许一个可见卡片获得指针 spring；状态只能存在于 canvas runtime ref/闭包，禁止用 React state 或 pointer 热路径布局读取。`pointercancel`、window `blur`、页面 hidden、卡片注销和粗指针/减少动态效果切换必须清除或回弹状态。
 
 ### Asset & Lazy Runtime 优化
 - **优化图片副本**：`public/optimized/bg` 与 `public/optimized/photos` 存放降采样 WebP 运行时资源；背景、LiquidGlassCanvas 背景纹理、照片堆叠均优先使用该目录，原图仍保留作源素材
