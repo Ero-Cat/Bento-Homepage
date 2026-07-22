@@ -383,3 +383,48 @@ test("liquid glass shader strengthens edge liquid energy without repainting the 
     "Expected edge liquid energy to deepen the silhouette without hard white borders",
   );
 });
+
+test("liquid glass pointer interaction is event-driven and clears safely", () => {
+  const source = readFileSync(new URL("src/components/liquid-glass-canvas.tsx", projectRoot), "utf8");
+
+  assert.match(source, /matchMedia\("\(prefers-reduced-motion: reduce\)"\)/);
+  assert.match(source, /"u_pointer"/);
+  assert.match(source, /"u_pointerHover"/);
+  assert.match(source, /"u_pointerPress"/);
+  assert.match(source, /window\.addEventListener\("pointermove", onPointerMove/);
+  assert.match(source, /window\.addEventListener\("pointerdown", onPointerDown/);
+  assert.match(source, /window\.addEventListener\("pointerup", onPointerUp/);
+  assert.match(source, /window\.addEventListener\("pointercancel", clearPointerInteraction/);
+  assert.match(source, /window\.addEventListener\("blur", clearPointerInteraction/);
+  assert.match(source, /window\.removeEventListener\("pointermove", onPointerMove/);
+  assert.match(source, /window\.removeEventListener\("blur", clearPointerInteraction/);
+
+  const handlerStart = source.indexOf("const onPointerMove =");
+  const handlerEnd = source.indexOf("const onPointerDown =", handlerStart);
+  assert.ok(handlerStart >= 0 && handlerEnd > handlerStart, "Expected a pointermove handler");
+  assert.doesNotMatch(
+    source.slice(handlerStart, handlerEnd),
+    /getBoundingClientRect\(/,
+    "Expected pointermove to use cached geometry instead of forcing layout",
+  );
+});
+
+test("liquid glass main pass exposes the shared interaction uniform contract", () => {
+  const shaderSource = readFileSync(new URL("src/shaders/glass-main.glsl", projectRoot), "utf8");
+  const canvasSource = readFileSync(new URL("src/components/liquid-glass-canvas.tsx", projectRoot), "utf8");
+
+  for (const uniform of [
+    "u_pointer",
+    "u_pointerHover",
+    "u_pointerPress",
+    "u_bevelWidth",
+    "u_magnification",
+    "u_surfaceBlurMix",
+    "u_counterRimFactor",
+    "u_pointerRefraction",
+    "u_pointerGlare",
+  ]) {
+    assert.match(shaderSource, new RegExp(`uniform\\s+\\w+\\s+${uniform}\\s*;`));
+    assert.match(canvasSource, new RegExp(`"${uniform}"`));
+  }
+});

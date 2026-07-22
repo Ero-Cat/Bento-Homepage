@@ -22,14 +22,19 @@ import {
   toDataAttributeName,
 } from "@/lib/liquid-glass";
 import {
+  createSpringValue,
   resolveDocumentCardRect,
   resolveCardRenderGeometry,
   resolveLiquidGlassQuality,
   resolveLiquidGlassViewport,
+  resolvePointerCardHit,
+  springValueIsSettled,
+  stepSpringValue,
   type RectLike,
   type LiquidGlassQualityProfile,
   type LiquidGlassViewportState,
   type ScissorRect,
+  type SpringValue,
 } from "@/lib/liquid-glass-runtime";
 import BG_FRAG from "@/shaders/glass-bg.glsl";
 import VBLUR_FRAG from "@/shaders/glass-vblur.glsl";
@@ -96,6 +101,7 @@ interface GLState {
 }
 
 interface CardRenderState {
+  id: string;
   dirty: boolean;
   dynamicFrames: number;
   visible: boolean;
@@ -104,6 +110,7 @@ interface CardRenderState {
   documentRect: RectLike;
   uvRect: readonly [number, number, number, number];
   scissorRect: ScissorRect | null;
+  interactive: boolean;
 }
 
 interface LiquidGlassCanvasProps {
@@ -206,6 +213,7 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
       return nav.connection?.saveData;
     };
     const coarsePointerMedia = window.matchMedia("(pointer: coarse)");
+    const reducedMotionMedia = window.matchMedia("(prefers-reduced-motion: reduce)");
 
     const gl = canvas.getContext("webgl2", {
       alpha: true,
@@ -258,6 +266,15 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
         "u_glareOppositeFactor",
         "u_tint",
         "u_tintAlpha",
+        "u_pointer",
+        "u_pointerHover",
+        "u_pointerPress",
+        "u_bevelWidth",
+        "u_magnification",
+        "u_surfaceBlurMix",
+        "u_counterRimFactor",
+        "u_pointerRefraction",
+        "u_pointerGlare",
       ]);
     } catch (error) {
       console.error("[LiquidGlass] Shader compile failed:", error);
@@ -374,6 +391,16 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
 
     const trackedCards = new Set<HTMLElement>();
     const cardRenderState = new WeakMap<HTMLElement, CardRenderState>();
+    let nextCardId = 1;
+    let activePointerCardId: string | null = null;
+    let pointerRenderCardId: string | null = null;
+    let lastPointerClient: readonly [number, number] | null = null;
+    let pointerPressed = false;
+    let pointerX: SpringValue = createSpringValue(0.5);
+    let pointerY: SpringValue = createSpringValue(0.5);
+    let pointerHover: SpringValue = createSpringValue(0);
+    let pointerPress: SpringValue = createSpringValue(0);
+    let lastRenderTimestamp = 0;
     let destroyed = false;
     let hasCommittedReady = false;
     let sceneDirty = true;
@@ -552,6 +579,7 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
 
         trackedCards.add(card);
         cardRenderState.set(card, {
+          id: `card-${nextCardId++}`,
           dirty: true,
           dynamicFrames: LIQUID_GLASS_CANVAS.measureWarmupFrames,
           visible: true,
@@ -560,6 +588,7 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
           documentRect: { left: 0, top: 0, width: 0, height: 0 },
           uvRect: [0, 0, 0, 0],
           scissorRect: null,
+          interactive: card.dataset.glassInteractive === "true",
         });
 
         resizeObserver?.observe(card);
@@ -620,9 +649,72 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
 
       entry.variant = variant;
       entry.radiusPx = radiusPx;
+      entry.interactive = card.dataset.glassInteractive === "true";
       projectCardGeometry(entry);
       entry.dirty = false;
       entry.dynamicFrames = Math.max(entry.dynamicFrames - 1, 0);
+    };
+
+    const pointerInteractionEnabled = () =>
+      !coarsePointerMedia.matches && !reducedMotionMedia.matches;
+
+    const updatePointerTarget = () => {
+      if (!lastPointerClient || !pointerInteractionEnabled()) {
+        return;
+      }
+
+      const candidates = Array.from(trackedCards, (card) => {
+        const entry = cardRenderState.get(card);
+        if (!entry) return null;
+        return {
+          id: entry.id,
+          rect: {
+            left: entry.documentRect.left - window.scrollX,
+            top: entry.documentRect.top - window.scrollY,
+            width: entry.documentRect.width,
+            height: entry.documentRect.height,
+          },
+          interactive: entry.interactive,
+        };
+      }).filter((candidate): candidate is NonNullable<typeof candidate> => candidate !== null);
+      const hit = resolvePointerCardHit(lastPointerClient, candidates);
+
+      activePointerCardId = hit?.id ?? null;
+      if (hit) {
+        pointerRenderCardId = hit.id;
+      }
+      pointerX = { ...pointerX, target: hit?.normalized[0] ?? 0.5 };
+      pointerY = { ...pointerY, target: hit?.normalized[1] ?? 0.5 };
+      pointerHover = { ...pointerHover, target: hit ? 1 : 0 };
+      pointerPress = { ...pointerPress, target: hit?.interactive && pointerPressed ? 1 : 0 };
+      requestRender();
+    };
+
+    const clearPointerInteraction = () => {
+      activePointerCardId = null;
+      pointerPressed = false;
+      pointerX = { ...pointerX, target: 0.5 };
+      pointerY = { ...pointerY, target: 0.5 };
+      pointerHover = { ...pointerHover, target: 0 };
+      pointerPress = { ...pointerPress, target: 0 };
+      requestRender();
+    };
+
+    const onPointerMove = (event: PointerEvent) => {
+      lastPointerClient = [event.clientX, event.clientY];
+      updatePointerTarget();
+    };
+
+    const onPointerDown = (event: PointerEvent) => {
+      pointerPressed = true;
+      lastPointerClient = [event.clientX, event.clientY];
+      updatePointerTarget();
+    };
+
+    const onPointerUp = (event: PointerEvent) => {
+      pointerPressed = false;
+      lastPointerClient = [event.clientX, event.clientY];
+      updatePointerTarget();
     };
 
     resizeObserver = new ResizeObserver((entries) => {
@@ -672,6 +764,7 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
       applyCanvasSizing();
       sceneDirty = true;
       markAllCardGeometryDirty();
+      updatePointerTarget();
       requestRender();
     };
 
@@ -682,12 +775,24 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
     const onVisibilityChange = () => {
       if (document.visibilityState === "visible") {
         onResize();
+      } else {
+        clearPointerInteraction();
       }
     };
 
     const onScroll = () => {
       cardsDirty = true;
+      updatePointerTarget();
       requestRender();
+    };
+
+    const onPointerCapabilityChange = () => {
+      if (pointerInteractionEnabled()) {
+        updatePointerTarget();
+      } else {
+        clearPointerInteraction();
+      }
+      onResize();
     };
 
     const onThemeChange = () => {
@@ -704,10 +809,17 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
 
     window.addEventListener("resize", onResize, { passive: true });
     window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("pointermove", onPointerMove, { passive: true });
+    window.addEventListener("pointerdown", onPointerDown, { passive: true });
+    window.addEventListener("pointerup", onPointerUp, { passive: true });
+    window.addEventListener("pointercancel", clearPointerInteraction, { passive: true });
+    window.addEventListener("blur", clearPointerInteraction);
+    document.addEventListener("pointerleave", clearPointerInteraction);
     document.addEventListener("fullscreenchange", onFullscreenChange);
     document.addEventListener("visibilitychange", onVisibilityChange);
     window.addEventListener(LIQUID_GLASS_CANVAS.registryChangeEventName, onRegistryChange);
-    coarsePointerMedia.addEventListener("change", onResize);
+    coarsePointerMedia.addEventListener("change", onPointerCapabilityChange);
+    reducedMotionMedia.addEventListener("change", onPointerCapabilityChange);
     window.visualViewport?.addEventListener("resize", onResize, { passive: true });
     window.visualViewport?.addEventListener("scroll", onScroll, { passive: true });
 
@@ -717,6 +829,25 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
     const render = (timestamp: number) => {
       rafRef.current = 0;
       if (destroyed) return;
+
+      const deltaMs = lastRenderTimestamp > 0 ? timestamp - lastRenderTimestamp : 16;
+      lastRenderTimestamp = timestamp;
+      const hasPointerDynamics = pointerRenderCardId !== null && !reducedMotionMedia.matches;
+      if (hasPointerDynamics) {
+        pointerX = stepSpringValue(pointerX, deltaMs, LIQUID_GLASS_CANVAS.spring.stiffness, LIQUID_GLASS_CANVAS.spring.damping);
+        pointerY = stepSpringValue(pointerY, deltaMs, LIQUID_GLASS_CANVAS.spring.stiffness, LIQUID_GLASS_CANVAS.spring.damping);
+        pointerHover = stepSpringValue(pointerHover, deltaMs, LIQUID_GLASS_CANVAS.spring.stiffness, LIQUID_GLASS_CANVAS.spring.damping);
+        pointerPress = stepSpringValue(pointerPress, deltaMs, LIQUID_GLASS_CANVAS.spring.stiffness, LIQUID_GLASS_CANVAS.spring.damping);
+        if (
+          activePointerCardId === null &&
+          springValueIsSettled(pointerX) &&
+          springValueIsSettled(pointerY) &&
+          springValueIsSettled(pointerHover) &&
+          springValueIsSettled(pointerPress)
+        ) {
+          pointerRenderCardId = null;
+        }
+      }
 
       applyCanvasSizing();
       applyCanvasDocumentPosition();
@@ -856,6 +987,23 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
           gl.uniform1f(state.mainProg.uniforms["u_glareOppositeFactor"]!, config.glareOppositeFactor);
           gl.uniform3f(state.mainProg.uniforms["u_tint"]!, config.tint[0], config.tint[1], config.tint[2]);
           gl.uniform1f(state.mainProg.uniforms["u_tintAlpha"]!, config.tintAlpha);
+          gl.uniform1f(state.mainProg.uniforms["u_bevelWidth"]!, config.bevelWidth);
+          gl.uniform1f(state.mainProg.uniforms["u_magnification"]!, config.magnification);
+          gl.uniform1f(state.mainProg.uniforms["u_surfaceBlurMix"]!, config.surfaceBlurMix);
+          gl.uniform1f(state.mainProg.uniforms["u_counterRimFactor"]!, config.counterRimFactor);
+          gl.uniform1f(state.mainProg.uniforms["u_pointerRefraction"]!, config.pointerRefraction);
+          gl.uniform1f(state.mainProg.uniforms["u_pointerGlare"]!, config.pointerGlare);
+          const pointerIsActive = entry.id === pointerRenderCardId;
+          gl.uniform2f(
+            state.mainProg.uniforms["u_pointer"]!,
+            pointerIsActive ? pointerX.value : 0.5,
+            pointerIsActive ? pointerY.value : 0.5,
+          );
+          gl.uniform1f(state.mainProg.uniforms["u_pointerHover"]!, pointerIsActive ? pointerHover.value : 0);
+          gl.uniform1f(
+            state.mainProg.uniforms["u_pointerPress"]!,
+            pointerIsActive && entry.interactive ? pointerPress.value * config.pressDepth : 0,
+          );
           drawQuad(gl, state.mainProg);
         }
 
@@ -875,7 +1023,7 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
       sceneDirty = false;
       cardsDirty = false;
 
-      if (state.prevBgTex || hasDynamicCards) {
+      if (state.prevBgTex || hasDynamicCards || pointerRenderCardId !== null) {
         requestRender();
       }
     };
@@ -891,10 +1039,17 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
 
       window.removeEventListener("resize", onResize);
       window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerdown", onPointerDown);
+      window.removeEventListener("pointerup", onPointerUp);
+      window.removeEventListener("pointercancel", clearPointerInteraction);
+      window.removeEventListener("blur", clearPointerInteraction);
+      document.removeEventListener("pointerleave", clearPointerInteraction);
       document.removeEventListener("fullscreenchange", onFullscreenChange);
       document.removeEventListener("visibilitychange", onVisibilityChange);
       window.removeEventListener(LIQUID_GLASS_CANVAS.registryChangeEventName, onRegistryChange);
-      coarsePointerMedia.removeEventListener("change", onResize);
+      coarsePointerMedia.removeEventListener("change", onPointerCapabilityChange);
+      reducedMotionMedia.removeEventListener("change", onPointerCapabilityChange);
       window.visualViewport?.removeEventListener("resize", onResize);
       window.visualViewport?.removeEventListener("scroll", onScroll);
       themeMedia.removeEventListener("change", onThemeChange);

@@ -29,6 +29,15 @@ uniform float u_glareHardness;
 uniform float u_glareOppositeFactor;
 uniform vec3 u_tint;
 uniform float u_tintAlpha;
+uniform vec2 u_pointer;
+uniform float u_pointerHover;
+uniform float u_pointerPress;
+uniform float u_bevelWidth;
+uniform float u_magnification;
+uniform float u_surfaceBlurMix;
+uniform float u_counterRimFactor;
+uniform float u_pointerRefraction;
+uniform float u_pointerGlare;
 out vec4 fragColor;
 
 float superellipseCornerSDF(vec2 p, float r, float n) {
