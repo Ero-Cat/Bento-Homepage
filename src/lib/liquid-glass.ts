@@ -16,6 +16,13 @@ export interface GlassVariantConfig {
   glareRange: number;
   glareHardness: number;
   glareOppositeFactor: number;
+  bevelWidth: number;
+  magnification: number;
+  surfaceBlurMix: number;
+  counterRimFactor: number;
+  pointerRefraction: number;
+  pointerGlare: number;
+  pressDepth: number;
   tint: readonly [number, number, number];
   tintAlpha: number;
   fallbackBlurPx: number;
@@ -66,6 +73,13 @@ export const GLASS_VARIANTS: Record<GlassVariant, GlassVariantConfig> = {
     glareRange: 90,
     glareHardness: -0.40,
     glareOppositeFactor: 0.92,
+    bevelWidth: 54,
+    magnification: 0.12,
+    surfaceBlurMix: 0.11,
+    counterRimFactor: 0.15,
+    pointerRefraction: 0.72,
+    pointerGlare: 0.70,
+    pressDepth: 0.10,
     tint: [1, 1, 1],
     tintAlpha: 0.036,
     fallbackBlurPx: 12,
@@ -86,6 +100,13 @@ export const GLASS_VARIANTS: Record<GlassVariant, GlassVariantConfig> = {
     glareRange: 92,
     glareHardness: -0.36,
     glareOppositeFactor: 0.88,
+    bevelWidth: 46,
+    magnification: 0.09,
+    surfaceBlurMix: 0.09,
+    counterRimFactor: 0.13,
+    pointerRefraction: 0.52,
+    pointerGlare: 0.55,
+    pressDepth: 0.075,
     tint: [1, 1, 1],
     tintAlpha: 0.03,
     fallbackBlurPx: 10,
@@ -106,6 +127,13 @@ export const GLASS_VARIANTS: Record<GlassVariant, GlassVariantConfig> = {
     glareRange: 88,
     glareHardness: -0.34,
     glareOppositeFactor: 0.82,
+    bevelWidth: 38,
+    magnification: 0.05,
+    surfaceBlurMix: 0.055,
+    counterRimFactor: 0.09,
+    pointerRefraction: 0.25,
+    pointerGlare: 0.28,
+    pressDepth: 0,
     tint: [1, 1, 1],
     tintAlpha: 0.028,
     fallbackBlurPx: 10,
@@ -126,6 +154,13 @@ export const GLASS_VARIANTS: Record<GlassVariant, GlassVariantConfig> = {
     glareRange: 86,
     glareHardness: -0.32,
     glareOppositeFactor: 0.78,
+    bevelWidth: 32,
+    magnification: 0.035,
+    surfaceBlurMix: 0.045,
+    counterRimFactor: 0.07,
+    pointerRefraction: 0.16,
+    pointerGlare: 0.18,
+    pressDepth: 0,
     tint: [1, 1, 1],
     tintAlpha: 0.024,
     fallbackBlurPx: 8,
@@ -146,6 +181,13 @@ export const GLASS_VARIANTS: Record<GlassVariant, GlassVariantConfig> = {
     glareRange: 92,
     glareHardness: -0.44,
     glareOppositeFactor: 0.96,
+    bevelWidth: 62,
+    magnification: 0.14,
+    surfaceBlurMix: 0.13,
+    counterRimFactor: 0.17,
+    pointerRefraction: 0.84,
+    pointerGlare: 0.86,
+    pressDepth: 0.12,
     tint: [1, 1, 1],
     tintAlpha: 0.04,
     fallbackBlurPx: 14,

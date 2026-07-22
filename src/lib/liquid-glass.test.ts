@@ -29,3 +29,24 @@ test("shared liquid glass variants keep enough edge energy on light backgrounds"
     assert.ok(variant.tintAlpha <= 0.04, `Expected ${name} not to reintroduce a milky white card tint`);
   }
 });
+
+test("shared liquid glass variants centralize layered optics and interaction tokens", () => {
+  for (const [name, variant] of Object.entries(GLASS_VARIANTS)) {
+    assert.ok(variant.bevelWidth > 0, `Expected ${name} to define a positive bevel width`);
+    assert.ok(variant.magnification >= 0, `Expected ${name} to define magnification`);
+    assert.ok(variant.surfaceBlurMix >= 0, `Expected ${name} to define center diffusion`);
+    assert.ok(variant.counterRimFactor >= 0, `Expected ${name} to define a counter rim`);
+    assert.ok(variant.pointerRefraction >= 0, `Expected ${name} to define pointer refraction`);
+    assert.ok(variant.pointerGlare >= 0, `Expected ${name} to define pointer glare`);
+    assert.ok(variant.pressDepth >= 0, `Expected ${name} to define press depth`);
+  }
+});
+
+test("layered liquid glass variants reserve the strongest response for hero content", () => {
+  assert.ok(GLASS_VARIANTS.immersive.bevelWidth >= GLASS_VARIANTS.hero.bevelWidth);
+  assert.ok(GLASS_VARIANTS.hero.pointerRefraction > GLASS_VARIANTS.panel.pointerRefraction);
+  assert.ok(GLASS_VARIANTS.panel.pointerRefraction > GLASS_VARIANTS.dense.pointerRefraction);
+  assert.ok(GLASS_VARIANTS.media.surfaceBlurMix <= GLASS_VARIANTS.panel.surfaceBlurMix);
+  assert.equal(GLASS_VARIANTS.dense.pressDepth, 0);
+  assert.equal(GLASS_VARIANTS.media.pressDepth, 0);
+});
