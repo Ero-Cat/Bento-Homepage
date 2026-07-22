@@ -428,3 +428,16 @@ test("liquid glass main pass exposes the shared interaction uniform contract", (
     assert.match(canvasSource, new RegExp(`"${uniform}"`));
   }
 });
+
+test("liquid glass main pass separates rim, bevel body, and clean center optics", () => {
+  const shaderSource = readFileSync(new URL("src/shaders/glass-main.glsl", projectRoot), "utf8");
+
+  assert.match(shaderSource, /outerRim/);
+  assert.match(shaderSource, /bevelBody/);
+  assert.match(shaderSource, /cleanCenter/);
+  assert.match(shaderSource, /pointerDirection/);
+  assert.match(shaderSource, /u_magnification/);
+  assert.match(shaderSource, /u_surfaceBlurMix/);
+  assert.match(shaderSource, /u_counterRimFactor/);
+  assert.match(shaderSource, /clamp\([^\n]*v_uv/);
+});
