@@ -1,0 +1,40 @@
+<style>
+  :root { --ink:#17171a; --secondary:rgba(23,23,26,.66); --tertiary:rgba(23,23,26,.44); --rose:200,0,93; --blue:0,122,255; --green:52,199,89; --orange:255,149,0; --purple:175,82,222; --mint:0,199,190; }
+  body{letter-spacing:0!important}.board{margin-top:24px;padding:30px;border-radius:28px;background:linear-gradient(rgba(230,242,250,.43),rgba(245,228,238,.37)),linear-gradient(135deg,#bad9e7,#e7d3dc 48%,#c8daee)}
+  .glass{max-width:980px;margin:auto;padding:22px;border-radius:26px;color:var(--ink);background:rgba(255,255,255,.28);border:1px solid rgba(255,255,255,.52);box-shadow:0 22px 52px rgba(35,52,78,.15),inset 0 1px rgba(255,255,255,.72);backdrop-filter:blur(22px)}
+  .head{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin-bottom:18px}.kicker{margin-bottom:5px;font-size:11px;font-weight:680;text-transform:uppercase;color:rgb(var(--rose))}.head h3{margin:0;font-size:22px;line-height:1.12;font-weight:650;letter-spacing:0}.head p{margin:6px 0 0;font-size:13px;line-height:1.35;color:var(--secondary)}.count{font-size:12px;color:var(--tertiary)}
+  .interest-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px 10px}.interest{display:flex;align-items:center;gap:10px;min-width:0;padding:8px 10px;border-radius:12px;background:rgba(255,255,255,.12)}.interest-icon{width:28px;height:28px;flex:none;display:flex;align-items:center;justify-content:center;border-radius:9px;font-size:11px;font-weight:720;color:rgb(var(--blue));background:rgba(var(--blue),.12);box-shadow:inset 0 1px rgba(255,255,255,.34)}.interest-icon.orange{color:rgb(var(--orange));background:rgba(var(--orange),.12)}.interest-icon.green{color:rgb(var(--green));background:rgba(var(--green),.12)}.interest-icon.purple{color:rgb(var(--purple));background:rgba(var(--purple),.12)}.interest-icon.mint{color:rgb(var(--mint));background:rgba(var(--mint),.12)}.interest-icon.rose{color:rgb(var(--rose));background:rgba(var(--rose),.11)}.interest span:last-child{min-width:0;font-size:12.5px;line-height:1.2;font-weight:540;color:var(--secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .interest.hovered{background:rgba(255,255,255,.22);box-shadow:inset 0 1px rgba(255,255,255,.32)}.interest.hovered span:last-child{color:var(--ink)}.interest.hovered .interest-icon{transform:scale(1.035)}
+  .rules{max-width:980px;margin:16px auto 0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.rule{padding:13px 14px;border-radius:14px;background:rgba(255,255,255,.48);border:1px solid rgba(255,255,255,.56)}.rule b{display:block;margin-bottom:4px;font-size:11px}.rule span{font-size:11px;line-height:1.4;color:var(--secondary)}
+  .approval{max-width:980px;margin:14px auto 0;padding:15px 17px;border-radius:15px;background:rgba(255,255,255,.56);cursor:pointer}.approval strong{font-size:12px}.approval p{margin:4px 0 0;font-size:11px;color:var(--secondary)}
+  @media(max-width:820px){.interest-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.rules{grid-template-columns:1fr}}
+</style>
+
+<h2>方案 B · Interests 不分组版本</h2>
+<p class="subtitle">12 个兴趣仍是独立条目。图标承担色彩，文字承担信息，弱化“彩色胶囊墙”的廉价感。</p>
+
+<div class="board">
+  <section class="glass">
+    <header class="head"><div><div class="kicker">Personal index</div><h3>Interests</h3><p>独立兴趣索引，保持原有配置顺序。</p></div><span class="count">12 topics</span></header>
+    <div class="interest-grid">
+      <div class="interest hovered"><i class="interest-icon">&lt;/&gt;</i><span>Vibe Coding</span></div>
+      <div class="interest"><i class="interest-icon orange">DIY</i><span>DIY</span></div>
+      <div class="interest"><i class="interest-icon green">{ }</i><span>Developer</span></div>
+      <div class="interest"><i class="interest-icon purple">3D</i><span>3D Print</span></div>
+      <div class="interest"><i class="interest-icon rose">＋</i><span>CS2</span></div>
+      <div class="interest"><i class="interest-icon purple">VR</i><span>VRChat</span></div>
+      <div class="interest"><i class="interest-icon blue">U</i><span>Unity</span></div>
+      <div class="interest"><i class="interest-icon green">◇</i><span>Minecraft</span></div>
+      <div class="interest"><i class="interest-icon mint">Wi</i><span>OpenWrt</span></div>
+      <div class="interest"><i class="interest-icon orange">⌂</i><span>Home Assistant</span></div>
+      <div class="interest"><i class="interest-icon rose">Bot</i><span>QQ Bot Dev</span></div>
+      <div class="interest"><i class="interest-icon mint">SV</i><span>ESXi Server</span></div>
+    </div>
+  </section>
+  <div class="rules">
+    <div class="rule"><b>字号与密度</b><span>22px 标题、13px 正文、12.5px 条目；桌面四列，移动端两列。</span></div>
+    <div class="rule"><b>颜色边界</b><span>Apple system color 只进入 28px 图标底座，条目底色保持近乎透明。</span></div>
+    <div class="rule"><b>Hover</b><span>条目底色轻微提亮、文字转主色、图标仅 1.035 倍；无描边、无位移。</span></div>
+  </div>
+  <div class="approval" data-choice="b3-interests-approved" onclick="toggleSelect(this)"><strong>选择：独立图标索引</strong><p>实施时图标名与 accent 一并进入 siteConfig，组件不硬编码兴趣内容。</p></div>
+</div>

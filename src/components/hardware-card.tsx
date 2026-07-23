@@ -3,11 +3,13 @@ import {
     Monitor,
     Keyboard,
     Printer,
+    Watch,
     Wifi,
     type LucideIcon,
 } from "lucide-react";
-import { siteConfig } from "@/config/site";
+import { siteConfig, type SystemAccent } from "@/config/site";
 import { GlassCard } from "@/components/glass-card";
+import { cn } from "@/lib/utils";
 
 /* ── Lucide icon lookup ─────────────────────────────────────── */
 const ICON_MAP: Record<string, LucideIcon> = {
@@ -15,94 +17,85 @@ const ICON_MAP: Record<string, LucideIcon> = {
     Monitor,
     Keyboard,
     Printer,
+    Watch,
     Wifi,
 };
 
-/** Apple-system accent colors per hardware category */
-const CATEGORY_COLORS: Record<string, string> = {
-    Apple: "#007aff",      // System Blue
-    Monitor: "#30d158",    // System Green
-    Keyboard: "#ff9f0a",   // System Orange
-    Printer: "#bf5af2",    // System Purple
-    Wifi: "#32d74b",       // System Mint
+const ACCENT_RGB: Record<SystemAccent, string> = {
+    blue: "var(--system-blue-rgb)",
+    green: "var(--system-green-rgb)",
+    orange: "var(--system-orange-rgb)",
+    purple: "var(--system-purple-rgb)",
+    red: "var(--system-red-rgb)",
+    mint: "var(--system-mint-rgb)",
 };
 
-/* ── Category Row ───────────────────────────────────────────── */
-function CategoryRow({
+function CategoryGroup({
     group,
-    isLast,
+    index,
 }: {
     group: (typeof siteConfig.hardware)[number];
-    isLast: boolean;
+    index: number;
 }) {
     const Icon = ICON_MAP[group.icon];
-    const accent = CATEGORY_COLORS[group.icon] ?? "#007aff";
+    const accentRgb = ACCENT_RGB[group.accent];
 
     return (
-        <div
-            className="flex flex-col gap-2"
-            style={
-                isLast
-                    ? undefined
-                    : {
-                        paddingBottom: "10px",
-                        borderBottom: "1px solid var(--glass-divider)",
-                    }
-            }
+        <section
+            className={cn(
+                "flex min-w-0 flex-col py-3.5 md:justify-center md:py-2.5 lg:py-3.5",
+                index > 0 && "border-t border-[var(--glass-divider)]",
+                index < 2 && "md:border-t-0",
+                index % 2 === 0 ? "md:pr-5" : "md:border-l md:border-[var(--glass-divider)] md:pl-5",
+            )}
         >
-            {/* Category header — colored icon bubble + label */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3 md:gap-2.5 lg:gap-3">
                 {Icon && (
-                    <div
-                        className="flex items-center justify-center w-6 h-6 rounded-lg shrink-0"
-                        style={{ background: `${accent}1a` }}
+                    <span
+                        className="flex w-8 h-8 shrink-0 items-center justify-center rounded-[10px] md:w-7 md:h-7 lg:w-8 lg:h-8"
+                        style={{ background: `rgba(${accentRgb}, 0.14)` }}
                     >
                         <Icon
-                            size={13}
-                            strokeWidth={2.5}
-                            style={{ color: accent }}
+                            size={16}
+                            strokeWidth={2.2}
+                            style={{ color: `rgb(${accentRgb})` }}
+                            aria-hidden="true"
                         />
-                    </div>
+                    </span>
                 )}
-                <span
-                    className="text-[11px] font-bold uppercase tracking-widest"
-                    style={{ color: accent, opacity: 0.85 }}
-                >
+                <h3 className="min-w-0 truncate text-[14px] font-[630] leading-tight text-text-primary md:text-[13px] lg:text-[14px]">
                     {group.category}
-                </span>
+                </h3>
             </div>
 
-            {/* Item chips — tinted with category accent */}
-            <div className="flex flex-wrap gap-1.5">
+            <ul className="ml-11 mt-3 flex min-w-0 flex-col gap-1.5 md:ml-0 md:mt-2.5 md:gap-1 lg:ml-11 lg:mt-3 lg:gap-1.5">
                 {group.items.map((item) => (
-                    <span
-                        key={item}
-                        className="inline-flex items-center rounded-full border px-3 py-1 text-[13px] font-medium text-text-secondary"
-                        style={{
-                            background: `${accent}10`,
-                            borderColor: `${accent}28`,
-                        }}
-                    >
+                    <li key={item} className="text-[13px] font-medium leading-[1.38] text-text-secondary md:text-[12px] md:leading-[1.3] lg:text-[13px] lg:leading-[1.38]">
                         {item}
-                    </span>
+                    </li>
                 ))}
-            </div>
-        </div>
+            </ul>
+        </section>
     );
 }
 
-/* ── HardwareCard ───────────────────────────────────────────── */
 export function HardwareCard() {
-    const { hardware } = siteConfig;
+    const { cardTitles, hardware } = siteConfig;
 
     return (
         <GlassCard variant="panel" className="flex h-full flex-col gap-3 p-5 md:p-6">
-            <div className="flex flex-col gap-3.5">
+            <header>
+                <h2 className="text-[22px] font-[650] leading-none text-text-primary">
+                    {cardTitles.hardware}
+                </h2>
+            </header>
+
+            <div className="grid min-h-0 flex-1 grid-cols-1 md:grid-cols-2 md:grid-rows-3">
                 {hardware.map((group, i) => (
-                    <CategoryRow
+                    <CategoryGroup
                         key={group.category}
                         group={group}
-                        isLast={i === hardware.length - 1}
+                        index={i}
                     />
                 ))}
             </div>

@@ -16,15 +16,19 @@ import {
 import {
   DEFAULT_GLASS_VARIANT,
   GLASS_VARIANTS,
+  type GlassColorScheme,
   type GlassVariant,
   LIQUID_GLASS_CANVAS,
+  resolveGlassMaterial,
   resolveGlassVariant,
   toDataAttributeName,
 } from "@/lib/liquid-glass";
 import {
   createSpringValue,
+  resolveCoverUvTransform,
   resolveDocumentCardRect,
   resolveCardRenderGeometry,
+  resolveBackgroundCrossfadeProgress,
   resolveLiquidGlassQuality,
   resolveLiquidGlassViewport,
   resolvePointerCardHit,
@@ -35,6 +39,7 @@ import {
   type LiquidGlassViewportState,
   type ScissorRect,
   type SpringValue,
+  type CoverUvTransform,
 } from "@/lib/liquid-glass-runtime";
 import BG_FRAG from "@/shaders/glass-bg.glsl";
 import VBLUR_FRAG from "@/shaders/glass-vblur.glsl";
@@ -70,6 +75,10 @@ interface GLState {
   prevBgImage: HTMLImageElement | null;
   bgUrl: string;
   prevBgUrl: string;
+  bgCover: CoverUvTransform;
+  prevBgCover: CoverUvTransform;
+  bgTextureReady: boolean;
+  colorScheme: GlassColorScheme;
   sceneVeil: {
     top: [number, number, number, number];
     mid: [number, number, number, number];
@@ -158,6 +167,15 @@ function readCardRadiusPx(card: HTMLElement, fallback: number) {
   return Number.isFinite(radius) ? radius : fallback;
 }
 
+function identityCoverUvTransform(): CoverUvTransform {
+  return {
+    scaleX: 1,
+    scaleY: 1,
+    offsetX: 0,
+    offsetY: 0,
+  };
+}
+
 function deleteTextureCache(gl: WebGL2RenderingContext, state: GLState) {
   for (const entry of state.textureCache.values()) {
     if (entry.texture) {
@@ -214,6 +232,7 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
     };
     const coarsePointerMedia = window.matchMedia("(pointer: coarse)");
     const reducedMotionMedia = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const themeMedia = window.matchMedia("(prefers-color-scheme: dark)");
 
     const gl = canvas.getContext("webgl2", {
       alpha: true,
@@ -235,6 +254,8 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
       bgProg = createShaderProgram(gl, BG_FRAG, [
         "u_bg",
         "u_bgPrev",
+        "u_bgCover",
+        "u_bgPrevCover",
         "u_resolution",
         "u_veilTop",
         "u_veilMid",
@@ -271,10 +292,17 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
         "u_pointerPress",
         "u_bevelWidth",
         "u_magnification",
+        "u_surfaceRefraction",
         "u_surfaceBlurMix",
         "u_counterRimFactor",
         "u_pointerRefraction",
         "u_pointerGlare",
+        "u_sceneCoverage",
+        "u_saturation",
+        "u_exposure",
+        "u_edgeHighlightGain",
+        "u_edgeShadowGain",
+        "u_bgReady",
       ]);
     } catch (error) {
       console.error("[LiquidGlass] Shader compile failed:", error);
@@ -291,6 +319,8 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
         strength: Number.parseFloat(styles.getPropertyValue("--glass-scene-veil-strength")) || 1,
       };
     };
+
+    const readColorScheme = (): GlassColorScheme => (themeMedia.matches ? "dark" : "light");
 
     const resolveQuality = () =>
       resolveLiquidGlassQuality({
@@ -326,15 +356,8 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
     const applyCanvasViewportStyle = (viewport: LiquidGlassViewportState) => {
       canvas.style.width = `${viewport.cssWidth}px`;
       canvas.style.height = `${viewport.cssHeight}px`;
-      canvas.style.left = `${window.scrollX + viewport.offsetLeft}px`;
-      canvas.style.top = `${window.scrollY + viewport.offsetTop}px`;
-    };
-
-    const applyCanvasDocumentPosition = () => {
-      canvas.style.width = `${state.cssWidth}px`;
-      canvas.style.height = `${state.cssHeight}px`;
-      canvas.style.left = `${window.scrollX + state.viewportOffsetLeft}px`;
-      canvas.style.top = `${window.scrollY + state.viewportOffsetTop}px`;
+      canvas.style.left = `${viewport.offsetLeft}px`;
+      canvas.style.top = `${viewport.offsetTop}px`;
     };
 
     const initialQuality = resolveQuality();
@@ -370,6 +393,10 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
       prevBgImage: null,
       bgUrl: "__liquid-glass-fallback__",
       prevBgUrl: "",
+      bgCover: identityCoverUvTransform(),
+      prevBgCover: identityCoverUvTransform(),
+      bgTextureReady: false,
+      colorScheme: readColorScheme(),
       sceneVeil: readSceneVeil(),
       bgTransitionStartedAt: 0,
       bgTransitionDuration: LIQUID_GLASS_CANVAS.backgroundTransitionMs,
@@ -437,6 +464,25 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
       state.quality = nextQuality;
     };
 
+    const updateBackgroundCoverTransforms = () => {
+      state.bgCover = state.bgImage
+        ? resolveCoverUvTransform({
+            sourceWidth: state.bgImage.naturalWidth,
+            sourceHeight: state.bgImage.naturalHeight,
+            viewportWidth: state.cssWidth,
+            viewportHeight: state.cssHeight,
+          })
+        : identityCoverUvTransform();
+      state.prevBgCover = state.prevBgImage
+        ? resolveCoverUvTransform({
+            sourceWidth: state.prevBgImage.naturalWidth,
+            sourceHeight: state.prevBgImage.naturalHeight,
+            viewportWidth: state.cssWidth,
+            viewportHeight: state.cssHeight,
+          })
+        : identityCoverUvTransform();
+    };
+
     const applyCanvasSizing = () => {
       const nextQuality = resolveQuality();
       const viewport = resolveViewportState(nextQuality.dprCap);
@@ -487,6 +533,7 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
       }
 
       state.sceneVeil = readSceneVeil();
+      updateBackgroundCoverTransforms();
       sceneDirty = sceneDirty || qualityChanged || sizeChanged;
       cardsDirty = true;
     };
@@ -505,6 +552,7 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
       return {
         currentUrl: dataset[LIQUID_GLASS_CANVAS.activeBackgroundDatasetKey] ?? "",
         nextUrl: dataset[LIQUID_GLASS_CANVAS.nextBackgroundDatasetKey] ?? "",
+        previousUrl: dataset[LIQUID_GLASS_CANVAS.previousBackgroundDatasetKey] ?? "",
         startedAt: Number.parseFloat(
           dataset[LIQUID_GLASS_CANVAS.backgroundTransitionStartedAtDatasetKey] ?? "",
         ),
@@ -549,7 +597,12 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
       image.src = url;
     };
 
-    const activateBackground = (url: string, duration: number, now: number) => {
+    const activateBackground = (
+      url: string,
+      previousUrl: string,
+      startedAt: number,
+      duration: number,
+    ) => {
       const entry = state.textureCache.get(url);
       if (!entry || entry.status !== "ready" || !entry.texture) {
         return false;
@@ -559,13 +612,26 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
         return true;
       }
 
-      state.prevBgTex = state.bgUrl === "__liquid-glass-fallback__" ? null : state.bgTex;
-      state.prevBgImage = state.bgImage;
-      state.prevBgUrl = state.bgUrl;
+      const continuesPublishedTransition =
+        Number.isFinite(startedAt) &&
+        startedAt > 0 &&
+        previousUrl === state.bgUrl &&
+        state.bgUrl !== "__liquid-glass-fallback__";
+      state.prevBgTex = continuesPublishedTransition ? state.bgTex : null;
+      state.prevBgImage = continuesPublishedTransition ? state.bgImage : null;
+      state.prevBgCover = continuesPublishedTransition ? state.bgCover : identityCoverUvTransform();
+      state.prevBgUrl = continuesPublishedTransition ? state.bgUrl : "";
       state.bgTex = entry.texture;
       state.bgImage = entry.image;
+      state.bgCover = resolveCoverUvTransform({
+        sourceWidth: entry.image.naturalWidth,
+        sourceHeight: entry.image.naturalHeight,
+        viewportWidth: state.cssWidth,
+        viewportHeight: state.cssHeight,
+      });
+      state.bgTextureReady = true;
       state.bgUrl = url;
-      state.bgTransitionStartedAt = now;
+      state.bgTransitionStartedAt = continuesPublishedTransition ? startedAt : 0;
       state.bgTransitionDuration = duration;
       state.pendingBgUrl = "";
       state.pendingBgDuration = duration;
@@ -809,6 +875,7 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
 
     const onThemeChange = () => {
       state.sceneVeil = readSceneVeil();
+      state.colorScheme = readColorScheme();
       sceneDirty = true;
       requestRender();
     };
@@ -835,7 +902,6 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
     window.visualViewport?.addEventListener("resize", onResize, { passive: true });
     window.visualViewport?.addEventListener("scroll", onScroll, { passive: true });
 
-    const themeMedia = window.matchMedia("(prefers-color-scheme: dark)");
     themeMedia.addEventListener("change", onThemeChange);
 
     const render = (timestamp: number) => {
@@ -862,7 +928,6 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
       }
 
       applyCanvasSizing();
-      applyCanvasDocumentPosition();
 
       const bgState = detectBgState();
       if (bgState.nextUrl) {
@@ -871,21 +936,27 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
       if (bgState.currentUrl) {
         ensureTexture(bgState.currentUrl);
         if (bgState.currentUrl !== state.bgUrl) {
-          const activated = activateBackground(bgState.currentUrl, bgState.duration, timestamp);
+          const activated = activateBackground(
+            bgState.currentUrl,
+            bgState.previousUrl,
+            bgState.startedAt,
+            bgState.duration,
+          );
           if (!activated) {
+            state.bgTextureReady = false;
             state.pendingBgUrl = bgState.currentUrl;
             state.pendingBgDuration = bgState.duration;
-          } else if (Number.isFinite(bgState.startedAt) && bgState.startedAt > 0) {
-            state.bgTransitionStartedAt = bgState.startedAt;
           }
         }
       }
       if (state.pendingBgUrl) {
         ensureTexture(state.pendingBgUrl);
-        const activated = activateBackground(state.pendingBgUrl, state.pendingBgDuration, timestamp);
-        if (activated && Number.isFinite(bgState.startedAt) && bgState.startedAt > 0) {
-          state.bgTransitionStartedAt = bgState.startedAt;
-        }
+        activateBackground(
+          state.pendingBgUrl,
+          bgState.previousUrl,
+          bgState.startedAt,
+          state.pendingBgDuration,
+        );
       }
 
       const backgroundTransitionActive = Boolean(state.prevBgTex && state.bgTransitionStartedAt > 0);
@@ -918,6 +989,20 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
         gl.useProgram(state.bgProg.program);
         bindTexture(gl, state.bgProg, "u_bg", state.bgTex, 0);
         bindTexture(gl, state.bgProg, "u_bgPrev", state.prevBgTex ?? state.bgTex, 1);
+        gl.uniform4f(
+          state.bgProg.uniforms["u_bgCover"]!,
+          state.bgCover.scaleX,
+          state.bgCover.scaleY,
+          state.bgCover.offsetX,
+          state.bgCover.offsetY,
+        );
+        gl.uniform4f(
+          state.bgProg.uniforms["u_bgPrevCover"]!,
+          state.prevBgTex ? state.prevBgCover.scaleX : state.bgCover.scaleX,
+          state.prevBgTex ? state.prevBgCover.scaleY : state.bgCover.scaleY,
+          state.prevBgTex ? state.prevBgCover.offsetX : state.bgCover.offsetX,
+          state.prevBgTex ? state.prevBgCover.offsetY : state.bgCover.offsetY,
+        );
         gl.uniform2f(state.bgProg.uniforms["u_resolution"]!, state.width, state.height);
         gl.uniform4f(state.bgProg.uniforms["u_veilTop"]!, ...state.sceneVeil.top);
         gl.uniform4f(state.bgProg.uniforms["u_veilMid"]!, ...state.sceneVeil.mid);
@@ -925,12 +1010,10 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
         gl.uniform1f(state.bgProg.uniforms["u_veilStrength"]!, state.sceneVeil.strength);
 
         const crossfadeMix = backgroundTransitionActive
-          ? Math.max(
-              0,
-              Math.min(
-                1,
-                (timestamp - state.bgTransitionStartedAt) / Math.max(state.bgTransitionDuration, 1),
-              ),
+          ? resolveBackgroundCrossfadeProgress(
+              timestamp,
+              state.bgTransitionStartedAt,
+              state.bgTransitionDuration,
             )
           : 1;
         gl.uniform1f(state.bgProg.uniforms["u_crossfadeMix"]!, crossfadeMix);
@@ -977,6 +1060,7 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
 
         for (const entry of cardsToDraw) {
           const config = GLASS_VARIANTS[entry.variant] ?? GLASS_VARIANTS[DEFAULT_GLASS_VARIANT];
+          const material = resolveGlassMaterial(config, state.colorScheme);
           const [uvX, uvY, uvW, uvH] = entry.uvRect;
           const scissorRect = entry.scissorRect;
           if (!scissorRect) continue;
@@ -997,14 +1081,21 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
           gl.uniform1f(state.mainProg.uniforms["u_glareRange"]!, config.glareRange);
           gl.uniform1f(state.mainProg.uniforms["u_glareHardness"]!, config.glareHardness);
           gl.uniform1f(state.mainProg.uniforms["u_glareOppositeFactor"]!, config.glareOppositeFactor);
-          gl.uniform3f(state.mainProg.uniforms["u_tint"]!, config.tint[0], config.tint[1], config.tint[2]);
-          gl.uniform1f(state.mainProg.uniforms["u_tintAlpha"]!, config.tintAlpha);
+          gl.uniform3f(state.mainProg.uniforms["u_tint"]!, material.tint[0], material.tint[1], material.tint[2]);
+          gl.uniform1f(state.mainProg.uniforms["u_tintAlpha"]!, material.tintAlpha);
           gl.uniform1f(state.mainProg.uniforms["u_bevelWidth"]!, config.bevelWidth);
           gl.uniform1f(state.mainProg.uniforms["u_magnification"]!, config.magnification);
+          gl.uniform1f(state.mainProg.uniforms["u_surfaceRefraction"]!, config.surfaceRefraction);
           gl.uniform1f(state.mainProg.uniforms["u_surfaceBlurMix"]!, config.surfaceBlurMix);
           gl.uniform1f(state.mainProg.uniforms["u_counterRimFactor"]!, config.counterRimFactor);
           gl.uniform1f(state.mainProg.uniforms["u_pointerRefraction"]!, config.pointerRefraction);
           gl.uniform1f(state.mainProg.uniforms["u_pointerGlare"]!, config.pointerGlare);
+          gl.uniform1f(state.mainProg.uniforms["u_sceneCoverage"]!, material.sceneCoverage);
+          gl.uniform1f(state.mainProg.uniforms["u_saturation"]!, material.saturation);
+          gl.uniform1f(state.mainProg.uniforms["u_exposure"]!, material.exposure);
+          gl.uniform1f(state.mainProg.uniforms["u_edgeHighlightGain"]!, material.edgeHighlightGain);
+          gl.uniform1f(state.mainProg.uniforms["u_edgeShadowGain"]!, material.edgeShadowGain);
+          gl.uniform1f(state.mainProg.uniforms["u_bgReady"]!, state.bgTextureReady ? 1 : 0);
           const pointerIsActive = entry.id === pointerRenderCardId;
           gl.uniform2f(
             state.mainProg.uniforms["u_pointer"]!,
@@ -1088,11 +1179,11 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
       className="liquid-glass-canvas"
       aria-hidden="true"
       style={{
-        position: "absolute",
+        position: "fixed",
         left: 0,
         top: 0,
         width: "100dvw",
-        height: "100%",
+        height: "100dvh",
         zIndex: 2,
         pointerEvents: "none",
         display: "block",

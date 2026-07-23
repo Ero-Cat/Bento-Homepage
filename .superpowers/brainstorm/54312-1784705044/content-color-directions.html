@@ -1,0 +1,96 @@
+<style>
+  .direction-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px; margin-top:24px; }
+  .direction { position:relative; overflow:hidden; min-height:580px; padding:18px; border:1px solid rgba(255,255,255,.14); border-radius:24px; background:linear-gradient(145deg,rgba(35,38,46,.96),rgba(12,13,17,.98)); cursor:pointer; }
+  .direction::before { content:""; position:absolute; inset:0; background:radial-gradient(circle at 15% 0%,rgba(255,255,255,.08),transparent 36%); pointer-events:none; }
+  .direction.selected { outline:2px solid #0a84ff; outline-offset:3px; }
+  .direction-head { position:relative; display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:16px; }
+  .direction-kicker { color:#8e8e93; font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+  .direction-title { margin:4px 0 0; color:#f5f5f7; font-size:17px; font-weight:650; letter-spacing:0; }
+  .badge { border-radius:999px; padding:4px 8px; background:rgba(10,132,255,.18); color:#64d2ff; font-size:10px; font-weight:700; }
+  .mini-card { position:relative; padding:16px; border:1px solid rgba(255,255,255,.10); border-radius:20px; background:rgba(255,255,255,.075); box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 16px 36px rgba(0,0,0,.18); }
+  .mini-card + .mini-card { margin-top:14px; }
+  .mini-titlebar { display:flex; align-items:center; justify-content:space-between; margin-bottom:13px; }
+  .mini-title { color:#f5f5f7; font-size:13px; font-weight:650; }
+  .mini-action { color:#98989d; font-size:10px; font-weight:600; }
+  .book-icon { display:grid; place-items:center; width:25px; height:25px; margin-right:8px; border-radius:8px; background:rgba(255,55,95,.14); color:#ff6482; font-size:12px; }
+  .title-left { display:flex; align-items:center; }
+  .post { padding:9px 8px; border-radius:12px; }
+  .post + .post { border-top:1px solid rgba(255,255,255,.055); }
+  .post-title { color:#f5f5f7; font-size:12px; font-weight:620; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .meta { display:flex; align-items:center; gap:6px; margin-top:4px; color:#98989d; font-size:9px; }
+  .category { padding:2px 5px; border-radius:5px; font-weight:650; }
+  .views { margin-left:auto; }
+  .hardware-group + .hardware-group { margin-top:12px; padding-top:12px; border-top:1px solid rgba(255,255,255,.07); }
+  .group-label { display:flex; align-items:center; gap:7px; margin-bottom:8px; font-size:10px; font-weight:700; }
+  .icon-dot { display:grid; place-items:center; width:23px; height:23px; border-radius:8px; font-size:11px; }
+  .chips { display:flex; flex-wrap:wrap; gap:5px; }
+  .chip { padding:5px 9px; border-radius:999px; font-size:10px; font-weight:560; }
+  .a .category { background:rgba(255,55,95,.12); color:#ff6482; }
+  .a .group-label { color:#c7c7cc; }
+  .a .icon-dot { background:rgba(10,132,255,.14); color:#64d2ff; }
+  .a .chip { border:1px solid rgba(255,255,255,.08); background:rgba(255,255,255,.055); color:#d1d1d6; }
+  .b .post-title { color:#fff0f4; }
+  .b .meta { color:#aeb4bd; }
+  .b .category { background:rgba(255,159,10,.15); color:#ffc05c; }
+  .b .group-label.blue { color:#66b5ff; } .b .group-label.green { color:#62db83; }
+  .b .icon-dot.blue { background:rgba(10,132,255,.16); color:#66b5ff; } .b .icon-dot.green { background:rgba(48,209,88,.16); color:#62db83; }
+  .b .chip.blue { background:rgba(10,132,255,.09); border:1px solid rgba(10,132,255,.18); color:#d8ebff; }
+  .b .chip.green { background:rgba(48,209,88,.09); border:1px solid rgba(48,209,88,.18); color:#dcf8e3; }
+  .c .book-icon,.c .icon-dot { background:rgba(255,55,95,.16); color:#ff6482; }
+  .c .post-title,.c .group-label { color:#ff8ca3; }
+  .c .meta { color:#b4a4aa; }
+  .c .category { background:rgba(255,55,95,.16); color:#ff8ca3; }
+  .c .chip { border:1px solid rgba(255,55,95,.16); background:rgba(255,55,95,.08); color:#f1dce2; }
+  .direction-note { position:relative; margin-top:14px; color:#a1a1a6; font-size:11px; line-height:1.5; }
+  @media (max-width:900px){.direction-grid{grid-template-columns:1fr}.direction{min-height:auto}}
+</style>
+
+<h2>Blog / Hardware 内容颜色方向</h2>
+<p class="subtitle">玻璃壳与布局不变，只比较文字、图标、元数据和标签的颜色层级。点击选择一个方向。</p>
+
+<div class="direction-grid">
+  <div class="direction a" data-choice="a" onclick="toggleSelect(this)">
+    <div class="direction-head"><div><div class="direction-kicker">方案 A</div><div class="direction-title">系统语义色</div></div><span class="badge">推荐</span></div>
+    <div class="mini-card">
+      <div class="mini-titlebar"><div class="title-left"><span class="book-icon">▤</span><span class="mini-title">博客</span></div><span class="mini-action">全部 ↗</span></div>
+      <div class="post"><div class="post-title">在 HomeLab 中部署高可用服务</div><div class="meta"><span>2 天前</span><span>·</span><span class="category">开发</span><span class="views">◉ 128</span></div></div>
+      <div class="post"><div class="post-title">我的 2026 桌面与工作流</div><div class="meta"><span>6 天前</span><span>·</span><span class="category">生活</span><span class="views">◉ 96</span></div></div>
+      <div class="post"><div class="post-title">液态玻璃主页的实现笔记</div><div class="meta"><span>12 天前</span><span>·</span><span class="category">前端</span><span class="views">◉ 241</span></div></div>
+    </div>
+    <div class="mini-card">
+      <div class="hardware-group"><div class="group-label"><span class="icon-dot">⌘</span>APPLE</div><div class="chips"><span class="chip">MacBook Pro M5</span><span class="chip">Mac Mini M2</span><span class="chip">iPhone 15 Pro</span></div></div>
+      <div class="hardware-group"><div class="group-label"><span class="icon-dot">▣</span>DESKTOP</div><div class="chips"><span class="chip">R7-9800X3D</span><span class="chip">RTX 3090 24G</span><span class="chip">32GB DDR5</span></div></div>
+    </div>
+    <p class="direction-note">强调内容层级，只让图标和分类承担少量强调色。最接近 Apple 设置与系统信息页面。</p>
+  </div>
+
+  <div class="direction b" data-choice="b" onclick="toggleSelect(this)">
+    <div class="direction-head"><div><div class="direction-kicker">方案 B</div><div class="direction-title">柔和分类染色</div></div></div>
+    <div class="mini-card">
+      <div class="mini-titlebar"><div class="title-left"><span class="book-icon">▤</span><span class="mini-title">博客</span></div><span class="mini-action">全部 ↗</span></div>
+      <div class="post"><div class="post-title">在 HomeLab 中部署高可用服务</div><div class="meta"><span>2 天前</span><span>·</span><span class="category">开发</span><span class="views">◉ 128</span></div></div>
+      <div class="post"><div class="post-title">我的 2026 桌面与工作流</div><div class="meta"><span>6 天前</span><span>·</span><span class="category">生活</span><span class="views">◉ 96</span></div></div>
+      <div class="post"><div class="post-title">液态玻璃主页的实现笔记</div><div class="meta"><span>12 天前</span><span>·</span><span class="category">前端</span><span class="views">◉ 241</span></div></div>
+    </div>
+    <div class="mini-card">
+      <div class="hardware-group"><div class="group-label blue"><span class="icon-dot blue">⌘</span>APPLE</div><div class="chips"><span class="chip blue">MacBook Pro M5</span><span class="chip blue">Mac Mini M2</span><span class="chip blue">iPhone 15 Pro</span></div></div>
+      <div class="hardware-group"><div class="group-label green"><span class="icon-dot green">▣</span>DESKTOP</div><div class="chips"><span class="chip green">R7-9800X3D</span><span class="chip green">RTX 3090 24G</span><span class="chip green">32GB DDR5</span></div></div>
+    </div>
+    <p class="direction-note">保留每类硬件的独立颜色，但降低饱和度和面积。信息识别更快，视觉仍稍活跃。</p>
+  </div>
+
+  <div class="direction c" data-choice="c" onclick="toggleSelect(this)">
+    <div class="direction-head"><div><div class="direction-kicker">方案 C</div><div class="direction-title">品牌玫红统一</div></div></div>
+    <div class="mini-card">
+      <div class="mini-titlebar"><div class="title-left"><span class="book-icon">▤</span><span class="mini-title">博客</span></div><span class="mini-action">全部 ↗</span></div>
+      <div class="post"><div class="post-title">在 HomeLab 中部署高可用服务</div><div class="meta"><span>2 天前</span><span>·</span><span class="category">开发</span><span class="views">◉ 128</span></div></div>
+      <div class="post"><div class="post-title">我的 2026 桌面与工作流</div><div class="meta"><span>6 天前</span><span>·</span><span class="category">生活</span><span class="views">◉ 96</span></div></div>
+      <div class="post"><div class="post-title">液态玻璃主页的实现笔记</div><div class="meta"><span>12 天前</span><span>·</span><span class="category">前端</span><span class="views">◉ 241</span></div></div>
+    </div>
+    <div class="mini-card">
+      <div class="hardware-group"><div class="group-label"><span class="icon-dot">⌘</span>APPLE</div><div class="chips"><span class="chip">MacBook Pro M5</span><span class="chip">Mac Mini M2</span><span class="chip">iPhone 15 Pro</span></div></div>
+      <div class="hardware-group"><div class="group-label"><span class="icon-dot">▣</span>DESKTOP</div><div class="chips"><span class="chip">R7-9800X3D</span><span class="chip">RTX 3090 24G</span><span class="chip">32GB DDR5</span></div></div>
+    </div>
+    <p class="direction-note">把两张卡统一到站点品牌色，整体感最强，但内容层级会更抢眼，Apple 感相对弱。</p>
+  </div>
+</div>

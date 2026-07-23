@@ -6,11 +6,13 @@ import {
   beginScrollGeometryTracking,
   createSpringValue,
   expandScissorRect,
+  resolveCoverUvTransform,
   resolvePointerCardHit,
   resolveDocumentCardRect,
   resolveCardRenderGeometry,
   resolveLiquidGlassQuality,
   resolveLiquidGlassViewport,
+  resolveBackgroundCrossfadeProgress,
   springValueIsSettled,
   stepScrollGeometryTracking,
   stepScrollFollowMotion,
@@ -89,6 +91,66 @@ test("resolveLiquidGlassViewport follows the visual viewport on mobile browser c
       offsetTop: 72,
     },
   );
+});
+
+test("resolveCoverUvTransform preserves centered CSS cover cropping for wide images", () => {
+  const transform = resolveCoverUvTransform({
+    sourceWidth: 2400,
+    sourceHeight: 1200,
+    viewportWidth: 1000,
+    viewportHeight: 1000,
+  });
+
+  assert.deepEqual(transform, {
+    scaleX: 0.5,
+    scaleY: 1,
+    offsetX: 0.25,
+    offsetY: 0,
+  });
+});
+
+test("resolveCoverUvTransform preserves centered CSS cover cropping for tall images", () => {
+  const transform = resolveCoverUvTransform({
+    sourceWidth: 1200,
+    sourceHeight: 2400,
+    viewportWidth: 1000,
+    viewportHeight: 500,
+  });
+
+  assert.deepEqual(transform, {
+    scaleX: 1,
+    scaleY: 0.25,
+    offsetX: 0,
+    offsetY: 0.375,
+  });
+});
+
+test("resolveCoverUvTransform falls back to identity while the real background image is not ready", () => {
+  assert.deepEqual(
+    resolveCoverUvTransform({
+      sourceWidth: 0,
+      sourceHeight: 0,
+      viewportWidth: 1000,
+      viewportHeight: 500,
+    }),
+    {
+      scaleX: 1,
+      scaleY: 1,
+      offsetX: 0,
+      offsetY: 0,
+    },
+  );
+});
+
+test("background crossfade follows the same iOS-style cubic bezier as the DOM fade", () => {
+  assert.equal(resolveBackgroundCrossfadeProgress(-20, 0, 2_000), 0);
+  assert.equal(resolveBackgroundCrossfadeProgress(2_200, 0, 2_000), 1);
+
+  const quarter = resolveBackgroundCrossfadeProgress(500, 0, 2_000);
+  const halfway = resolveBackgroundCrossfadeProgress(1_000, 0, 2_000);
+
+  assert.ok(quarter > 0.76 && quarter < 0.77, `Expected eased quarter progress, received ${quarter}`);
+  assert.ok(halfway > 0.96 && halfway < 0.97, `Expected eased halfway progress, received ${halfway}`);
 });
 
 test("scroll geometry tracking stays active through long momentum scrolls and settles after idle frames", () => {

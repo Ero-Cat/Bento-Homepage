@@ -80,6 +80,26 @@ test("background layer uses optimized image assets for paint and glass texture s
   );
 });
 
+test("background layer publishes the shared transition clock from the real CSS animation start", () => {
+  const source = readFileSync(new URL("src/components/background-layer.tsx", projectRoot), "utf8");
+
+  assert.match(source, /onAnimationStart=\{startBackgroundTransition\}/);
+  assert.match(
+    source,
+    /const startBackgroundTransition[\s\S]*performance\.now\(\)[\s\S]*backgroundTransitionStartedAtDatasetKey/,
+    "Expected the WebGL transition timestamp to be published when the DOM fade actually starts",
+  );
+
+  const transitionEffectStart = source.indexOf("useEffect(() =>", source.indexOf("const currentImage"));
+  const transitionEffectEnd = source.indexOf("}, [currentImage, nextImage]", transitionEffectStart);
+  assert.ok(transitionEffectStart >= 0 && transitionEffectEnd > transitionEffectStart);
+  assert.doesNotMatch(
+    source.slice(transitionEffectStart, transitionEffectEnd),
+    /performance\.now\(\)/,
+    "Expected the staging effect not to start the shared clock before the browser starts the CSS animation",
+  );
+});
+
 test("layout primes liquid glass into a loading state before hydration", () => {
   const source = readFileSync(new URL("src/app/layout.tsx", projectRoot), "utf8");
 
@@ -204,6 +224,32 @@ test("liquid glass startup cannot deadlock in loading when the first background 
   );
 });
 
+test("liquid glass background pass samples images with centered CSS cover UVs", () => {
+  const bgShaderSource = readFileSync(new URL("src/shaders/glass-bg.glsl", projectRoot), "utf8");
+  const canvasSource = readFileSync(new URL("src/components/liquid-glass-canvas.tsx", projectRoot), "utf8");
+
+  assert.match(bgShaderSource, /uniform\s+vec4\s+u_bgCover;/);
+  assert.match(bgShaderSource, /uniform\s+vec4\s+u_bgPrevCover;/);
+  assert.match(bgShaderSource, /coverUv\(/);
+  assert.match(canvasSource, /resolveCoverUvTransform/);
+  assert.match(canvasSource, /"u_bgCover"/);
+  assert.match(canvasSource, /"u_bgPrevCover"/);
+});
+
+test("liquid glass runtime tracks real background readiness without removing the fallback texture", () => {
+  const source = readFileSync(new URL("src/components/liquid-glass-canvas.tsx", projectRoot), "utf8");
+
+  assert.match(source, /bgTextureReady:\s*false/);
+  assert.match(source, /state\.bgTextureReady\s*=\s*true/);
+  assert.match(source, /state\.bgTextureReady\s*=\s*false/);
+  assert.match(source, /"u_bgReady"/);
+  assert.doesNotMatch(
+    source,
+    /if\s*\(!state\.bgTex\)\s*return/,
+    "Expected the runtime to keep the non-null fallback texture and avoid a loading deadlock",
+  );
+});
+
 test("liquid glass fullscreen and resize paths dirty geometry and request a fresh frame", () => {
   const source = readFileSync(new URL("src/components/liquid-glass-canvas.tsx", projectRoot), "utf8");
 
@@ -269,19 +315,37 @@ test("liquid glass scroll sync does not predict wheel deltas ahead of the browse
   );
 });
 
-test("liquid glass canvas lives in the document scroll coordinate system", () => {
+test("liquid glass canvas stays anchored to the visual viewport during document scroll", () => {
   const source = readFileSync(new URL("src/components/liquid-glass-canvas.tsx", projectRoot), "utf8");
 
   assert.match(
     source,
-    /position:\s*"absolute"/,
-    "Expected the shared canvas to scroll in the same document coordinate system as card content",
+    /position:\s*"fixed"/,
+    "Expected the shared canvas bitmap to stay in the same viewport coordinate system as the fixed page background",
   );
 
   assert.match(
     source,
-    /height:\s*"100%"/,
-    "Expected the shared canvas layer to cover the full scrollable document instead of only a fixed viewport bitmap",
+    /height:\s*"100dvh"/,
+    "Expected the shared canvas layer to cover the visual viewport instead of the scrollable document",
+  );
+
+  const applyViewportStyleIndex = source.indexOf("const applyCanvasViewportStyle");
+  const initialQualityIndex = source.indexOf("const initialQuality", applyViewportStyleIndex);
+  const applyViewportStyleSource = source.slice(applyViewportStyleIndex, initialQualityIndex);
+
+  assert.ok(applyViewportStyleIndex >= 0, "Expected a viewport canvas positioning helper");
+  assert.match(applyViewportStyleSource, /viewport\.offsetLeft/);
+  assert.match(applyViewportStyleSource, /viewport\.offsetTop/);
+  assert.doesNotMatch(
+    applyViewportStyleSource,
+    /window\.scroll[XY]/,
+    "Expected canvas positioning to ignore document scroll and follow only visual viewport offsets",
+  );
+  assert.doesNotMatch(
+    source,
+    /applyCanvasDocumentPosition/,
+    "Expected render frames not to reposition the fixed canvas from document scroll",
   );
 });
 
@@ -318,7 +382,7 @@ test("liquid glass shader keeps a visible shell silhouette in WebGL ready mode",
   );
 });
 
-test("liquid glass shader keeps card interiors optically transparent", () => {
+test("liquid glass shader reconstructs the scene through clean centers when the real background is ready", () => {
   const shaderSource = readFileSync(new URL("src/shaders/glass-main.glsl", projectRoot), "utf8");
 
   assert.doesNotMatch(
@@ -335,8 +399,20 @@ test("liquid glass shader keeps card interiors optically transparent", () => {
 
   assert.match(
     shaderSource,
-    /interiorAlpha/,
-    "Expected the card center alpha to stay near transparent while edges carry the glass silhouette",
+    /u_sceneCoverage/,
+    "Expected material profiles to control scene reconstruction coverage",
+  );
+
+  assert.match(
+    shaderSource,
+    /u_bgReady/,
+    "Expected the shader to keep a low-coverage startup shell until the real background texture is ready",
+  );
+
+  assert.match(
+    shaderSource,
+    /centerSceneCoverage/,
+    "Expected the clean center to show the reconstructed scene instead of a transparent hole",
   );
 });
 
@@ -433,10 +509,17 @@ test("liquid glass main pass exposes the shared interaction uniform contract", (
     "u_pointerPress",
     "u_bevelWidth",
     "u_magnification",
+    "u_surfaceRefraction",
     "u_surfaceBlurMix",
     "u_counterRimFactor",
     "u_pointerRefraction",
     "u_pointerGlare",
+    "u_sceneCoverage",
+    "u_saturation",
+    "u_exposure",
+    "u_edgeHighlightGain",
+    "u_edgeShadowGain",
+    "u_bgReady",
   ]) {
     assert.match(shaderSource, new RegExp(`uniform\\s+\\w+\\s+${uniform}\\s*;`));
     assert.match(canvasSource, new RegExp(`"${uniform}"`));
@@ -451,7 +534,137 @@ test("liquid glass main pass separates rim, bevel body, and clean center optics"
   assert.match(shaderSource, /cleanCenter/);
   assert.match(shaderSource, /pointerDirection/);
   assert.match(shaderSource, /u_magnification/);
+  assert.match(shaderSource, /u_surfaceRefraction/);
   assert.match(shaderSource, /u_surfaceBlurMix/);
   assert.match(shaderSource, /u_counterRimFactor/);
   assert.match(shaderSource, /clamp\([^\n]*v_uv/);
+});
+
+test("liquid glass center refracts and diffuses the scene instead of repainting the unchanged background", () => {
+  const shaderSource = readFileSync(new URL("src/shaders/glass-main.glsl", projectRoot), "utf8");
+
+  assert.match(
+    shaderSource,
+    /surfaceLensOffset/,
+    "Expected the clean center to use a full-surface lens displacement",
+  );
+  assert.match(
+    shaderSource,
+    /texture\(u_bg,\s*safeUv\(surfaceLensOffset\)\)/,
+    "Expected sharp center sampling to use the lens offset",
+  );
+  assert.match(
+    shaderSource,
+    /centerDiffusion/,
+    "Expected a named center diffusion stage that remains independent from edge refraction",
+  );
+  assert.match(
+    shaderSource,
+    /centerSceneCoverage\s*=\s*mix\([^,]+,\s*readySceneCoverage,\s*cleanCenter\)/,
+    "Expected the clean center to use the full material scene coverage instead of blending back toward the unchanged page background",
+  );
+});
+
+test("liquid glass main pass keeps rounded-corner optics free of medial-axis wedges", () => {
+  const shaderSource = readFileSync(new URL("src/shaders/glass-main.glsl", projectRoot), "utf8");
+
+  assert.match(
+    shaderSource,
+    /u_radius\s*\*\s*u_dpr/,
+    "Expected the CSS corner radius to be converted into framebuffer pixels",
+  );
+  assert.match(
+    shaderSource,
+    /cornerSafeBevelWidthPx\s*=\s*min\([\s\S]*cornerRadius/,
+    "Expected the optical bevel to stop before the rounded corner distance field reaches its medial axis",
+  );
+});
+
+test("liquid glass shader uses reference-style edge displacement instead of a weak rim offset", () => {
+  const shaderSource = readFileSync(new URL("src/shaders/glass-main.glsl", projectRoot), "utf8");
+
+  assert.match(
+    shaderSource,
+    /referenceEdgeDisplacement/,
+    "Expected the main pass to include an explicit displacement-map-style edge field",
+  );
+
+  assert.match(
+    shaderSource,
+    /u_refFactor[\s\S]*referenceEdgeDisplacement|referenceEdgeDisplacement[\s\S]*u_refFactor/,
+    "Expected the centralized refFactor token to scale real edge displacement",
+  );
+
+  assert.match(
+    shaderSource,
+    /sampleDispersedGlass\([\s\S]*redOffset[\s\S]*greenOffset[\s\S]*blueOffset/,
+    "Expected RGB channels to sample separate displaced offsets like the reference filter",
+  );
+
+  assert.match(
+    shaderSource,
+    /u_glareAngle[\s\S]*u_glareConvergence[\s\S]*u_glareRange[\s\S]*u_glareOppositeFactor/,
+    "Expected directional glare uniforms to participate in the material instead of being unused knobs",
+  );
+});
+
+test("liquid glass edge displacement and chromatic aberration fade out over the outermost two CSS pixels", () => {
+  const shaderSource = readFileSync(new URL("src/shaders/glass-main.glsl", projectRoot), "utf8");
+
+  assert.match(
+    shaderSource,
+    /outerEdgeContinuity\s*=\s*smoothstep\(\s*0\.0\s*,\s*2\.0\s*,\s*edgeDistanceCssPx\s*\)/,
+    "Expected the reference two-pixel continuity ramp at the silhouette",
+  );
+  assert.match(
+    shaderSource,
+    /refractPixels[\s\S]*outerEdgeContinuity/,
+    "Expected displacement to settle to zero before clipping",
+  );
+  assert.match(
+    shaderSource,
+    /chroma[\s\S]*outerEdgeContinuity/,
+    "Expected chromatic aberration to settle to zero before clipping",
+  );
+});
+
+test("liquid glass counter rim is a thin optical band instead of a broad dark trough", () => {
+  const shaderSource = readFileSync(new URL("src/shaders/glass-main.glsl", projectRoot), "utf8");
+
+  assert.match(shaderSource, /counterRimBand/);
+  assert.doesNotMatch(
+    shaderSource,
+    /innerShadow\s*=\s*\(1\.0\s*-\s*smoothstep\(0\.08,\s*0\.88,\s*bevelDepth\)\)/,
+    "Expected the broad U-shaped counter rim to be removed",
+  );
+});
+
+test("liquid glass refraction uses a bounded non-saturating envelope instead of a thick border plateau", () => {
+  const shaderSource = readFileSync(new URL("src/shaders/glass-main.glsl", projectRoot), "utf8");
+
+  assert.match(
+    shaderSource,
+    /edgeField\s*=\s*pow\(\s*max\(\s*outerRim[\s\S]*bevelBody/,
+    "Expected the rim and bevel lobes to crossfade without additive saturation",
+  );
+  assert.doesNotMatch(
+    shaderSource,
+    /edgeField\s*=\s*pow\(\s*clamp\(\s*outerRim[\s\S]*\+\s*bevelBody/,
+    "Expected no flat saturated displacement plateau between the rim and bevel",
+  );
+  assert.match(
+    shaderSource,
+    /maxPullPx\s*\*\s*0\.55\s*\/\s*max\(length\(centerPull\)/,
+    "Expected center pull to consume only part of the displacement budget",
+  );
+  assert.match(
+    shaderSource,
+    /lensNormal[\s\S]*maxPullPx\s*\*\s*\(0\.28\s*\+\s*centerDistance\s*\*\s*0\.10\)/,
+    "Expected normal refraction to remain below the reference displacement budget",
+  );
+  assert.match(
+    shaderSource,
+    /magnifyPixels[\s\S]*0\.30\s*\+\s*edgeField\s*\*\s*0\.46/,
+    "Expected pointer magnification to follow the same smooth optical envelope",
+  );
 });

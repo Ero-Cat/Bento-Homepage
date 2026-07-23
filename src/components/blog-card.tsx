@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Fragment, useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { BookOpen, ArrowUpRight, Eye } from "lucide-react";
+import { ArrowUpRight, Eye } from "lucide-react";
 import { GlassCard } from "@/components/glass-card";
 import { siteConfig } from "@/config/site";
 
@@ -33,6 +33,27 @@ interface HaloResponse {
     total: number;
 }
 
+const feedbackSpring = {
+    type: "spring" as const,
+    stiffness: 260,
+    damping: 28,
+};
+
+const headerLinkMotion = {
+    rest: { color: "var(--text-tertiary)", transition: feedbackSpring },
+    hover: { color: "var(--tint-color)", transition: feedbackSpring },
+};
+
+const headerIconMotion = {
+    rest: { opacity: 0.52, transition: feedbackSpring },
+    hover: { opacity: 1, transition: feedbackSpring },
+};
+
+const rowMaterialMotion = {
+    rest: { opacity: 0, transition: feedbackSpring },
+    hover: { opacity: 1, transition: feedbackSpring },
+};
+
 function timeAgo(dateStr: string): string {
     const now = Date.now();
     const then = new Date(dateStr).getTime();
@@ -53,6 +74,7 @@ function timeAgo(dateStr: string): string {
 
 export function BlogCard() {
     const blogConfig = siteConfig.blog;
+    const { cardTitles } = siteConfig;
     const [posts, setPosts] = useState<HaloPost[]>([]);
     const [loading, setLoading] = useState(!!blogConfig?.url);
 
@@ -74,48 +96,43 @@ export function BlogCard() {
     if (!blogConfig?.url) return null;
 
     return (
-        <GlassCard variant="panel" className="flex flex-col gap-4 p-5 md:p-6 h-full">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                    <div
-                        className="w-[26px] h-[26px] rounded-[8px] flex items-center justify-center shrink-0"
-                        style={{ background: "rgba(var(--tint-rgb), 0.10)" }}
-                    >
-                        <BookOpen size={13} style={{ color: "var(--tint-color)" }} />
-                    </div>
-                    <h3 className="text-[14px] font-semibold text-text-primary tracking-tight">博客</h3>
-                </div>
-                <a
+        <GlassCard variant="panel" className="flex h-full flex-col gap-3 p-5 md:p-6">
+            <header className="flex items-center justify-between gap-4">
+                <h2 className="text-[22px] font-[650] leading-none text-text-primary">
+                    {cardTitles.blog}
+                </h2>
+                <motion.a
                     href={blogConfig.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group flex items-center gap-0.5 text-[11px] font-medium text-text-tertiary hover:text-tint transition-colors duration-150"
+                    variants={headerLinkMotion}
+                    initial="rest"
+                    animate="rest"
+                    whileHover="hover"
+                    whileFocus="hover"
+                    className="flex min-h-11 min-w-11 items-center justify-end gap-1 rounded-[12px] px-2 text-[12px] font-semibold text-text-tertiary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgba(var(--tint-rgb),0.42)]"
                 >
-                    全部
-                    <ArrowUpRight
-                        size={11}
-                        className="opacity-70 transition-opacity duration-150 group-hover:opacity-100"
-                    />
-                </a>
-            </div>
+                    {cardTitles.blogLink}
+                    <motion.span variants={headerIconMotion} className="flex">
+                        <ArrowUpRight size={12} aria-hidden="true" />
+                    </motion.span>
+                </motion.a>
+            </header>
 
-            {/* Post List */}
-            <div className="flex flex-col flex-1 gap-0.5 -mx-1">
+            <div className="-mx-1 flex min-h-0 flex-1 flex-col">
                 {loading ? (
-                    /* Skeleton */
                     Array.from({ length: 4 }).map((_, i) => (
-                        <div key={i} className="flex items-center gap-3 px-2.5 py-[10px] rounded-xl">
-                            <div className="flex-1 flex flex-col gap-2">
+                        <div key={i} className="-mx-2 flex min-h-11 flex-1 items-center px-3 py-2.5">
+                            <div className="flex min-w-0 flex-1 flex-col gap-2">
                                 <div
-                                    className="h-3.5 rounded-full animate-pulse"
+                                    className="h-[15px] rounded-[4px]"
                                     style={{
                                         width: `${58 + ((i * 13) % 32)}%`,
                                         background: "var(--glass-inner-bg)",
                                     }}
                                 />
                                 <div
-                                    className="h-2.5 rounded-full animate-pulse"
+                                    className="h-3 rounded-[3px]"
                                     style={{
                                         width: `${36 + ((i * 9) % 22)}%`,
                                         background: "rgba(var(--tint-rgb), 0.08)",
@@ -126,62 +143,65 @@ export function BlogCard() {
                     ))
                 ) : posts.length > 0 ? (
                     posts.map((post, i) => (
-                        <motion.a
-                            key={post.status.permalink}
-                            href={`${blogConfig.url}${post.status.permalink}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="group relative flex items-center gap-2 rounded-[14px] border border-transparent px-2.5 py-[10px] transition-[background,border-color] duration-200 hover:border-[var(--glass-inner-border)] hover:bg-[var(--glass-inner-bg)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgba(var(--tint-rgb),0.32)]"
-                            initial={{ opacity: 0, y: 5 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{
-                                delay: i * 0.045,
-                                type: "spring",
-                                stiffness: 300,
-                                damping: 26,
-                            }}
-                        >
-                            {/* Content */}
-                            <div className="flex-1 min-w-0">
-                                <h4 className="text-[13px] font-semibold leading-snug line-clamp-1 transition-colors duration-150 text-text-primary group-hover:text-tint">
-                                    {post.spec.title}
-                                </h4>
+                        <Fragment key={post.status.permalink}>
+                            {i > 0 && (
+                                <div
+                                    className="mx-3 h-px shrink-0"
+                                    style={{ background: "var(--glass-divider)" }}
+                                />
+                            )}
+                            <motion.a
+                                href={`${blogConfig.url}${post.status.permalink}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                initial="rest"
+                                animate="rest"
+                                whileHover="hover"
+                                whileFocus="hover"
+                                className="relative -mx-2 flex min-h-11 flex-1 items-center overflow-hidden rounded-[12px] px-3 py-2.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgba(var(--tint-rgb),0.42)]"
+                            >
+                                <motion.span
+                                    aria-hidden="true"
+                                    variants={rowMaterialMotion}
+                                    className="pointer-events-none absolute inset-0"
+                                    style={{ background: "var(--glass-inner-bg)" }}
+                                />
+                                <div className="relative z-[1] min-w-0 flex-1">
+                                    <h3 className="line-clamp-1 text-[15px] font-[640] leading-[1.3] text-text-primary">
+                                        {post.spec.title}
+                                    </h3>
 
-                                {/* Meta row */}
-                                <div className="flex items-center gap-1.5 mt-1">
-                                    <span className="text-[11px] font-medium text-text-tertiary">
-                                        {timeAgo(post.spec.publishTime)}
-                                    </span>
-                                    {post.categories?.[0] && (
-                                        <>
-                                            <span
-                                                className="text-[10px] select-none"
-                                                style={{ color: "var(--text-tertiary)", opacity: 0.4 }}
-                                            >
-                                                ·
-                                            </span>
-                                            <span className="rounded-[5px] border border-[rgba(var(--tint-rgb),0.18)] bg-[rgba(var(--tint-rgb),0.08)] px-1.5 py-0.5 text-[10px] font-semibold leading-none tracking-wide text-tint">
-                                                {post.categories[0].spec.displayName}
-                                            </span>
-                                        </>
-                                    )}
-                                    <span
-                                        className="ml-auto flex items-center gap-1 text-[11px]"
-                                        style={{ color: "var(--text-tertiary)", opacity: 0.55 }}
-                                    >
-                                        <Eye size={10} />
-                                        {post.stats?.visit ?? 0}
-                                    </span>
+                                    <div className="mt-2 flex min-w-0 items-center gap-2 text-[12px] font-medium leading-[1.25]">
+                                        <span className="shrink-0 text-text-tertiary">
+                                            {timeAgo(post.spec.publishTime)}
+                                        </span>
+                                        {post.categories?.[0] && (
+                                            <>
+                                                <span className="shrink-0 select-none text-text-tertiary" aria-hidden="true">
+                                                    ·
+                                                </span>
+                                                <span
+                                                    className="min-w-0 truncate"
+                                                    style={{ color: "var(--tint-color)" }}
+                                                >
+                                                    {post.categories[0].spec.displayName}
+                                                </span>
+                                            </>
+                                        )}
+                                        <span
+                                            aria-label={`${post.stats?.visit ?? 0} views`}
+                                            className="ml-auto flex shrink-0 items-center gap-1 text-text-tertiary"
+                                        >
+                                            <Eye size={11} aria-hidden="true" />
+                                            {post.stats?.visit ?? 0}
+                                        </span>
+                                    </div>
                                 </div>
-                            </div>
-
-                        </motion.a>
+                            </motion.a>
+                        </Fragment>
                     ))
                 ) : (
-                    <p
-                        className="text-[13px] py-6 text-center"
-                        style={{ color: "var(--text-tertiary)", opacity: 0.55 }}
-                    >
+                    <p className="text-[13px] py-6 text-center text-text-tertiary">
                         暂无博文
                     </p>
                 )}

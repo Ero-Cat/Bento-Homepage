@@ -1,0 +1,155 @@
+<style>
+  :root {
+    --ink: #17171a;
+    --secondary: rgba(23, 23, 26, .68);
+    --tertiary: rgba(23, 23, 26, .46);
+    --hairline: rgba(23, 23, 26, .10);
+    --rose: 200, 0, 93;
+    --blue: 0, 122, 255;
+    --green: 52, 199, 89;
+    --orange: 255, 149, 0;
+    --purple: 175, 82, 222;
+  }
+  .direction-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px; margin-top:24px; }
+  .direction { cursor:pointer; border:1px solid rgba(255,255,255,.52); border-radius:24px; overflow:hidden; background:rgba(255,255,255,.34); box-shadow:0 18px 48px rgba(32,48,72,.14), inset 0 1px rgba(255,255,255,.76); transition:transform .25s, box-shadow .25s, border-color .25s; }
+  .direction:hover { transform:translateY(-3px); box-shadow:0 24px 58px rgba(32,48,72,.20), inset 0 1px rgba(255,255,255,.82); }
+  .direction.selected { border-color:rgba(var(--rose),.58); box-shadow:0 0 0 3px rgba(var(--rose),.12),0 24px 58px rgba(32,48,72,.18); }
+  .direction-head { padding:18px 18px 15px; border-bottom:1px solid rgba(255,255,255,.48); }
+  .eyebrow { font-size:11px; font-weight:700; color:rgb(var(--rose)); text-transform:uppercase; }
+  .direction-head h3 { margin:5px 0 4px; font-size:19px; letter-spacing:0; color:var(--ink); }
+  .direction-head p { margin:0; font-size:12px; line-height:1.45; color:var(--secondary); }
+  .scene { padding:18px; background:
+    linear-gradient(rgba(229,240,249,.48),rgba(244,231,239,.42)),
+    linear-gradient(135deg,#b7d8e8,#f0cfce 52%,#c8d9ef);
+  }
+  .mini-card { position:relative; overflow:hidden; border-radius:20px; padding:16px; margin-bottom:12px; color:var(--ink); background:rgba(255,255,255,.30); border:1px solid rgba(255,255,255,.48); box-shadow:0 12px 30px rgba(38,52,73,.13), inset 0 1px rgba(255,255,255,.66); backdrop-filter:blur(18px); }
+  .mini-card:last-child { margin-bottom:0; }
+  .mini-title { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:12px; }
+  .mini-title strong { font-size:13px; font-weight:650; }
+  .mini-title span { font-size:10px; color:var(--tertiary); }
+  .muted { color:var(--tertiary); }
+  .accent-blue { color:rgb(var(--blue)); } .accent-green { color:rgb(var(--green)); } .accent-orange { color:rgb(var(--orange)); }
+  .a-interest { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px 14px; }
+  .a-interest span { display:flex; align-items:center; gap:7px; font-size:11px; color:var(--secondary); }
+  .a-interest i { width:5px; height:5px; border-radius:50%; background:rgb(var(--rose)); box-shadow:0 0 0 4px rgba(var(--rose),.09); }
+  .a-section { display:grid; grid-template-columns:26px 1fr; gap:10px; padding:10px 0; border-top:1px solid var(--hairline); }
+  .a-section:first-of-type { border-top:0; padding-top:0; }
+  .a-icon { width:24px; height:24px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:750; background:rgba(var(--blue),.10); color:rgb(var(--blue)); }
+  .a-label { font-size:9px; font-weight:700; color:var(--tertiary); text-transform:uppercase; margin-bottom:4px; }
+  .a-items { font-size:11px; line-height:1.7; color:var(--secondary); }
+  .a-project { padding:10px 8px; border-radius:12px; }
+  .a-project + .a-project { border-top:1px solid var(--hairline); border-radius:0; }
+  .a-project.active { background:rgba(255,255,255,.22); box-shadow:inset 0 0 0 1px rgba(255,255,255,.34); }
+  .project-top { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .project-top b { font-size:12px; font-weight:650; }
+  .project-top small { font-size:9px; color:var(--tertiary); }
+  .a-project p { font-size:10px; line-height:1.45; color:var(--secondary); margin:4px 0 0; }
+  .b-interest { display:flex; flex-wrap:wrap; gap:7px; }
+  .b-interest span { padding:6px 9px; border-radius:9px; font-size:10px; font-weight:560; color:var(--secondary); background:rgba(255,255,255,.18); }
+  .b-interest span:nth-child(3n+1){ color:rgb(var(--blue)); background:rgba(var(--blue),.09); }
+  .b-interest span:nth-child(3n+2){ color:rgb(var(--purple)); background:rgba(var(--purple),.09); }
+  .b-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+  .b-group { padding:10px; border-radius:13px; background:rgba(255,255,255,.16); }
+  .b-group b { display:block; font-size:10px; margin-bottom:6px; }
+  .b-group p { margin:0; font-size:9px; line-height:1.55; color:var(--secondary); }
+  .b-project { padding:10px; border-radius:13px; background:rgba(255,255,255,.16); margin-top:8px; }
+  .b-project:first-of-type { margin-top:0; background:rgba(var(--rose),.08); box-shadow:inset 0 0 0 1px rgba(var(--rose),.15); }
+  .b-project b { font-size:11px; } .b-project p { margin:4px 0 7px; font-size:9px; color:var(--secondary); }
+  .tag { display:inline-block; margin-right:4px; font-size:8px; color:rgb(var(--rose)); }
+  .c-interest { display:flex; flex-wrap:wrap; gap:8px 16px; }
+  .c-interest span { font-size:11px; font-weight:520; color:var(--secondary); }
+  .c-interest span::before { content:"/"; margin-right:5px; color:rgba(var(--rose),.65); }
+  .c-row { display:grid; grid-template-columns:76px 1fr; padding:9px 0; border-top:1px solid var(--hairline); }
+  .c-row:first-of-type { border-top:0; }
+  .c-row b { font-size:9px; text-transform:uppercase; color:var(--tertiary); }
+  .c-row span { font-size:10px; line-height:1.55; color:var(--secondary); }
+  .c-project { padding:10px 0; border-top:1px solid var(--hairline); }
+  .c-project:first-of-type { border-top:0; }
+  .c-project .project-top b { font-weight:600; }
+  .c-project p { margin:4px 0 0; font-size:9px; line-height:1.45; color:var(--secondary); }
+  .hover-note { margin-top:11px; padding-top:10px; border-top:1px solid rgba(255,255,255,.45); font-size:9px; line-height:1.4; color:var(--tertiary); }
+  @media (max-width:980px){ .direction-grid{grid-template-columns:1fr;} }
+</style>
+
+<h2>三张 Bento 内容层，哪种方向更对？</h2>
+<p class="subtitle">外层 Liquid Glass 保持不变。请重点看信息密度、颜色权重与 hover 的克制程度。</p>
+
+<div class="direction-grid">
+  <section class="direction" data-choice="a" onclick="toggleSelect(this)">
+    <div class="direction-head">
+      <div class="eyebrow">A · 推荐</div>
+      <h3>分层玻璃目录</h3>
+      <p>用细分组、色点和留白建立秩序，尽量不再制造胶囊与内层卡片。</p>
+    </div>
+    <div class="scene">
+      <div class="mini-card">
+        <div class="mini-title"><strong>Interests</strong><span>12 topics</span></div>
+        <div class="a-interest"><span><i></i>Vibe Coding</span><span><i></i>VRChat</span><span><i></i>3D Print</span><span><i></i>Home Assistant</span><span><i></i>Unity</span><span><i></i>ESXi Server</span></div>
+      </div>
+      <div class="mini-card">
+        <div class="mini-title"><strong>Hardware</strong><span>Everyday setup</span></div>
+        <div class="a-section"><div class="a-icon">A</div><div><div class="a-label">Apple</div><div class="a-items">MacBook Pro M5 · Mac Mini M2 · iPhone 15 Pro</div></div></div>
+        <div class="a-section"><div class="a-icon" style="color:rgb(var(--green));background:rgba(var(--green),.1)">PC</div><div><div class="a-label">Desktop</div><div class="a-items">R7-9800X3D · RTX 5090 32G · 32GB DDR5</div></div></div>
+        <div class="a-section"><div class="a-icon" style="color:rgb(var(--orange));background:rgba(var(--orange),.1)">IO</div><div><div class="a-label">Peripherals</div><div class="a-items">Quest 3 · HHKB · DeathAdder V3 · G502</div></div></div>
+      </div>
+      <div class="mini-card">
+        <div class="mini-title"><strong>Projects</strong><span>GitHub activity</span></div>
+        <div class="a-project active"><div class="project-top"><b>心率推送</b><small>★ 34 · ⑂ 1</small></div><p>跨平台 BLE 心率监控与多协议实时推送。</p></div>
+        <div class="a-project"><div class="project-top"><b>Bento Homepage</b><small>★ 8 · ⑂ 0</small></div><p>配置驱动的 Liquid Glass 个人主页。</p></div>
+        <div class="hover-note">Hover：仅提升当前行的局部亮度与 1px 内高光，不位移、不整块染色。</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="direction" data-choice="b" onclick="toggleSelect(this)">
+    <div class="direction-head">
+      <div class="eyebrow">B</div>
+      <h3>柔和彩色模块</h3>
+      <p>保留分类色和块状节奏，阅读更快，但内容层会比玻璃本体更抢眼。</p>
+    </div>
+    <div class="scene">
+      <div class="mini-card">
+        <div class="mini-title"><strong>Interests</strong><span>12 topics</span></div>
+        <div class="b-interest"><span>Vibe Coding</span><span>DIY</span><span>Developer</span><span>3D Print</span><span>VRChat</span><span>Unity</span><span>OpenWrt</span><span>Home Assistant</span></div>
+      </div>
+      <div class="mini-card">
+        <div class="mini-title"><strong>Hardware</strong><span>Everyday setup</span></div>
+        <div class="b-grid"><div class="b-group"><b class="accent-blue">Apple</b><p>MacBook Pro M5<br>Mac Mini M2<br>iPhone 15 Pro</p></div><div class="b-group"><b class="accent-green">Desktop</b><p>R7-9800X3D<br>RTX 5090 32G<br>32GB DDR5</p></div><div class="b-group"><b class="accent-orange">Peripherals</b><p>Quest 3 · HHKB<br>DeathAdder V3</p></div><div class="b-group"><b>Network</b><p>AX1800 · MT3000<br>N5105</p></div></div>
+      </div>
+      <div class="mini-card">
+        <div class="mini-title"><strong>Projects</strong><span>GitHub activity</span></div>
+        <div class="b-project"><div class="project-top"><b>心率推送</b><small>★ 34</small></div><p>跨平台 BLE 心率监控与实时推送。</p><span class="tag">Flutter</span><span class="tag">BLE</span><span class="tag">VRChat</span></div>
+        <div class="b-project"><div class="project-top"><b>Bento Homepage</b><small>★ 8</small></div><p>配置驱动的 Liquid Glass 个人主页。</p><span class="tag">Next.js</span><span class="tag">WebGL</span></div>
+        <div class="hover-note">Hover：当前模块增加轻微主题色底纹，标签与数据同步提亮。</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="direction" data-choice="c" onclick="toggleSelect(this)">
+    <div class="direction-head">
+      <div class="eyebrow">C</div>
+      <h3>极简技术清单</h3>
+      <p>去掉绝大多数装饰，让背景折射成为视觉主角，信息感更冷静。</p>
+    </div>
+    <div class="scene">
+      <div class="mini-card">
+        <div class="mini-title"><strong>Interests</strong><span>12 topics</span></div>
+        <div class="c-interest"><span>Vibe Coding</span><span>DIY</span><span>VRChat</span><span>3D Print</span><span>Unity</span><span>OpenWrt</span><span>ESXi</span></div>
+      </div>
+      <div class="mini-card">
+        <div class="mini-title"><strong>Hardware</strong><span>Everyday setup</span></div>
+        <div class="c-row"><b>Apple</b><span>MacBook Pro M5, Mac Mini M2, iPhone 15 Pro</span></div>
+        <div class="c-row"><b>Desktop</b><span>R7-9800X3D, RTX 5090 32G, 32GB DDR5</span></div>
+        <div class="c-row"><b>Peripherals</b><span>Quest 3, HHKB, DeathAdder V3, G502</span></div>
+        <div class="c-row"><b>Network</b><span>AX1800, MT3000, N5105</span></div>
+      </div>
+      <div class="mini-card">
+        <div class="mini-title"><strong>Projects</strong><span>GitHub activity</span></div>
+        <div class="c-project"><div class="project-top"><b>01 / 心率推送</b><small>34 stars</small></div><p>BLE 心率监控与多协议实时推送。</p></div>
+        <div class="c-project"><div class="project-top"><b>02 / Bento Homepage</b><small>8 stars</small></div><p>Liquid Glass 个人主页。</p></div>
+        <div class="c-project"><div class="project-top"><b>03 / ESXi UPS</b><small>5 stars</small></div><p>UPS 断电自动化管理工具。</p></div>
+        <div class="hover-note">Hover：只调整文字明度和外链图标透明度，背景完全不变。</div>
+      </div>
+    </div>
+  </section>
+</div>

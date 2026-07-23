@@ -1,0 +1,276 @@
+<style>
+  html:has(#glass-readability-demo),
+  body:has(#glass-readability-demo) {
+    height: auto !important;
+    min-height: 100% !important;
+    overflow-y: auto !important;
+  }
+
+  #glass-readability-demo {
+    --candidate-blur: 14px;
+    --scene-image: url("http://localhost:3000/optimized/bg/VRChat_2026-02-15_02-14-54.741_3840x2160_wrld_b305d7f6-84f2-4687-8a25-ae8b35030a08.webp");
+  }
+
+  #glass-readability-demo .comparison-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 18px;
+  }
+
+  #glass-readability-demo .comparison-card {
+    min-width: 0;
+    padding: 0;
+    overflow: hidden;
+    cursor: pointer;
+  }
+
+  #glass-readability-demo .comparison-card.is-selected {
+    box-shadow: 0 0 0 2px var(--ring);
+  }
+
+  #glass-readability-demo .scene {
+    position: relative;
+    min-height: 270px;
+    padding: 28px 12px 14px;
+    display: flex;
+    align-items: center;
+    background-image: var(--scene-image);
+    background-size: cover;
+    background-position: center;
+    isolation: isolate;
+  }
+
+  #glass-readability-demo .scene::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: color-mix(in srgb, var(--background) 8%, transparent);
+  }
+
+  #glass-readability-demo .glass-pane {
+    position: relative;
+    width: 100%;
+    min-height: 204px;
+    overflow: hidden;
+    padding: 18px;
+    border: 1px solid color-mix(in srgb, var(--border) 62%, transparent);
+    border-radius: 28px;
+    color: var(--primary-foreground);
+    background: color-mix(in srgb, var(--primary) 20%, transparent);
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, var(--primary-foreground) 20%, transparent),
+      inset 0 -1px 0 color-mix(in srgb, var(--background) 14%, transparent),
+      0 18px 36px color-mix(in srgb, var(--background) 20%, transparent);
+  }
+
+  #glass-readability-demo .glass-pane::before {
+    content: "";
+    position: absolute;
+    inset: 1px;
+    border-radius: 27px;
+    pointer-events: none;
+    box-shadow:
+      inset 0 1px 1px color-mix(in srgb, var(--primary-foreground) 16%, transparent),
+      inset 1px 0 1px color-mix(in srgb, var(--primary-foreground) 8%, transparent);
+  }
+
+  #glass-readability-demo .current .glass-pane {
+    backdrop-filter: blur(4px) saturate(1.05);
+    -webkit-backdrop-filter: blur(4px) saturate(1.05);
+  }
+
+  #glass-readability-demo .candidate .glass-pane {
+    backdrop-filter: blur(var(--candidate-blur)) saturate(1.15);
+    -webkit-backdrop-filter: blur(var(--candidate-blur)) saturate(1.15);
+  }
+
+  #glass-readability-demo .reference .glass-pane {
+    backdrop-filter: blur(20px) saturate(1.28);
+    -webkit-backdrop-filter: blur(20px) saturate(1.28);
+  }
+
+  #glass-readability-demo .pane-header,
+  #glass-readability-demo .project-meta,
+  #glass-readability-demo .stats {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  #glass-readability-demo .pane-title,
+  #glass-readability-demo .project-title {
+    font-weight: 500;
+  }
+
+  #glass-readability-demo .project-row {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid color-mix(in srgb, var(--border) 58%, transparent);
+  }
+
+  #glass-readability-demo .project-description {
+    margin: 7px 0 12px;
+    color: color-mix(in srgb, var(--primary-foreground) 82%, transparent);
+  }
+
+  #glass-readability-demo .project-meta,
+  #glass-readability-demo .stats,
+  #glass-readability-demo .card-caption p {
+    color: color-mix(in srgb, var(--primary-foreground) 72%, transparent);
+  }
+
+  #glass-readability-demo .card-caption {
+    padding: 14px;
+  }
+
+  #glass-readability-demo .card-caption h3,
+  #glass-readability-demo .card-caption p {
+    margin: 0;
+  }
+
+  #glass-readability-demo .card-caption p {
+    margin-top: 4px;
+  }
+
+  #glass-readability-demo .control-row {
+    margin-top: 16px;
+  }
+
+  #glass-readability-demo .control-heading {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+
+  #glass-readability-demo .control-value {
+    color: var(--muted-foreground);
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (max-width: 520px) {
+    #glass-readability-demo .comparison-grid {
+      grid-template-columns: 1fr;
+    }
+
+    #glass-readability-demo .scene {
+      min-height: 300px;
+      padding-inline: 22px;
+    }
+  }
+</style>
+
+<section id="glass-readability-demo" aria-labelledby="glass-demo-title">
+  <h2 id="glass-demo-title">哪一种透明度与模糊平衡更适合 Bento？</h2>
+  <p class="subtitle">三张卡使用相同背景位置、相同内容和相同 tint，仅调整全表面柔化强度。</p>
+
+  <div class="control-row">
+    <div class="control-heading">
+      <label class="form-label" for="candidate-blur">候选效果模糊强度</label>
+      <span class="control-value" id="candidate-blur-value">14px</span>
+    </div>
+    <input class="form-range" id="candidate-blur" type="range" min="8" max="24" step="1" value="14" />
+  </div>
+
+  <div class="cards comparison-grid">
+    <div class="card comparison-card current" data-choice="current" onclick="toggleSelect(this)">
+      <div class="scene">
+        <article class="glass-pane">
+          <div class="pane-header">
+            <span class="pane-title">Projects</span>
+            <i data-lucide="arrow-up-right" aria-hidden="true"></i>
+          </div>
+          <div class="project-row">
+            <div class="project-meta">
+              <span class="project-title">Bento Homepage</span>
+              <span class="stats">★ 128&nbsp;&nbsp;⑂ 18</span>
+            </div>
+            <p class="project-description">配置驱动的液态玻璃个人主页，集成实时状态、项目数据与背景轮播。</p>
+            <div class="project-meta">
+              <span>Next.js · React · TypeScript</span>
+              <span>Updated Jul 23</span>
+            </div>
+          </div>
+        </article>
+      </div>
+      <div class="card-caption">
+        <h3>当前效果</h3>
+        <p>约 4px 等效柔化，背景细节明显穿透。</p>
+      </div>
+    </div>
+
+    <div class="card comparison-card candidate" data-choice="candidate" onclick="toggleSelect(this)">
+      <div class="scene">
+        <article class="glass-pane">
+          <div class="pane-header">
+            <span class="pane-title">Projects</span>
+            <i data-lucide="arrow-up-right" aria-hidden="true"></i>
+          </div>
+          <div class="project-row">
+            <div class="project-meta">
+              <span class="project-title">Bento Homepage</span>
+              <span class="stats">★ 128&nbsp;&nbsp;⑂ 18</span>
+            </div>
+            <p class="project-description">配置驱动的液态玻璃个人主页，集成实时状态、项目数据与背景轮播。</p>
+            <div class="project-meta">
+              <span>Next.js · React · TypeScript</span>
+              <span>Updated Jul 23</span>
+            </div>
+          </div>
+        </article>
+      </div>
+      <div class="card-caption">
+        <h3>候选效果</h3>
+        <p>默认 14px 等效柔化，中心可读、边缘仍有背景能量。</p>
+      </div>
+    </div>
+
+    <div class="card comparison-card reference" data-choice="reference" onclick="toggleSelect(this)">
+      <div class="scene">
+        <article class="glass-pane">
+          <div class="pane-header">
+            <span class="pane-title">Projects</span>
+            <i data-lucide="arrow-up-right" aria-hidden="true"></i>
+          </div>
+          <div class="project-row">
+            <div class="project-meta">
+              <span class="project-title">Bento Homepage</span>
+              <span class="stats">★ 128&nbsp;&nbsp;⑂ 18</span>
+            </div>
+            <p class="project-description">配置驱动的液态玻璃个人主页，集成实时状态、项目数据与背景轮播。</p>
+            <div class="project-meta">
+              <span>Next.js · React · TypeScript</span>
+              <span>Updated Jul 23</span>
+            </div>
+          </div>
+        </article>
+      </div>
+      <div class="card-caption">
+        <h3>参考 Demo 强度</h3>
+        <p>约 20px 全表面模糊，可读性最高，背景信息损失更多。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  (() => {
+    const root = document.getElementById("glass-readability-demo");
+    const range = document.getElementById("candidate-blur");
+    const value = document.getElementById("candidate-blur-value");
+    if (!root || !range || !value) return;
+
+    range.value = "14";
+    root.style.setProperty("--candidate-blur", "14px");
+    value.textContent = "14px";
+
+    range.addEventListener("input", () => {
+      const blur = `${range.value}px`;
+      root.style.setProperty("--candidate-blur", blur);
+      value.textContent = blur;
+    });
+  })();
+</script>

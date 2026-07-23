@@ -5,6 +5,8 @@
 // No component code changes are needed.
 // ============================================================
 
+export type SystemAccent = "blue" | "green" | "orange" | "purple" | "red" | "mint";
+
 export interface SiteConfig {
     profile: {
         name: string;
@@ -15,10 +17,22 @@ export interface SiteConfig {
         aliases?: string[];  // Typewriter cycling names
         location?: string;
     };
-    interests: string[];
+    cardTitles: {
+        interests: string;
+        hardware: string;
+        projects: string;
+        blog: string;
+        blogLink: string;
+    };
+    interests: {
+        label: string;
+        icon: string;
+        accent: SystemAccent;
+    }[];
     hardware: {
         category: string;
         icon: string;   // Lucide icon name: "Apple", "Monitor", etc.
+        accent: SystemAccent;
         items: string[];
     }[];
     software: {
@@ -120,28 +134,36 @@ export const siteConfig: SiteConfig = {
         location: "China Anhui | VRChat",
     },
 
+    cardTitles: {
+        interests: "Interests",
+        hardware: "Hardware",
+        projects: "Projects",
+        blog: "Blog",
+        blogLink: "全部文章",
+    },
+
     interests: [
-        "Vibe Coding",
-        "DIY",
-        "Developer",
-        "3D Print",
-        "CS2",
-        "VRChat",
-        "Unity",
-        "Minecraft",
-        "OpenWrt",
-        "Home Assistant",
-        "QQ Bot Dev",
-        "ESXi Server",
+        { label: "Vibe Coding", icon: "Code2", accent: "blue" },
+        { label: "DIY", icon: "Wrench", accent: "orange" },
+        { label: "Developer", icon: "Braces", accent: "green" },
+        { label: "3D Print", icon: "Box", accent: "purple" },
+        { label: "CS2", icon: "Crosshair", accent: "red" },
+        { label: "VRChat", icon: "Headset", accent: "purple" },
+        { label: "Unity", icon: "Boxes", accent: "blue" },
+        { label: "Minecraft", icon: "Blocks", accent: "green" },
+        { label: "OpenWrt", icon: "Router", accent: "mint" },
+        { label: "Home Assistant", icon: "HousePlug", accent: "orange" },
+        { label: "QQ Bot Dev", icon: "Bot", accent: "red" },
+        { label: "ESXi Server", icon: "ServerCog", accent: "mint" },
     ],
 
     hardware: [
-        { category: "Apple", icon: "Apple", items: ["MacBook Pro M5", "Mac Mini M2", "Air Pods 3 Pro", "iPhone 15 Pro (Europe)"] },
-        { category: "Desktop", icon: "Monitor", items: ["R7-9800X3D", "RTX 3090 24G", "32GB DDR5", "ROG STRIX B650-A Gaming WIFI", "DELL R720XD Server | 100G | 22T"] },
-        { category: "Peripherals", icon: "Keyboard", items: ["Quest 3", "HHKB", "NIZ PLUM", "Razer DeathAdder V3", "Logitech G502", "Logitech M720"] },
-        { category: "DIY & Maker", icon: "Printer", items: ["Xtool M1 Ultra", "Bambu Lab A1 AMS", "Bambu Lab A1 mini AMS", "Snapmaker U1", "EPSON L8058"] },
-        { category: "Wearable", icon: "Watch", items: ["Garmin Enduro 2"] },
-        { category: "Network", icon: "Wifi", items: ["GL·iNet AX1800", "GL·iNet MT3000", "N5105"] },
+        { category: "Apple", icon: "Apple", accent: "blue", items: ["MacBook Pro M5", "Mac Mini M2", "Air Pods 3 Pro", "iPhone 15 Pro (Europe)"] },
+        { category: "Desktop", icon: "Monitor", accent: "green", items: ["R7-9800X3D", "ROG RTX 5090 32G", "32GB DDR5", "ROG STRIX B650-A Gaming WIFI", "DELL R720XD Server | 100G | 22T"] },
+        { category: "Peripherals", icon: "Keyboard", accent: "orange", items: ["Quest 3", "HHKB", "NIZ PLUM", "Razer DeathAdder V3", "Logitech G502", "Logitech M720"] },
+        { category: "DIY & Maker", icon: "Printer", accent: "purple", items: ["Xtool M1 Ultra", "Bambu Lab A1 AMS", "Bambu Lab A1 mini AMS", "Snapmaker U1", "EPSON L8058"] },
+        { category: "Wearable", icon: "Watch", accent: "red", items: ["Garmin Enduro 2"] },
+        { category: "Network", icon: "Wifi", accent: "mint", items: ["GL·iNet AX1800", "GL·iNet MT3000", "N5105"] },
     ],
 
 
@@ -189,22 +211,23 @@ export const siteConfig: SiteConfig = {
             name: "郭老师",
             avatar: "https://chaosgoo.com/images/Logo_Sketch.webp",
             url: "https://chaosgoo.com/",
-            description: "郭老师 TQL",
+            description: "郭老师带带我",
         },
         {
             name: "荟荟",
             avatar: "https://nhui.top/content/uploadfile/202503/ad7b1741690461.jpg",
             url: "https://nhui.top/",
-            description: "男科大糕手荟荟",
+            description: "男科大叫受荟荟",
         },
         {
             name: "李老板",
-            avatar: "https://leetfs.com/logo.png",
+            avatar: "https://pbs.twimg.com/profile_images/2028353368008339456/o3OhBxWk_400x400.jpg",
             url: "https://leetfs.com/",
             description: "木桶饭糕手李老板",
         },
         {
             name: "光水",
+            description: "光科长",
             avatar: "https://api.vrchat.cloud/api/1/file/file_c00911ce-3e53-4e98-a494-936811cc85a8/1/",
             url: "https://www.songzx.com/",
         },

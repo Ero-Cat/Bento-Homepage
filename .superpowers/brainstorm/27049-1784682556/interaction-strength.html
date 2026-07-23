@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Liquid Glass Interaction Direction</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", sans-serif;
+      --mx: 50%;
+      --my: 30%;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: rgba(255,255,255,.96);
+      background:
+        linear-gradient(180deg, rgba(10,13,20,.18), rgba(9,10,15,.52)),
+        url('/files/scene.webp') center / cover fixed;
+    }
+    main { width: min(1180px, calc(100% - 32px)); margin: 0 auto; padding: 42px 0 54px; }
+    h1 { margin: 0; font-size: clamp(28px, 4vw, 46px); line-height: 1.1; letter-spacing: 0; }
+    .lead { max-width: 760px; margin: 12px 0 28px; color: rgba(255,255,255,.74); font-size: 16px; line-height: 1.55; }
+    .choices { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+    .choice {
+      position: relative;
+      min-width: 0;
+      cursor: pointer;
+      border: 0;
+      background: none;
+      color: inherit;
+      text-align: left;
+      padding: 0;
+    }
+    .preview {
+      position: relative;
+      height: 360px;
+      border-radius: 28px;
+      overflow: hidden;
+      isolation: isolate;
+      transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) scale(var(--scale, 1));
+      transition: transform 580ms cubic-bezier(.2,.9,.25,1), box-shadow 580ms cubic-bezier(.2,.9,.25,1);
+      box-shadow: 0 16px 50px rgba(0,0,0,.24);
+    }
+    .preview::before {
+      content: "";
+      position: absolute;
+      inset: -20px;
+      z-index: -2;
+      background:
+        linear-gradient(180deg, rgba(10,13,20,.14), rgba(9,10,15,.32)),
+        url('/files/scene.webp') center / cover fixed;
+      transform: scale(var(--lens, 1.02)) translate(var(--dx, 0), var(--dy, 0));
+      filter: blur(var(--blur, 9px)) saturate(var(--sat, 1.35));
+      transition: transform 580ms cubic-bezier(.2,.9,.25,1), filter 580ms cubic-bezier(.2,.9,.25,1);
+    }
+    .preview::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      border-radius: inherit;
+      background:
+        radial-gradient(circle at var(--mx) var(--my), rgba(255,255,255,var(--glare, .16)), transparent 29%),
+        linear-gradient(145deg, rgba(255,255,255,var(--top, .22)), transparent 24%, transparent 70%, rgba(0,0,0,var(--shade, .11)) 100%);
+      box-shadow:
+        inset 0 1px 1px rgba(255,255,255,var(--rim, .55)),
+        inset 1px 0 0 rgba(255,90,90,var(--rgb, .03)),
+        inset -1px 0 0 rgba(70,160,255,var(--rgb, .03)),
+        inset 0 -18px 38px rgba(0,0,0,var(--inner, .08));
+    }
+    .glass-content { position: relative; z-index: 1; height: 100%; padding: 24px; display: flex; flex-direction: column; }
+    .eyebrow { color: rgba(255,255,255,.66); font-size: 13px; }
+    .profile { display: flex; align-items: center; gap: 14px; margin-top: 18px; }
+    .avatar { width: 56px; height: 56px; border-radius: 50%; background: rgba(255,255,255,.20); box-shadow: inset 0 1px 0 rgba(255,255,255,.5); }
+    .name { font-size: 24px; font-weight: 650; }
+    .meta { margin-top: 3px; color: rgba(255,255,255,.67); font-size: 14px; }
+    .copy { margin: auto 0 0; color: rgba(255,255,255,.83); font-size: 15px; line-height: 1.55; text-shadow: 0 1px 8px rgba(0,0,0,.24); }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+    .chip { padding: 8px 11px; border-radius: 12px; background: rgba(255,255,255,.10); border: 1px solid rgba(255,255,255,.13); font-size: 13px; }
+    .label { padding: 16px 4px 0; }
+    .label-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .label h2 { margin: 0; font-size: 19px; letter-spacing: 0; }
+    .label p { margin: 6px 0 0; color: rgba(255,255,255,.68); font-size: 14px; line-height: 1.45; }
+    .badge { padding: 5px 8px; border-radius: 9px; color: rgba(255,255,255,.76); background: rgba(255,255,255,.11); font-size: 12px; white-space: nowrap; }
+    .choice[data-choice="a"] .preview { --blur: 14px; --sat: 1.25; --glare: .11; --top: .17; --rim: .36; --inner: .05; --rgb: .02; background: rgba(255,255,255,.10); }
+    .choice[data-choice="b"] .preview { --blur: 9px; --sat: 1.48; --glare: .18; --top: .24; --rim: .62; --inner: .09; --rgb: .08; background: rgba(255,255,255,.075); }
+    .choice[data-choice="c"] .preview { --blur: 5px; --sat: 1.68; --glare: .28; --top: .31; --rim: .78; --inner: .14; --rgb: .18; background: rgba(255,255,255,.055); }
+    .choice:hover .preview { --scale: 1.012; --rx: -1.2deg; --ry: 1.6deg; }
+    .choice[data-choice="a"]:hover .preview { --lens: 1.025; --dx: 1px; --dy: -1px; }
+    .choice[data-choice="b"]:hover .preview { --lens: 1.055; --dx: 4px; --dy: -3px; }
+    .choice[data-choice="c"]:hover .preview { --lens: 1.105; --dx: 9px; --dy: -7px; --scale: 1.025; --rx: -2.3deg; --ry: 3deg; }
+    .choice.selected .preview { outline: 3px solid rgba(255,255,255,.92); outline-offset: 4px; }
+    .choice.selected .badge { color: #101114; background: rgba(255,255,255,.94); }
+    .hint { margin-top: 24px; color: rgba(255,255,255,.72); font-size: 14px; }
+    @media (max-width: 860px) {
+      .choices { grid-template-columns: 1fr; }
+      .preview { height: 300px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>液态玻璃的交互强度</h1>
+    <p class="lead">将鼠标移到三张卡片上感受差异。这里比较的是形变、折射和边缘能量的整体气质，不是最终参数。</p>
+    <div class="choices">
+      <button class="choice" data-choice="a" onclick="toggleSelect(this)">
+        <div class="preview">
+          <div class="glass-content">
+            <span class="eyebrow">PROFILE</span>
+            <div class="profile"><div class="avatar"></div><div><div class="name">Erocat</div><div class="meta">Digital life & creative work</div></div></div>
+            <p class="copy">中心更柔和，折射只在边缘出现。阅读稳定，鼠标响应非常轻。</p>
+            <div class="chips"><span class="chip">VRChat</span><span class="chip">Photography</span></div>
+          </div>
+        </div>
+        <div class="label"><div class="label-row"><h2>A · 系统级克制</h2><span class="badge">稳定</span></div><p>接近系统设置面板，视觉安静，光学存在感较低。</p></div>
+      </button>
+      <button class="choice" data-choice="b" onclick="toggleSelect(this)">
+        <div class="preview">
+          <div class="glass-content">
+            <span class="eyebrow">PROFILE</span>
+            <div class="profile"><div class="avatar"></div><div><div class="name">Erocat</div><div class="meta">Digital life & creative work</div></div></div>
+            <p class="copy">可见的厚玻璃边缘与局部色散，中心保持清晰；悬停时有受控弹性。</p>
+            <div class="chips"><span class="chip">VRChat</span><span class="chip">Photography</span></div>
+          </div>
+        </div>
+        <div class="label"><div class="label-row"><h2>B · 分层自适应</h2><span class="badge">推荐</span></div><p>Hero 更鲜明、密集卡片更克制，同一系统内按内容密度调光学。</p></div>
+      </button>
+      <button class="choice" data-choice="c" onclick="toggleSelect(this)">
+        <div class="preview">
+          <div class="glass-content">
+            <span class="eyebrow">PROFILE</span>
+            <div class="profile"><div class="avatar"></div><div><div class="name">Erocat</div><div class="meta">Digital life & creative work</div></div></div>
+            <p class="copy">折射、彩边和形变都更明显，第一眼最像技术演示，内容干扰也最高。</p>
+            <div class="chips"><span class="chip">VRChat</span><span class="chip">Photography</span></div>
+          </div>
+        </div>
+        <div class="label"><div class="label-row"><h2>C · 展示型强光学</h2><span class="badge">鲜明</span></div><p>最大化液态玻璃辨识度，适合少量重点控件，不适合全站同强度。</p></div>
+      </button>
+    </div>
+    <p class="hint">点击选择一个方向。你也可以直接在对话中说“以 B 为主，但 Hero 更接近 C”。</p>
+  </main>
+  <script>
+    document.querySelectorAll('.choice').forEach((choice) => {
+      choice.addEventListener('pointermove', (event) => {
+        const rect = choice.getBoundingClientRect();
+        choice.style.setProperty('--mx', `${event.clientX - rect.left}px`);
+        choice.style.setProperty('--my', `${event.clientY - rect.top}px`);
+      });
+    });
+  </script>
+</body>
+</html>

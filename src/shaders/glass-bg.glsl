@@ -5,6 +5,8 @@ in vec2 v_uv;
 
 uniform sampler2D u_bg;
 uniform sampler2D u_bgPrev;
+uniform vec4 u_bgCover;
+uniform vec4 u_bgPrevCover;
 uniform vec2 u_resolution;
 uniform vec4 u_veilTop;
 uniform vec4 u_veilMid;
@@ -14,9 +16,13 @@ uniform float u_crossfadeMix;
 
 out vec4 fragColor;
 
+vec2 coverUv(vec2 uv, vec4 transform) {
+  return clamp(uv * transform.xy + transform.zw, vec2(0.001), vec2(0.999));
+}
+
 void main() {
-  vec4 prevBase = texture(u_bgPrev, v_uv);
-  vec4 nextBase = texture(u_bg, v_uv);
+  vec4 prevBase = texture(u_bgPrev, coverUv(v_uv, u_bgPrevCover));
+  vec4 nextBase = texture(u_bg, coverUv(v_uv, u_bgCover));
   vec4 base = mix(prevBase, nextBase, clamp(u_crossfadeMix, 0.0, 1.0));
   float pageY = 1.0 - v_uv.y;
   float topMix = smoothstep(0.0, 0.45, pageY);

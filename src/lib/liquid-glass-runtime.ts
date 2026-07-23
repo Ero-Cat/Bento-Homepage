@@ -130,6 +130,67 @@ export interface DocumentCardRectInput {
   canvasDocumentTop?: number;
 }
 
+export interface CoverUvTransformInput {
+  sourceWidth: number;
+  sourceHeight: number;
+  viewportWidth: number;
+  viewportHeight: number;
+}
+
+export interface CoverUvTransform {
+  scaleX: number;
+  scaleY: number;
+  offsetX: number;
+  offsetY: number;
+}
+
+function cubicBezierCoordinate(t: number, control1: number, control2: number): number {
+  const inverse = 1 - t;
+  return (
+    3 * inverse * inverse * t * control1 +
+    3 * inverse * t * t * control2 +
+    t * t * t
+  );
+}
+
+function cubicBezierDerivative(t: number, control1: number, control2: number): number {
+  const inverse = 1 - t;
+  return (
+    3 * inverse * inverse * control1 +
+    6 * inverse * t * (control2 - control1) +
+    3 * t * t * (1 - control2)
+  );
+}
+
+function solveCubicBezierProgress(
+  progress: number,
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+): number {
+  const target = Math.min(1, Math.max(0, progress));
+  let parameter = target;
+
+  for (let iteration = 0; iteration < 6; iteration++) {
+    const error = cubicBezierCoordinate(parameter, x1, x2) - target;
+    const derivative = cubicBezierDerivative(parameter, x1, x2);
+    if (Math.abs(error) < 0.000001 || Math.abs(derivative) < 0.000001) break;
+    parameter = Math.min(1, Math.max(0, parameter - error / derivative));
+  }
+
+  return cubicBezierCoordinate(parameter, y1, y2);
+}
+
+export function resolveBackgroundCrossfadeProgress(
+  timestamp: number,
+  startedAt: number,
+  duration: number,
+): number {
+  const linearProgress = (timestamp - startedAt) / Math.max(duration, 1);
+  return solveCubicBezierProgress(linearProgress, 0.22, 1, 0.36, 1);
+}
+
 export function resolveLiquidGlassQuality({
   cardCount,
   devicePixelRatio,
@@ -193,6 +254,40 @@ export function resolveLiquidGlassViewport({
     height: Math.max(1, Math.round(cssHeight * dpr)),
     offsetLeft: visualViewport?.offsetLeft ?? 0,
     offsetTop: visualViewport?.offsetTop ?? 0,
+  };
+}
+
+export function resolveCoverUvTransform({
+  sourceWidth,
+  sourceHeight,
+  viewportWidth,
+  viewportHeight,
+}: CoverUvTransformInput): CoverUvTransform {
+  if (
+    sourceWidth <= 0 ||
+    sourceHeight <= 0 ||
+    viewportWidth <= 0 ||
+    viewportHeight <= 0
+  ) {
+    return {
+      scaleX: 1,
+      scaleY: 1,
+      offsetX: 0,
+      offsetY: 0,
+    };
+  }
+
+  const coverScale = Math.max(viewportWidth / sourceWidth, viewportHeight / sourceHeight);
+  const drawnWidth = sourceWidth * coverScale;
+  const drawnHeight = sourceHeight * coverScale;
+  const scaleX = Math.min(1, viewportWidth / drawnWidth);
+  const scaleY = Math.min(1, viewportHeight / drawnHeight);
+
+  return {
+    scaleX,
+    scaleY,
+    offsetX: (1 - scaleX) * 0.5,
+    offsetY: (1 - scaleY) * 0.5,
   };
 }
 

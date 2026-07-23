@@ -27,11 +27,18 @@ interface BackgroundLayerProps {
     images: string[];
 }
 
+interface PendingBackgroundTransition {
+    activeUrl: string;
+    previousUrl: string;
+    previousImage: string;
+}
+
 export function BackgroundLayer({ images }: BackgroundLayerProps) {
     const [shuffled, setShuffled] = useState<string[]>([]);
     const [index, setIndex] = useState(0);
     const previousUrlRef = useRef("");
     const previousImageRef = useRef("");
+    const pendingTransitionRef = useRef<PendingBackgroundTransition | null>(null);
     const [fadingImage, setFadingImage] = useState("");
 
     // Shuffle on mount (client only) to avoid hydration mismatch
@@ -62,19 +69,39 @@ export function BackgroundLayer({ images }: BackgroundLayerProps) {
     const nextImage =
         shuffled.length > 1 ? shuffled[(index + 1) % shuffled.length] : currentImage;
 
+    const startBackgroundTransition = useCallback(() => {
+        const transition = pendingTransitionRef.current;
+        if (!transition) return;
+
+        const root = document.documentElement;
+        root.dataset[LIQUID_GLASS_CANVAS.activeBackgroundDatasetKey] = transition.activeUrl;
+        root.dataset[LIQUID_GLASS_CANVAS.previousBackgroundDatasetKey] = transition.previousUrl;
+        root.dataset[LIQUID_GLASS_CANVAS.backgroundTransitionStartedAtDatasetKey] =
+            `${performance.now()}`;
+        root.dataset[LIQUID_GLASS_CANVAS.backgroundTransitionDurationDatasetKey] =
+            `${LIQUID_GLASS_CANVAS.backgroundTransitionMs}`;
+    }, []);
+
+    const finishBackgroundTransition = useCallback(() => {
+        const transition = pendingTransitionRef.current;
+        if (!transition) return;
+
+        const root = document.documentElement;
+        if (root.dataset[LIQUID_GLASS_CANVAS.activeBackgroundDatasetKey] === transition.activeUrl) {
+            delete root.dataset[LIQUID_GLASS_CANVAS.previousBackgroundDatasetKey];
+            delete root.dataset[LIQUID_GLASS_CANVAS.backgroundTransitionStartedAtDatasetKey];
+            delete root.dataset[LIQUID_GLASS_CANVAS.backgroundTransitionDurationDatasetKey];
+        }
+        setFadingImage((image) => (image === transition.previousImage ? "" : image));
+        pendingTransitionRef.current = null;
+    }, []);
+
     useEffect(() => {
         const root = document.documentElement;
         const activeUrl = currentImage ? optimizedBgUrl(currentImage) : "";
         const nextUrl = nextImage ? optimizedBgUrl(nextImage) : "";
         const previousUrl = previousUrlRef.current;
         const previousImage = previousImageRef.current;
-        let cleanupTimer: number | undefined;
-
-        if (activeUrl) {
-            root.dataset[LIQUID_GLASS_CANVAS.activeBackgroundDatasetKey] = activeUrl;
-        } else {
-            delete root.dataset[LIQUID_GLASS_CANVAS.activeBackgroundDatasetKey];
-        }
 
         if (nextUrl) {
             root.dataset[LIQUID_GLASS_CANVAS.nextBackgroundDatasetKey] = nextUrl;
@@ -82,27 +109,17 @@ export function BackgroundLayer({ images }: BackgroundLayerProps) {
             delete root.dataset[LIQUID_GLASS_CANVAS.nextBackgroundDatasetKey];
         }
 
-        if (previousUrl && previousUrl !== activeUrl) {
-            const startedAt = performance.now();
-            if (previousImage) {
-                setFadingImage(previousImage);
-            }
-            root.dataset[LIQUID_GLASS_CANVAS.previousBackgroundDatasetKey] = previousUrl;
-            root.dataset[LIQUID_GLASS_CANVAS.backgroundTransitionStartedAtDatasetKey] =
-                `${startedAt}`;
-            root.dataset[LIQUID_GLASS_CANVAS.backgroundTransitionDurationDatasetKey] =
-                `${LIQUID_GLASS_CANVAS.backgroundTransitionMs}`;
-
-            cleanupTimer = window.setTimeout(() => {
-                if (root.dataset[LIQUID_GLASS_CANVAS.activeBackgroundDatasetKey] === activeUrl) {
-                    delete root.dataset[LIQUID_GLASS_CANVAS.previousBackgroundDatasetKey];
-                    delete root.dataset[LIQUID_GLASS_CANVAS.backgroundTransitionStartedAtDatasetKey];
-                    delete root.dataset[LIQUID_GLASS_CANVAS.backgroundTransitionDurationDatasetKey];
-                }
-                setFadingImage((image) => (image === previousImage ? "" : image));
-            }, LIQUID_GLASS_CANVAS.backgroundTransitionMs);
+        if (previousUrl && previousUrl !== activeUrl && previousImage) {
+            pendingTransitionRef.current = { activeUrl, previousUrl, previousImage };
+            setFadingImage(previousImage);
         } else {
+            pendingTransitionRef.current = null;
             setFadingImage("");
+            if (activeUrl) {
+                root.dataset[LIQUID_GLASS_CANVAS.activeBackgroundDatasetKey] = activeUrl;
+            } else {
+                delete root.dataset[LIQUID_GLASS_CANVAS.activeBackgroundDatasetKey];
+            }
             delete root.dataset[LIQUID_GLASS_CANVAS.previousBackgroundDatasetKey];
             delete root.dataset[LIQUID_GLASS_CANVAS.backgroundTransitionStartedAtDatasetKey];
             delete root.dataset[LIQUID_GLASS_CANVAS.backgroundTransitionDurationDatasetKey];
@@ -110,12 +127,6 @@ export function BackgroundLayer({ images }: BackgroundLayerProps) {
 
         previousUrlRef.current = activeUrl;
         previousImageRef.current = currentImage;
-
-        return () => {
-            if (cleanupTimer) {
-                window.clearTimeout(cleanupTimer);
-            }
-        };
     }, [currentImage, nextImage]);
 
     useEffect(() => {
@@ -140,6 +151,8 @@ export function BackgroundLayer({ images }: BackgroundLayerProps) {
                     fill
                     sizes="100vw"
                     className="bg-image-layer bg-image-layer--previous"
+                    onAnimationStart={startBackgroundTransition}
+                    onAnimationEnd={finishBackgroundTransition}
                     aria-hidden="true"
                 />
             )}

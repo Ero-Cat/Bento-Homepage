@@ -11,9 +11,13 @@
 ## ✨ 特性
 
 - **共享 Liquid Glass 壳层** — 全站 `GlassCard` 统一注册到一个 `LiquidGlassCanvas`，通过 `bgPass → vBlurPass → hBlurPass → mainPass` 渲染折射、Fresnel 与 glare
-- **背景切换同步** — 页面背景和 liquid glass 共用一套背景切换时序，切图时玻璃内部不再慢半拍
+- **背景切换同步** — 页面旧背景真正触发 `animationstart` 时才发布共享时钟，DOM 与 liquid glass 共用 `cubic-bezier(0.22, 1, 0.36, 1)` 进度，切图时玻璃内部不再提前或慢半拍
 - **Variant 化玻璃参数** — `hero` / `panel` / `media` / `dense` / `immersive` 通过 `src/lib/liquid-glass.ts` 集中管理，不在业务卡片里散落光学参数
-- **分层厚玻璃光学** — `mainPass` 将壳层拆为外缘色散、bevel 折射与干净中心，避免退化为普通 blur 卡片
+- **参考式边缘 displacement** — `mainPass` 借鉴 `liquid-glass-react` 的边缘位移贴图思路，在 WebGL 中生成向中心压缩的厚边缘折射、RGB 分通道色散与方向性 glare
+- **iOS 式场景重建** — 背景纹理按页面相同的居中 `cover` 裁剪采样；真实纹理 ready 后卡片中心以轻微镜片位移和扩散完整重建同一场景，文本型 `panel` / `dense` 使用约 8px 等效的最低全表面柔化档增强复杂背景可读性，透明感来自背景透射而非二次降低场景覆盖，边缘再做强折射、低色散和亮暗双 rim
+- **明暗材质 profile** — 每个 glass variant 同时提供 light/dark 光学材质，暗色模式保持透明但更亮，亮色模式增加暗 counter-rim 来提升边缘折射可见度
+- **圆角光学约束** — 折射强度与斜面宽度分离，bevel 不超过圆角半径的 55%，保留宽阔连续的内圆角；位移与色散在最外 2px 平滑归零，并使用有界、无饱和平台的单峰折射包络，暗 counter-rim 收束为窄带，避免角部出现紧缩 U 形槽、彩色厚边、灰黑胶圈、直角楔形或折线
+- **Apple 内容层级** — Interests 使用静态图标索引，Hardware 使用双栏设备目录，Projects 使用克制的 spring 材质 hover，Blog 使用无胶囊的编辑式文章列表；不显示无说明的数组长度计数
 - **弹性指针响应** — 桌面端只为当前卡片平滑更新折射与 glare；内容层不位移，粗指针和减少动态效果下自动回退为静态玻璃
 - **按需渲染调度** — 共享画布只在背景切换、resize、scroll、卡片几何、指针 spring 和首屏入场稳定阶段重绘，不再常驻空转
 - **稳定首帧启动** — WebGL renderer 启动时先创建 1×1 fallback GPU 背景纹理，真实背景异步加载失败或延迟时也能完成首个 composed frame，不会卡在 `data-liquid-glass="loading"`
@@ -57,11 +61,11 @@
 | 📸 照片堆叠 | `photo-stack-card.tsx` | 可交互的照片堆叠展示，点击展开/收起 |
 | 🎮 VRChat | `vrchat-status-card.tsx` | 实时在线状态、头像、信任等级、徽章 |
 | 📊 贡献图 | `github-heatmap-card.tsx` | GitHub 过去一年贡献热力图 |
-| 📝 博客 | `blog-card.tsx` | Halo 2.x 最近博文列表 |
+| 📝 博客 | `blog-card.tsx` | Halo 2.x 编辑式文章列表、语义元数据与 spring 材质反馈 |
 | 🔗 社交链接 | `social-card.tsx` | GitHub / Telegram / Twitter / VRChat 等平台图标 |
-| ✨ 兴趣标签 | `skills-card.tsx` | 静态标签，保持内容扫描优先 |
-| 🖥️ 硬件清单 | `hardware-card.tsx` | 分类展示硬件设备，Pill Tag 样式与兴趣标签一致 |
-| 🚀 项目展示 | `projects-card.tsx` | 项目名称、描述、标签、外链、GitHub Stars/Forks |
+| ✨ 兴趣索引 | `skills-card.tsx` | 四列彩色图标索引，静态展示且无伪按钮 hover |
+| 🖥️ 硬件清单 | `hardware-card.tsx` | 双栏分类目录、系统色图标与纯文本设备列表 |
+| 🚀 项目展示 | `projects-card.tsx` | 编辑式项目列表、GitHub Stars/Forks 与 spring 材质 hover |
 | 🤝 友链 | `friends-card.tsx` | 好友头像网格，轻微悬停反馈 |
 | 🗺️ 足迹地图 | `map-card.tsx` | Mapbox 互动地图，标记去过的城市，自动 i18n 地名，IP 距离显示 |
 | 🌤️ 实时天气 | `weather-card.tsx` | open-meteo 免费天气 API，Apple Weather 风格，动态天气动效 |
@@ -157,16 +161,20 @@ Bento-Homepage/
 
 ### 2. 共享渲染器
 
-- `LiquidGlassCanvas` 固定在背景层之上、内容层之下
+- `LiquidGlassCanvas` 使用 `position: fixed` 固定在背景层之上、内容层之下；画布定位只跟随 `visualViewport` 偏移，不把 `window.scrollX/Y` 写入 `left/top`
 - 所有卡片共用一个 WebGL2 context，避免每张卡片单独建画布
 - active background texture 在 GL 状态里始终非空：启动先使用 1×1 fallback GPU texture，真实背景纹理 ready 后再替换，避免异步图片加载阻塞 `ready` 提交
 - 渲染器使用失效驱动调度：背景、窗口尺寸、滚动、卡片几何和首屏入场动画变化时才请求下一帧
-- `mainPass` 使用外缘色散、厚 bevel 折射和低扩散中心三段模型；所有光学与指针强度从 variant token 读取
+- `bgPass` 使用与页面背景一致的居中 `cover` UV 变换，避免卡片内折射背景和 DOM 背景裁剪不一致
+- 背景切换先完成下一张纹理预热，旧 DOM 图层触发 `animationstart` 后再同时发布 active/previous URL 与开始时间；Canvas 使用同一贝塞尔曲线计算 crossfade，纹理迟到时按已发布时钟追帧，不重新开始动画
+- `mainPass` 使用外缘色散、厚 bevel 折射和干净中心三段模型；真实背景 ready 后干净中心直接采用 variant 的完整 `sceneCoverage`，禁止对已折射场景再次乘低透明度并与原背景互相抵消；边缘折射使用参考式 displacement field，而不是弱法线偏移；所有光学与指针强度从 variant token 读取
+- `mainPass` 的位移与色散必须在最外 2 CSS px 内归零；outer-rim 与 bevel 只能通过无加法饱和的连续包络合成，背景采样偏移必须限制在参考 displacement 的合理范围内；方向高光与 counter-rim 使用独立窄带，禁止以覆盖整个 bevel 的强位移、亮边或暗阴影制造厚边框
+- 真实背景纹理未 ready 时，`mainPass` 只输出低覆盖壳层，避免 1×1 fallback 白纹理把卡片涂成不透明白块
 - 桌面交互只保存一张当前卡片的 pointer spring，不经过 React state；pointer cancel、窗口失焦、页面隐藏与滚动重投影都会安全清除或重新命中
 - 粗指针和 `prefers-reduced-motion` 关闭持续指针追踪，但保留共享 WebGL 壳层
 - resize / fullscreen / visibility 恢复统一走同一条重绘路径：更新 viewport/FBO、标脏所有卡片文档几何并请求新帧，避免全屏切换后画布被清空但壳层不重绘
 - 移动端使用 `visualViewport` 解析动态视口尺寸；卡片位置缓存为稳定文档坐标，滚动时按当前 scroll 投影到视口，避免把布局读取放进滚动热路径
-- scroll 事件只使用浏览器已提交的位置投影文档坐标；不预测 wheel 距离，避免 OS 动量滚动与 glass bitmap 偏离
+- scroll 事件只使用浏览器已提交的位置投影卡片文档坐标并请求重绘，不移动 Canvas DOM；这让固定页面背景与玻璃内部场景始终共享同一视口坐标系，也避免 OS 动量滚动与 glass bitmap 偏离
 - `ResizeObserver` / `IntersectionObserver` / registry 事件共同维护卡片几何缓存，避免每帧对所有卡片调用布局读取
 - `mainPass` 对每张卡启用 scissor 裁剪，GPU 只处理该卡的实际屏幕区域
 - `vBlur` / `hBlur` FBO 会按质量档位降采样，优先在移动端和高 DPR 下控制填充率
@@ -180,6 +188,7 @@ Bento-Homepage/
 ### 3. 变体系统
 
 - `src/lib/liquid-glass.ts` 是 liquid-glass 视觉参数的单一事实源
+- 每个 variant 同时维护 `light` / `dark` 材质 profile，用于 tint、sceneCoverage、saturation、exposure、亮 rim 与暗 counter-rim 增益
 - 当前提供：
   - `hero`
   - `panel`
@@ -255,6 +264,18 @@ profile: {
 
 > `description` 使用 `Record<string, string>` 格式，根据浏览器语言自动匹配，`en` 为默认 fallback。
 
+### 卡片标题
+
+```typescript
+cardTitles: {
+    interests: "Interests",
+    hardware: "Hardware",
+    projects: "Projects",
+    blog: "Blog",
+    blogLink: "全部文章",
+}
+```
+
 ### 🎵 网易云音乐
 
 在 `netease.songIds` 中填入歌曲 ID，播放器将随机选择一首展示。
@@ -303,16 +324,21 @@ blog: {
 
 ```typescript
 interests: [
-    "Vibe Coding", "Spring Boot", "3D Print", "VRChat", "Unity", ...
+    { label: "Vibe Coding", icon: "Code2", accent: "blue" },
+    { label: "DIY", icon: "Wrench", accent: "orange" },
+    { label: "VRChat", icon: "Headset", accent: "purple" },
+    ...
 ]
 ```
+
+`accent` 可选值为 `blue`、`green`、`orange`、`purple`、`red`、`mint`，运行时自动适配明暗模式。
 
 ### 硬件清单
 
 ```typescript
 hardware: [
-    { category: "🍎 Apple", items: ["MacBook Pro M5", "Air Pods 3 Pro"] },
-    { category: "🖥️ PC", items: ["R7-9800X3D", "RTX 3090 24G"] },
+    { category: "Apple", icon: "Apple", accent: "blue", items: ["MacBook Pro M5", "Air Pods 3 Pro"] },
+    { category: "Desktop", icon: "Monitor", accent: "green", items: ["R7-9800X3D", "ROG RTX 5090 32G"] },
     ...
 ]
 ```

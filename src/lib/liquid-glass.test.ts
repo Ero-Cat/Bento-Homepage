@@ -1,7 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { GLASS_VARIANTS, LIQUID_GLASS_CANVAS, toDataAttributeName } from "./liquid-glass.ts";
+import {
+  GLASS_VARIANTS,
+  LIQUID_GLASS_CANVAS,
+  resolveGlassMaterial,
+  toDataAttributeName,
+} from "./liquid-glass.ts";
 
 test("all shared liquid glass variants use circular corners that match the NetEase card", () => {
   for (const [name, variant] of Object.entries(GLASS_VARIANTS)) {
@@ -33,8 +38,19 @@ test("shared liquid glass variants keep enough edge energy on light backgrounds"
 test("shared liquid glass variants centralize layered optics and interaction tokens", () => {
   for (const [name, variant] of Object.entries(GLASS_VARIANTS)) {
     assert.ok(variant.bevelWidth > 0, `Expected ${name} to define a positive bevel width`);
+    assert.ok(
+      variant.bevelWidth <= variant.shaderRadius * 0.55,
+      `Expected ${name} bevel to preserve a broad inner corner instead of collapsing into a tight U-shaped rim`,
+    );
     assert.ok(variant.magnification >= 0, `Expected ${name} to define magnification`);
-    assert.ok(variant.surfaceBlurMix >= 0, `Expected ${name} to define center diffusion`);
+    assert.ok(
+      variant.surfaceRefraction > 0,
+      `Expected ${name} to refract the scene across the full glass surface`,
+    );
+    assert.ok(
+      variant.surfaceBlurMix >= 0.16,
+      `Expected ${name} center diffusion to remain visible after alpha compositing`,
+    );
     assert.ok(variant.counterRimFactor >= 0, `Expected ${name} to define a counter rim`);
     assert.ok(variant.pointerRefraction >= 0, `Expected ${name} to define pointer refraction`);
     assert.ok(variant.pointerGlare >= 0, `Expected ${name} to define pointer glare`);
@@ -49,4 +65,45 @@ test("layered liquid glass variants reserve the strongest response for hero cont
   assert.ok(GLASS_VARIANTS.media.surfaceBlurMix <= GLASS_VARIANTS.panel.surfaceBlurMix);
   assert.equal(GLASS_VARIANTS.dense.pressDepth, 0);
   assert.equal(GLASS_VARIANTS.media.pressDepth, 0);
+});
+
+test("text-heavy glass variants keep a restrained readability diffusion floor", () => {
+  assert.ok(
+    GLASS_VARIANTS.panel.surfaceBlurMix >= 0.3,
+    "Expected panel glass to reach the approved minimum full-surface softening",
+  );
+  assert.ok(
+    GLASS_VARIANTS.dense.surfaceBlurMix >= 0.25,
+    "Expected dense glass to soften busy backgrounds behind compact text",
+  );
+  assert.ok(GLASS_VARIANTS.panel.surfaceBlurMix <= 0.34);
+  assert.ok(GLASS_VARIANTS.dense.surfaceBlurMix <= 0.3);
+  assert.ok(GLASS_VARIANTS.panel.surfaceBlurMix > GLASS_VARIANTS.dense.surfaceBlurMix);
+});
+
+test("shared liquid glass variants expose light and dark material profiles", () => {
+  for (const [name, variant] of Object.entries(GLASS_VARIANTS)) {
+    for (const scheme of ["light", "dark"] as const) {
+      const material = resolveGlassMaterial(variant, scheme);
+
+      assert.ok(
+        material.sceneCoverage >= 0.88,
+        `Expected ${name}/${scheme} to reconstruct the page scene instead of leaving a transparent card center`,
+      );
+      assert.ok(material.tintAlpha <= 0.09, `Expected ${name}/${scheme} to avoid a milky opaque fill`);
+      assert.ok(material.saturation >= 1, `Expected ${name}/${scheme} to keep refracted imagery vivid`);
+      assert.ok(material.edgeHighlightGain > 0, `Expected ${name}/${scheme} to expose a bright rim gain`);
+      assert.ok(material.edgeShadowGain > 0, `Expected ${name}/${scheme} to expose a dark counter-rim gain`);
+    }
+  }
+});
+
+test("dark liquid glass material stays transparent but more luminous than light material", () => {
+  const panelLight = resolveGlassMaterial(GLASS_VARIANTS.panel, "light");
+  const panelDark = resolveGlassMaterial(GLASS_VARIANTS.panel, "dark");
+
+  assert.ok(panelDark.sceneCoverage >= panelLight.sceneCoverage);
+  assert.ok(panelDark.edgeHighlightGain > panelLight.edgeHighlightGain);
+  assert.ok(panelDark.edgeShadowGain >= panelLight.edgeShadowGain);
+  assert.ok(panelDark.tintAlpha <= 0.09);
 });

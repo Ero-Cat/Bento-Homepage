@@ -1,0 +1,114 @@
+<style>
+  :root {
+    --ink:#17171a; --secondary:rgba(23,23,26,.67); --tertiary:rgba(23,23,26,.46);
+    --line:rgba(23,23,26,.09); --rose:200,0,93; --blue:0,122,255; --green:52,199,89;
+    --orange:255,149,0; --purple:175,82,222; --mint:0,199,190;
+  }
+  body { letter-spacing:0 !important; }
+  .board { margin-top:24px; padding:28px; border-radius:28px; background:
+    linear-gradient(rgba(230,242,250,.42),rgba(245,228,238,.36)),
+    linear-gradient(135deg,#bad9e7 0%,#e7d3dc 48%,#c8daee 100%); }
+  .preview-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; align-items:start; }
+  .preview { border-radius:26px; padding:22px; color:var(--ink); background:rgba(255,255,255,.28);
+    border:1px solid rgba(255,255,255,.50); box-shadow:0 20px 50px rgba(35,52,78,.14), inset 0 1px rgba(255,255,255,.72); backdrop-filter:blur(22px); }
+  .preview.interests { grid-column:1 / -1; min-height:196px; }
+  .preview.projects { min-height:448px; }
+  .preview.hardware { min-height:640px; }
+  .card-head { display:flex; align-items:flex-end; justify-content:space-between; gap:18px; margin-bottom:20px; }
+  .kicker { margin-bottom:5px; font-size:11px; line-height:1; font-weight:680; text-transform:uppercase; color:rgb(var(--rose)); }
+  .card-head h3 { margin:0; font-size:22px; line-height:1.12; font-weight:650; letter-spacing:0; }
+  .card-head p { margin:6px 0 0; font-size:13px; line-height:1.35; color:var(--secondary); }
+  .count { flex:none; font-size:12px; color:var(--tertiary); }
+  .interest-groups { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; }
+  .interest-group { min-height:92px; padding:13px 14px; border-radius:14px; background:rgba(255,255,255,.16); }
+  .interest-group:nth-child(1){ background:rgba(var(--blue),.075); }
+  .interest-group:nth-child(2){ background:rgba(var(--orange),.075); }
+  .interest-group:nth-child(3){ background:rgba(var(--purple),.075); }
+  .interest-group:nth-child(4){ background:rgba(var(--mint),.075); }
+  .group-name { display:flex; align-items:center; gap:7px; margin-bottom:9px; font-size:12px; font-weight:650; }
+  .group-dot { width:7px; height:7px; border-radius:50%; background:currentColor; box-shadow:0 0 0 4px rgba(255,255,255,.26); }
+  .group-name.blue{color:rgb(var(--blue))}.group-name.orange{color:rgb(var(--orange))}.group-name.purple{color:rgb(var(--purple))}.group-name.mint{color:rgb(var(--mint))}
+  .interest-items { font-size:12px; line-height:1.65; color:var(--secondary); }
+  .hardware-grid { display:grid; grid-template-columns:1fr 1fr; gap:0 22px; }
+  .hardware-group { padding:18px 0; border-top:1px solid var(--line); }
+  .hardware-group:nth-child(-n+2){ border-top:0; padding-top:2px; }
+  .hardware-label { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+  .hardware-icon { width:32px; height:32px; display:flex; align-items:center; justify-content:center; border-radius:10px; font-size:11px; font-weight:720; background:rgba(var(--blue),.10); color:rgb(var(--blue)); }
+  .hardware-icon.green{background:rgba(var(--green),.10);color:rgb(var(--green))}.hardware-icon.orange{background:rgba(var(--orange),.10);color:rgb(var(--orange))}.hardware-icon.purple{background:rgba(var(--purple),.10);color:rgb(var(--purple))}.hardware-icon.rose{background:rgba(var(--rose),.09);color:rgb(var(--rose))}.hardware-icon.mint{background:rgba(var(--mint),.10);color:rgb(var(--mint))}
+  .hardware-label strong { display:block; font-size:14px; font-weight:630; }
+  .hardware-label span { display:block; margin-top:2px; font-size:11px; color:var(--tertiary); }
+  .hardware-items { display:grid; gap:7px; padding-left:42px; }
+  .hardware-items span { font-size:12.5px; line-height:1.35; color:var(--secondary); }
+  .project-list { display:grid; }
+  .project { position:relative; padding:17px 12px; border-radius:16px; }
+  .project + .project::before { content:""; position:absolute; top:0; left:12px; right:12px; height:1px; background:var(--line); }
+  .project.hovered { background:rgba(255,255,255,.18); box-shadow:inset 0 1px rgba(255,255,255,.36); }
+  .project.hovered::before,.project.hovered + .project::before { opacity:0; }
+  .project-top { display:flex; align-items:center; justify-content:space-between; gap:14px; }
+  .project-title { font-size:16px; line-height:1.25; font-weight:640; }
+  .project.hovered .project-title { color:rgb(var(--rose)); }
+  .stats { flex:none; display:flex; gap:10px; font-size:11px; color:var(--tertiary); }
+  .project p { margin:6px 0 10px; font-size:13px; line-height:1.48; color:var(--secondary); }
+  .project-meta { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .tags { display:flex; gap:10px; font-size:11px; font-weight:560; color:rgba(var(--rose),.78); }
+  .arrow { font-size:13px; color:var(--tertiary); opacity:.38; }
+  .project.hovered .arrow { opacity:.82; color:rgb(var(--rose)); }
+  .spec { margin-top:20px; display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; }
+  .spec div { padding:12px 13px; border-radius:14px; background:rgba(255,255,255,.42); border:1px solid rgba(255,255,255,.54); }
+  .spec b { display:block; margin-bottom:4px; font-size:11px; color:var(--ink); }
+  .spec span { font-size:11px; line-height:1.4; color:var(--secondary); }
+  .approval { margin-top:18px; display:flex; align-items:center; justify-content:space-between; gap:20px; padding:17px 18px; border-radius:16px; background:rgba(255,255,255,.54); }
+  .approval p { margin:0; font-size:13px; color:var(--secondary); }
+  .approval button { border:0; border-radius:999px; padding:10px 15px; color:white; background:rgb(var(--rose)); font:600 12px/1 system-ui; cursor:pointer; }
+  @media(max-width:900px){.preview-grid{grid-template-columns:1fr}.preview.interests{grid-column:auto}.interest-groups,.spec{grid-template-columns:1fr 1fr}.hardware-grid{grid-template-columns:1fr}.hardware-group:nth-child(2){border-top:1px solid var(--line);padding-top:18px}}
+</style>
+
+<h2>方案 B · Apple 层级强化版</h2>
+<p class="subtitle">不增加第二套玻璃系统。颜色用于导航，排版用于层级，背景折射仍然是视觉主体。</p>
+
+<div class="board">
+  <div class="preview-grid">
+    <section class="preview interests">
+      <header class="card-head"><div><div class="kicker">Personal index</div><h3>Interests</h3><p>从标签墙改为四组兴趣语义，扫一眼就能理解关注方向。</p></div><span class="count">12 topics</span></header>
+      <div class="interest-groups">
+        <div class="interest-group"><div class="group-name blue"><i class="group-dot"></i>Build</div><div class="interest-items">Vibe Coding · Developer<br>QQ Bot Dev · Unity</div></div>
+        <div class="interest-group"><div class="group-name orange"><i class="group-dot"></i>Make</div><div class="interest-items">DIY · 3D Print<br>Home Assistant</div></div>
+        <div class="interest-group"><div class="group-name purple"><i class="group-dot"></i>Play</div><div class="interest-items">VRChat · CS2<br>Minecraft</div></div>
+        <div class="interest-group"><div class="group-name mint"><i class="group-dot"></i>Systems</div><div class="interest-items">OpenWrt<br>ESXi Server</div></div>
+      </div>
+    </section>
+
+    <section class="preview hardware">
+      <header class="card-head"><div><div class="kicker">Daily setup</div><h3>Hardware</h3><p>双栏设备目录，去掉重复胶囊边框。</p></div><span class="count">6 groups</span></header>
+      <div class="hardware-grid">
+        <div class="hardware-group"><div class="hardware-label"><i class="hardware-icon">A</i><div><strong>Apple</strong><span>4 devices</span></div></div><div class="hardware-items"><span>MacBook Pro M5</span><span>Mac Mini M2</span><span>AirPods 3 Pro</span><span>iPhone 15 Pro</span></div></div>
+        <div class="hardware-group"><div class="hardware-label"><i class="hardware-icon green">PC</i><div><strong>Desktop</strong><span>5 components</span></div></div><div class="hardware-items"><span>R7-9800X3D</span><span>ROG RTX 5090 32G</span><span>32GB DDR5</span><span>ROG STRIX B650-A</span></div></div>
+        <div class="hardware-group"><div class="hardware-label"><i class="hardware-icon orange">IO</i><div><strong>Peripherals</strong><span>6 devices</span></div></div><div class="hardware-items"><span>Quest 3</span><span>HHKB · NIZ PLUM</span><span>DeathAdder V3</span><span>Logitech G502 · M720</span></div></div>
+        <div class="hardware-group"><div class="hardware-label"><i class="hardware-icon purple">DIY</i><div><strong>Maker</strong><span>5 machines</span></div></div><div class="hardware-items"><span>Xtool M1 Ultra</span><span>Bambu Lab A1 AMS</span><span>Snapmaker U1</span><span>EPSON L8058</span></div></div>
+        <div class="hardware-group"><div class="hardware-label"><i class="hardware-icon rose">W</i><div><strong>Wearable</strong><span>1 device</span></div></div><div class="hardware-items"><span>Garmin Enduro 2</span></div></div>
+        <div class="hardware-group"><div class="hardware-label"><i class="hardware-icon mint">NW</i><div><strong>Network</strong><span>3 devices</span></div></div><div class="hardware-items"><span>GL·iNet AX1800</span><span>GL·iNet MT3000</span><span>N5105</span></div></div>
+      </div>
+    </section>
+
+    <section class="preview projects">
+      <header class="card-head"><div><div class="kicker">Selected work</div><h3>Projects</h3><p>标题承担主层级，技术栈与 GitHub 数据降为辅助信息。</p></div><span class="count">3 projects</span></header>
+      <div class="project-list">
+        <article class="project hovered"><div class="project-top"><span class="project-title">心率推送</span><span class="stats">☆ 34&nbsp;&nbsp;⑂ 1</span></div><p>跨平台 BLE 心率监控与多协议实时推送，适用于 VRChat 模型联动。</p><div class="project-meta"><div class="tags"><span>Flutter</span><span>BLE</span><span>VRChat</span></div><span class="arrow">↗</span></div></article>
+        <article class="project"><div class="project-top"><span class="project-title">Bento Homepage</span><span class="stats">☆ 8&nbsp;&nbsp;⑂ 0</span></div><p>配置驱动的 Liquid Glass 个人主页与多卡片内容系统。</p><div class="project-meta"><div class="tags"><span>Next.js</span><span>WebGL</span></div><span class="arrow">↗</span></div></article>
+        <article class="project"><div class="project-top"><span class="project-title">ESXi UPS Automation</span><span class="stats">☆ 5&nbsp;&nbsp;⑂ 0</span></div><p>服务器 UPS 断电自动化管理与安全关机工具。</p><div class="project-meta"><div class="tags"><span>ESXi</span><span>Automation</span></div><span class="arrow">↗</span></div></article>
+      </div>
+    </section>
+  </div>
+
+  <div class="spec">
+    <div><b>标题</b><span>22px / 650，替代当前所有内容都挤在 11–15px 的状态。</span></div>
+    <div><b>正文</b><span>13px / 1.48，暗色与复杂背景下保持可读性。</span></div>
+    <div><b>间距</b><span>卡内 20–22px；分组 12–18px；分隔线只用于目录关系。</span></div>
+    <div><b>Hover</b><span>无位移、无外边框；仅局部材质、标题与箭头渐进提亮。</span></div>
+  </div>
+
+  <div class="approval" data-choice="b2-approved" onclick="toggleSelect(this)">
+    <p>这一版会需要把 interests 从字符串列表升级为带分组的配置数据。</p>
+    <button type="button">选择这一版</button>
+  </div>
+</div>

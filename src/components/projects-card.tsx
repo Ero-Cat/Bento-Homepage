@@ -2,6 +2,7 @@
 
 import React from "react";
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import { siteConfig } from "@/config/site";
 import { GlassCard } from "@/components/glass-card";
 import { ExternalLink, Star, GitFork } from "lucide-react";
@@ -10,6 +11,22 @@ interface RepoStats {
     stars: number;
     forks: number;
 }
+
+const hoverSpring = {
+    type: "spring" as const,
+    stiffness: 260,
+    damping: 28,
+};
+
+const materialMotion = {
+    rest: { opacity: 0, transition: hoverSpring },
+    hover: { opacity: 1, transition: hoverSpring },
+};
+
+const externalIconMotion = {
+    rest: { opacity: 0.28, transition: hoverSpring },
+    hover: { opacity: 0.78, transition: hoverSpring },
+};
 
 /**
  * Extract GitHub owner/repo from a GitHub URL.
@@ -22,7 +39,7 @@ function parseGitHubUrl(url: string): { owner: string; repo: string } | null {
 }
 
 export function ProjectsCard() {
-    const { projects } = siteConfig;
+    const { cardTitles, projects } = siteConfig;
     const [stats, setStats] = useState<Record<string, RepoStats>>({});
 
     useEffect(() => {
@@ -64,8 +81,14 @@ export function ProjectsCard() {
     });
 
     return (
-        <GlassCard variant="panel" className="flex h-full flex-col p-5 md:p-6">
-            <div className="flex flex-col">
+        <GlassCard variant="panel" className="flex h-full flex-col gap-3 p-5 md:p-6">
+            <header>
+                <h2 className="text-[22px] font-[650] leading-none text-text-primary">
+                    {cardTitles.projects}
+                </h2>
+            </header>
+
+            <div className="flex min-h-0 flex-1 flex-col">
                 {sorted.map((project, i) => {
                     const repoStats = stats[project.url];
 
@@ -73,60 +96,67 @@ export function ProjectsCard() {
                         <React.Fragment key={project.name}>
                             {i > 0 && (
                                 <div
-                                    className="h-px mx-1"
+                                    className="mx-2 h-px shrink-0"
                                     style={{ background: "var(--glass-divider)" }}
                                 />
                             )}
-                            <a
+                            <motion.a
                                 href={project.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="group relative -mx-1 flex flex-col gap-1.5 rounded-[14px] border border-transparent px-3 py-2.5 transition-[background,border-color] duration-200 hover:border-[var(--glass-inner-border)] hover:bg-[var(--glass-inner-bg)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgba(var(--tint-rgb),0.32)]"
+                                initial="rest"
+                                animate="rest"
+                                whileHover="hover"
+                                whileFocus="hover"
+                                className="relative -mx-2 flex flex-1 flex-col justify-center gap-2 overflow-hidden rounded-[16px] px-3 py-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgba(var(--tint-rgb),0.42)]"
                             >
-                                {/* Name + external icon */}
-                                <div className="flex items-center justify-between gap-2">
-                                    <span className="font-semibold text-[15px] text-text-primary group-hover:text-tint transition-colors duration-150 leading-snug">
+                                <motion.span
+                                    aria-hidden="true"
+                                    variants={materialMotion}
+                                    className="pointer-events-none absolute inset-0"
+                                    style={{ background: "var(--glass-inner-bg)" }}
+                                />
+
+                                <div className="relative z-[1] flex items-center justify-between gap-3">
+                                    <span className="text-[16px] font-[640] leading-snug text-text-primary">
                                         {project.name}
                                     </span>
-                                    <div className="flex items-center gap-2.5 shrink-0">
+                                    <div className="flex shrink-0 items-center gap-2.5">
                                         {repoStats && (
                                             <>
-                                                <span className="flex items-center gap-0.5 text-[12px] text-text-tertiary">
+                                                <span className="flex items-center gap-1 text-[12px] tabular-nums text-text-tertiary">
                                                     <Star size={11} style={{ color: "var(--tint-color)" }} />
                                                     {repoStats.stars}
                                                 </span>
-                                                <span className="flex items-center gap-0.5 text-[12px] text-text-tertiary">
+                                                <span className="flex items-center gap-1 text-[12px] tabular-nums text-text-tertiary">
                                                     <GitFork size={11} />
                                                     {repoStats.forks}
                                                 </span>
                                             </>
                                         )}
-                                        <ExternalLink
-                                            size={12}
-                                            className="text-text-tertiary opacity-35 group-hover:opacity-60 transition-opacity duration-150"
-                                        />
+                                        <motion.span variants={externalIconMotion} className="flex text-text-tertiary">
+                                            <ExternalLink size={13} aria-hidden="true" />
+                                        </motion.span>
                                     </div>
                                 </div>
 
-                                {/* Description */}
-                                <p className="text-[13px] text-text-secondary leading-relaxed line-clamp-2">
+                                <p className="relative z-[1] line-clamp-2 text-[13px] leading-[1.48] text-text-secondary">
                                     {project.description}
                                 </p>
 
-                                {/* Tags */}
                                 {project.tags && project.tags.length > 0 && (
-                                    <div className="flex flex-wrap gap-1.5">
+                                    <div className="relative z-[1] flex flex-wrap gap-x-3 gap-y-1">
                                         {project.tags.map((tag) => (
                                             <span
                                                 key={tag}
-                                                className="inline-flex items-center rounded-md border border-[rgba(var(--tint-rgb),0.18)] bg-[rgba(var(--tint-rgb),0.08)] px-2 py-0.5 text-[11px] font-medium text-tint"
+                                                className="text-[11px] font-medium leading-none text-tint"
                                             >
                                                 {tag}
                                             </span>
                                         ))}
                                     </div>
                                 )}
-                            </a>
+                            </motion.a>
                         </React.Fragment>
                     );
                 })}

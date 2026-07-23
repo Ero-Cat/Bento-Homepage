@@ -176,13 +176,18 @@ Bento-Homepage/
 ### LiquidGlassCanvas 优化
 - **共享单画布**：所有 `GlassCard` 通过 DOM 注册到同一个 `LiquidGlassCanvas`，避免每张卡片单独建 WebGL context
 - **失效驱动渲染**：共享画布不再常驻 60fps 全量重绘；仅在背景切换、resize、scroll、卡片几何变化、活动指针 spring 和首屏入场稳定阶段才重新调度渲染
-- **变体化参数**：`hero` / `panel` / `media` / `dense` / `immersive` 通过 `src/lib/liquid-glass.ts` 集中管理半径、bevel、折射、中心扩散、色散、Fresnel、glare、指针响应与 fallback blur
-- **三段式壳层**：`mainPass` 必须保持外缘色散、厚 bevel 折射和干净中心三段模型；强光学不得覆盖文字密集中心区域
+- **变体化参数**：`hero` / `panel` / `media` / `dense` / `immersive` 通过 `src/lib/liquid-glass.ts` 集中管理半径、bevel、参考式 displacement 折射、中心扩散、色散、Fresnel、glare、指针响应、light/dark 材质 profile 与 fallback blur
+- **三段式壳层**：`mainPass` 必须保持外缘色散、厚 bevel 折射和清晰中心三段模型；真实背景纹理 ready 后，中心必须通过非零全表面镜片位移、可见扩散与 variant 的完整 `sceneCoverage` 重建同一页面场景，文本型 `panel` / `dense` 必须保留约 8px 等效的最低全表面柔化档以压低复杂背景细节，禁止直接重画未偏移背景、叠加第二层 CSS blur 或对已折射场景二次降低覆盖导致中心材质消失；边缘折射必须使用类似 `liquid-glass-react` 位移贴图的非线性 displacement field，禁止退回几像素弱法线偏移；强色散与 glare 不得覆盖文字密集中心区域
+- **圆角光学约束**：折射位移强度与 bevel 宽度必须分离；bevel 宽度不得超过圆角半径的 55%，必须为玻璃内轮廓保留至少 45% 的宽圆角；shader 圆角必须按运行时 DPR 换算，位移与色散必须在最外 2 CSS px 平滑归零；outer-rim 与 bevel 必须用有界、无加法饱和平台的连续包络合成，最大采样位移必须受统一预算限制，counter-rim 必须保持为独立窄带，避免角部产生紧缩 U 形槽、彩色厚边、灰黑胶圈、中轴楔形或直角折线
 - **稳定背景源**：`BackgroundLayer` 将当前背景图 URL 发布到根节点 dataset，Canvas 不再通过脆弱 DOM 查询推断背景
 - **非阻塞首帧纹理**：`LiquidGlassCanvas` 启动时必须先创建 1×1 fallback GPU background texture；`GLState.bgTex` 保持非空，真实背景异步加载完成后替换，禁止重新引入 `if (!state.bgTex) return` 这类 loading 死锁
-- **背景切换同步**：`BackgroundLayer` 同步发布当前/上一张背景与过渡时间，Canvas 在 `bgPass` 内执行同时序 crossfade，避免 glass 与页面背景不同步
+- **背景 cover 对齐**：`bgPass` 必须用 `resolveCoverUvTransform` 复现页面背景的 `object-fit: cover; object-position: center` 裁剪；禁止直接用裸 `v_uv` 采样背景图导致卡片内部和页面背景错位
+- **材质模式**：light/dark 模式必须通过 `GlassMaterialProfile` 集中控制 tint、sceneCoverage、saturation、exposure、edgeHighlightGain 与 edgeShadowGain；业务组件禁止根据主题复制光学参数
+- **真实纹理门控**：真实背景未 ready 时只允许低覆盖 startup shell，禁止让 1×1 fallback 纹理以高 sceneCoverage 绘制不透明白卡；真实纹理 ready 后再提高 sceneCoverage
+- **背景切换同步**：`BackgroundLayer` 必须在旧 DOM 图层的 `animationstart` 事件中同步发布当前/上一张背景与过渡时间；Canvas 使用与 CSS 一致的 `cubic-bezier(0.22, 1, 0.36, 1)` 进度执行 crossfade，纹理迟到时按已发布时间追帧或直接同步当前帧，禁止重新启动过渡
 - **文档坐标几何缓存**：卡片 rect / radius 在显式布局变化时缓存为文档坐标，滚动热路径只做 scroll 投影，避免每帧对所有卡片执行布局读取
-- **滚动与指针同步**：scroll 事件只投影浏览器已提交的文档坐标，禁止预测 wheel 距离；有缓存指针位置时必须重新命中当前可见卡片，避免滚动后保留错误 hover 状态
+- **固定视口画布**：共享 Canvas 必须使用 `position: fixed`，尺寸与 `left/top` 只跟随 `visualViewport`；禁止把 `window.scrollX/Y` 写入 Canvas DOM 位置，避免固定页面背景与玻璃位图落入不同滚动坐标系
+- **滚动与指针同步**：scroll 事件只投影浏览器已提交的卡片文档坐标并请求重绘，禁止移动 Canvas DOM 或预测 wheel 距离；有缓存指针位置时必须重新命中当前可见卡片，避免滚动后保留错误 hover 状态
 - **全屏与 resize 重绘**：resize、fullscreenchange、visibility 恢复必须统一走 viewport/FBO 更新、全卡片几何标脏、requestRender 的重绘路径，避免 PC 全屏切换后 canvas 清空但 glass 壳层不重新提交
 - **移动端视口同步**：Canvas 使用 `visualViewport` 解析动态视口尺寸和 offset，配合文档坐标投影保持 mobile 与滚动场景下 glass shell 和 DOM 内容同步
 - **按卡片范围绘制**：`mainPass` 通过 scissor 限定到每张卡片的实际屏幕区域，避免“每张卡都绘制一次全屏 quad”的 GPU 浪费
@@ -212,6 +217,12 @@ Bento-Homepage/
 - 内层交互面与内容承载面使用组件局部 Tailwind 样式，并复用现有 `glass-*` / `tint` token。
 - 禁止重新引入 Prism、`glass-chip`、`pill-tag` 或额外共享内层控件体系。
 - 信息型标签（Interests / Hardware）保持静态，禁止做成带 scale/glow 的伪按钮；列表型卡片 hover 只保留低噪声色彩反馈，避免装饰箭头和方向位移。
+- **Apple 内容标题**：Interests / Hardware / Projects / Blog 使用配置化 `22px / 650` 标题；禁止添加无说明的数组长度计数、解释功能或装饰样式副标题。Projects 的 Stars/Forks 等具备明确语义的统计数据保留。
+- **Interests 图标索引**：桌面四列、移动端两列；每项由 28px Lucide 系统色图标底座与 13px 标签组成，保持原始配置顺序，禁止 hover、scale、glow、描边和胶囊样式。
+- **Hardware 双栏目录**：桌面两列三行、移动端单列；分类使用 32px 系统色图标与 14px 标题，设备使用 13px 纯文本列表和语义分隔线，禁止内嵌卡片、标签胶囊及 hover。
+- **Projects 编辑式列表**：项目名、描述、GitHub 数据与技术栈使用 16px / 13px / 11–12px 层级；hover 仅允许通过 Framer Motion spring 淡入 `--glass-inner-bg` 并提高外链图标透明度，禁止位移、缩放、hover 外框或整行主题色覆盖。
+- **Blog 编辑式列表**：文章使用 15px 标题、12px 语义元数据与 `--glass-divider` 分隔线；分类为无边框、无背景的 tint 文字。链接 hover / focus 仅通过 spring 淡入 `--glass-inner-bg` 或提高图标强调，禁止位移、缩放、hover 外框和 CSS transition；所有链接触控目标至少 44×44px。
+- Blog 的时间、分隔符、阅读量与空状态直接使用语义文本 token，禁止叠加低 opacity；Interests / Hardware 的 accent 必须来自 light/dark Apple system-color RGB token，仅用于低透明度图标材质，禁止在业务组件中硬编码 HEX。
 
 ### GitHubHeatmapCard 优化
 - 使用第三方公开 API（`github-contributions-api.jogruber.de`），无需 GitHub Token
@@ -261,3 +272,4 @@ Bento-Homepage/
 12. **Shell vs Content Separation**: 外层 `GlassCard` 只负责液态玻璃壳层与命中区域；内容层、chip、按钮、divider、媒体裁剪必须由内层 DOM 结构负责
 13. **Stable Background Contract**: 共享画布只能通过 `BackgroundLayer` 发布的 active background dataset 读取背景，禁止重新引入 `querySelector + computedStyle` 推断链路
 14. **Inner Control Styling**: 内层控件样式应保持组件局部化并复用现有 glass / tint token；禁止重新引入 Prism、旧 glass inner class、`glass-chip`、`glass-icon-button`、`pill-tag` 或新的共享内层控件接口
+15. **Content Accent Configuration**: Interests 与 Hardware 的图标、语义 accent 和展示文字必须由 `src/config/site.ts` 提供；业务组件只负责把 `SystemAccent` 映射到现有 `--system-*-rgb`，不得按内容文本猜测颜色或硬编码个人数据
