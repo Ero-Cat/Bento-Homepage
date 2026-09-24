@@ -176,7 +176,13 @@ Bento-Homepage/
 ### LiquidGlassCanvas 优化
 - **共享单画布**：所有 `GlassCard` 通过 DOM 注册到同一个 `LiquidGlassCanvas`，避免每张卡片单独建 WebGL context
 - **失效驱动渲染**：共享画布不再常驻 60fps 全量重绘；仅在背景切换、resize、scroll、卡片几何变化、活动指针 spring 和首屏入场稳定阶段才重新调度渲染
-- **变体化参数**：`hero` / `panel` / `media` / `dense` / `immersive` 通过 `src/lib/liquid-glass.ts` 集中管理半径、bevel、参考式 displacement 折射、中心扩散、色散、Fresnel、glare、指针响应、light/dark 材质 profile 与 fallback blur
+- **变体化参数**：`hero` / `panel` / `media` / `dense` / `immersive` 通过 `src/lib/liquid-glass.ts` 集中管理半径、bevel、参考式 displacement 折射、长程折射场（`edgeLensRange`）、中心放大（`lensMagnification`）、镜像边（`rimMirror`）、中心扩散、色散、Fresnel、glare、指针响应与 light/dark 材质 profile、fallback blur
+- **iOS 风边缘点光**：`mainPass` 使用单一 `KEY_LIGHT`（左上主光）驱动柔和的方向性边缘亮度与左上内部辉光；禁止整面 glare 扫光，禁止把 GL 边缘做成近实心厚边框——清晰描边由 CSS 发丝线负责，GL 只保留亮度渐变
+- **外折式边缘折射**：边缘位移必须沿法线**向外**采样（`lensNormal = +normalDir * wideField * maxPullPx`），让 rim 带显示卡片边界**之外**被弯折挤入的背景内容（displacement-map 行为）；中心放大拉力（`centerPull`）在边缘带必须衰减（`× (0.15 + 0.85 × (1 - wideField))`），禁止两个场互相抵消把净位移归零；位移预算为短边的 17%
+- **合成器同步边缘（滚动零错帧）**：`.glass-card` 在 `data-liquid-glass="ready"` 下只绘制受光方向细线（`inset 0 1px 0`）与接触阴影（`--glass-edge-top-light/-shadow` 明暗双档 token），**禁止均匀全周描边**（Apple 没有白环）；这些位置锚点随内容在合成器线程滚动，绝不允许画进 WebGL 画布；WebGL 负责外折折射带、色散、辉光
+- **设备像素对齐**：卡片投影 `shaderRectPx` 必须取整到设备像素（`Math.round(left*dpr)`），分数滚动偏移不得让边缘覆盖率逐帧振荡（shimmer）
+- **长程折射场与中心放大**：边缘折射由 `edgeLensRange` 的长程衰减场驱动（超出 bevel 带向内延续），位移预算按卡片尺寸封顶（短边的 17%）；中心以 `lensMagnification`（1.03-1.05）做全局"压在玻璃下"放大；最外 1.2-4px 由 `rimMirror` 提供镜像翻转边
+- **接触阴影**：由 `.glass-card` 的 CSS `box-shadow`（`--glass-edge-shadow`，下方偏置、紧凑模糊）在合成器上绘制，随内容同步滚动；禁止在 WebGL 画布内绘制形状外阴影（rAF 错帧 + 相邻卡片阴影在间隙中双重叠加）
 - **三段式壳层**：`mainPass` 必须保持外缘色散、厚 bevel 折射和清晰中心三段模型；真实背景纹理 ready 后，中心必须通过非零全表面镜片位移、可见扩散与 variant 的完整 `sceneCoverage` 重建同一页面场景，文本型 `panel` / `dense` 必须保留约 8px 等效的最低全表面柔化档以压低复杂背景细节，禁止直接重画未偏移背景、叠加第二层 CSS blur 或对已折射场景二次降低覆盖导致中心材质消失；边缘折射必须使用类似 `liquid-glass-react` 位移贴图的非线性 displacement field，禁止退回几像素弱法线偏移；强色散与 glare 不得覆盖文字密集中心区域
 - **圆角光学约束**：折射位移强度与 bevel 宽度必须分离；bevel 宽度不得超过圆角半径的 55%，必须为玻璃内轮廓保留至少 45% 的宽圆角；shader 圆角必须按运行时 DPR 换算，位移与色散必须在最外 2 CSS px 平滑归零；outer-rim 与 bevel 必须用有界、无加法饱和平台的连续包络合成，最大采样位移必须受统一预算限制，counter-rim 必须保持为独立窄带，避免角部产生紧缩 U 形槽、彩色厚边、灰黑胶圈、中轴楔形或直角折线
 - **稳定背景源**：`BackgroundLayer` 将当前背景图 URL 发布到根节点 dataset，Canvas 不再通过脆弱 DOM 查询推断背景
@@ -193,7 +199,7 @@ Bento-Homepage/
 - **按卡片范围绘制**：`mainPass` 通过 scissor 限定到每张卡片的实际屏幕区域，避免“每张卡都绘制一次全屏 quad”的 GPU 浪费
 - **对称降采样 blur**：blur 管线为先 bilinear 降采样到 blur buffer，再执行垂直/水平分离高斯；两轴必须在同一 blur-buffer 分辨率下采样，模糊半径以 CSS px 锚定（`sceneBlurRadiusCss`）并按 `dpr × blurBufferScale` 换算成 texel 半径（`resolveSceneBlurTexelRadius`），保证任何档位两轴强度一致且无稀疏核鬼影；禁止恢复"vblur 用全屏分辨率、hblur 用降采样分辨率"的不对称采样
 - **场景缓冲上限**：场景 FBO（fbo0）按 `min(dpr, sceneBufferMaxScale)` × CSS 尺寸渲染（默认上限 1.5×），mainPass 以 LINEAR 上采样、rim 仍按全画布分辨率着色；所有 FBO 使用 RGBA8（管线全程 LDR），禁止恢复 RGBA16F 或无上限的场景缓冲
-- **纯光学壳层**：WebGL2 就绪后，`GlassCard` 的旧 DOM 玻璃外观必须静音，只保留结构与命中区域，光学效果完全由 Canvas 负责
+- **壳层与边缘分工**：WebGL2 就绪后，`GlassCard` 的旧 DOM 玻璃"底色/模糊"外观必须静音（背景透明、无 backdrop-filter），内部光学完全由 Canvas 负责；但 CSS 发丝描边与接触阴影属于例外——它们是位置锚点，必须留在 DOM 上随合成器滚动
 - **CSS fallback**：WebGL2 不可用时退回 CSS blur/border/shadow 玻璃壳层，保证内容可读
 - **低端质量分级**：在省流量、低内存、低核心数或移动高 DPR 场景下，仍保留 WebGL Liquid Glass，只降低 DPR 与 blur buffer 成本；卡片绘制被 scissor 限定，成本随视口而非注册卡片数缩放，禁止用 cardCount 触发 DPR 降档；禁止用静态壳层替代正常 liquid shell
 - **清透镜片 veil 策略**：玻璃场景内的 veil 强度必须低于页面 DOM 遮罩（light 0.6 / dark 0.8，见 `--glass-scene-veil-strength`），玻璃采样要比页面更干净；可读性与材质感由 `GlassMaterialProfile` 的 saturation/exposure/tintAlpha/sceneCoverage 负责，禁止靠加重 veil 洗白/压黑玻璃再反打饱和度

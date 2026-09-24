@@ -509,7 +509,9 @@ test("liquid glass main pass exposes the shared interaction uniform contract", (
     "u_pointerPress",
     "u_bevelWidth",
     "u_magnification",
-    "u_surfaceRefraction",
+    "u_lensMagnification",
+    "u_edgeLensRange",
+    "u_rimMirror",
     "u_surfaceBlurMix",
     "u_counterRimFactor",
     "u_pointerRefraction",
@@ -534,7 +536,7 @@ test("liquid glass main pass separates rim, bevel body, and clean center optics"
   assert.match(shaderSource, /cleanCenter/);
   assert.match(shaderSource, /pointerDirection/);
   assert.match(shaderSource, /u_magnification/);
-  assert.match(shaderSource, /u_surfaceRefraction/);
+  assert.match(shaderSource, /u_lensMagnification/);
   assert.match(shaderSource, /u_surfaceBlurMix/);
   assert.match(shaderSource, /u_counterRimFactor/);
   assert.match(shaderSource, /clamp\([^\n]*v_uv/);
@@ -603,8 +605,8 @@ test("liquid glass shader uses reference-style edge displacement instead of a we
 
   assert.match(
     shaderSource,
-    /u_glareAngle[\s\S]*u_glareConvergence[\s\S]*u_glareRange[\s\S]*u_glareOppositeFactor/,
-    "Expected directional glare uniforms to participate in the material instead of being unused knobs",
+    /KEY_LIGHT[\s\S]*u_glareFactor[\s\S]*u_glareOppositeFactor/,
+    "Expected a single directional key light to drive rim specular and interior glow instead of a broad face glare",
   );
 });
 
@@ -659,8 +661,18 @@ test("liquid glass refraction uses a bounded non-saturating envelope instead of 
   );
   assert.match(
     shaderSource,
-    /lensNormal[\s\S]*maxPullPx\s*\*\s*\(0\.28\s*\+\s*centerDistance\s*\*\s*0\.10\)/,
+    /lensNormal[\s\S]*maxPullPx\s*\*\s*\(0\.55\s*\+\s*centerDistance\s*\*\s*0\.16\)/,
     "Expected normal refraction to remain below the reference displacement budget",
+  );
+  assert.match(
+    shaderSource,
+    /min\(\s*u_refThickness[\s\S]*min\(safeHalfSize\.x,\s*safeHalfSize\.y\)\s*\*\s*0\.17/,
+    "Expected the long-range lens pull to stay bounded relative to card size",
+  );
+  assert.match(
+    shaderSource,
+    /lensFalloff[\s\S]*1\.0\s*-\s*smoothstep\(0\.0,\s*u_edgeLensRange,\s*edgeDistanceCssPx\)/,
+    "Expected a smooth long-range Apple-style lens falloff field",
   );
   assert.match(
     shaderSource,

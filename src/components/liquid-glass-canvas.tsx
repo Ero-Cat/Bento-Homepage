@@ -290,13 +290,11 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
         "u_refFactor",
         "u_refDispersion",
         "u_fresnelFactor",
-        "u_fresnelHardness",
         "u_glareFactor",
-        "u_glareAngle",
-        "u_glareConvergence",
-        "u_glareRange",
-        "u_glareHardness",
         "u_glareOppositeFactor",
+        "u_edgeLensRange",
+        "u_lensMagnification",
+        "u_rimMirror",
         "u_tint",
         "u_tintAlpha",
         "u_pointer",
@@ -304,7 +302,6 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
         "u_pointerPress",
         "u_bevelWidth",
         "u_magnification",
-        "u_surfaceRefraction",
         "u_surfaceBlurMix",
         "u_counterRimFactor",
         "u_pointerRefraction",
@@ -1124,18 +1121,15 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
           gl.uniform1f(state.mainProg.uniforms["u_refFactor"]!, config.refFactor);
           gl.uniform1f(state.mainProg.uniforms["u_refDispersion"]!, config.refDispersion);
           gl.uniform1f(state.mainProg.uniforms["u_fresnelFactor"]!, config.fresnelFactor);
-          gl.uniform1f(state.mainProg.uniforms["u_fresnelHardness"]!, config.fresnelHardness);
           gl.uniform1f(state.mainProg.uniforms["u_glareFactor"]!, config.glareFactor);
-          gl.uniform1f(state.mainProg.uniforms["u_glareAngle"]!, config.glareAngle);
-          gl.uniform1f(state.mainProg.uniforms["u_glareConvergence"]!, config.glareConvergence);
-          gl.uniform1f(state.mainProg.uniforms["u_glareRange"]!, config.glareRange);
-          gl.uniform1f(state.mainProg.uniforms["u_glareHardness"]!, config.glareHardness);
           gl.uniform1f(state.mainProg.uniforms["u_glareOppositeFactor"]!, config.glareOppositeFactor);
+          gl.uniform1f(state.mainProg.uniforms["u_edgeLensRange"]!, config.edgeLensRange);
+          gl.uniform1f(state.mainProg.uniforms["u_lensMagnification"]!, config.lensMagnification);
+          gl.uniform1f(state.mainProg.uniforms["u_rimMirror"]!, config.rimMirror);
           gl.uniform3f(state.mainProg.uniforms["u_tint"]!, material.tint[0], material.tint[1], material.tint[2]);
           gl.uniform1f(state.mainProg.uniforms["u_tintAlpha"]!, material.tintAlpha);
           gl.uniform1f(state.mainProg.uniforms["u_bevelWidth"]!, config.bevelWidth);
           gl.uniform1f(state.mainProg.uniforms["u_magnification"]!, config.magnification);
-          gl.uniform1f(state.mainProg.uniforms["u_surfaceRefraction"]!, config.surfaceRefraction);
           gl.uniform1f(state.mainProg.uniforms["u_surfaceBlurMix"]!, config.surfaceBlurMix);
           gl.uniform1f(state.mainProg.uniforms["u_counterRimFactor"]!, config.counterRimFactor);
           gl.uniform1f(state.mainProg.uniforms["u_pointerRefraction"]!, config.pointerRefraction);

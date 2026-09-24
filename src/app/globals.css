@@ -29,6 +29,11 @@
   --glass-divider: rgba(0, 0, 0, 0.06);
   --glass-floating-bg: rgba(255, 255, 255, 0.18);
   --glass-floating-border: rgba(0, 0, 0, 0.07);
+  /* Compositor-synced edge treatment (ready mode): a faint lit top line and
+     the tight contact shadow never desync from DOM content while scrolling;
+     the bent-refraction rim is painted by the GL canvas. */
+  --glass-edge-top-light: rgba(255, 255, 255, 0.55);
+  --glass-edge-shadow: 0 1px 1px rgba(0, 0, 0, 0.05), 0 4px 10px rgba(0, 0, 0, 0.06), 0 14px 30px rgba(0, 0, 0, 0.12);
   /* Glass samples a cleaner scene than the veiled page so the material reads
      as a clear lens instead of a washed-out slab. */
   --glass-scene-veil-strength: 0.6;
@@ -109,6 +114,8 @@
     --glass-divider: rgba(255, 255, 255, 0.07);
     --glass-floating-bg: rgba(28, 28, 30, 0.80);
     --glass-floating-border: rgba(255, 255, 255, 0.09);
+    --glass-edge-top-light: rgba(255, 255, 255, 0.24);
+    --glass-edge-shadow: 0 1px 1px rgba(0, 0, 0, 0.24), 0 16px 36px rgba(0, 0, 0, 0.5);
     /* Below the DOM overlay (1.0) so dark glass stays a deep lens with visible
        background instead of a muddier copy of the page. */
     --glass-scene-veil-strength: 0.8;
@@ -351,7 +358,12 @@ body {
   background: transparent;
   border-width: 0;
   border-color: transparent;
-  box-shadow: none;
+  /* No uniform stroke — Apple's liquid glass has none. Only a faint lit
+     top line plus the contact shadow live on the compositor-scrolled
+     element; the bent-refraction rim is painted by the WebGL canvas. */
+  box-shadow:
+    inset 0 1px 0 0.75px var(--glass-edge-top-light),
+    var(--glass-edge-shadow);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
 }

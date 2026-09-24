@@ -71,8 +71,9 @@ https://github.com/Ero-Cat/Bento-Homepage/raw/main/assets/demo.webm
 
 ### 🧊 Liquid Glass 渲染
 
-- **共享单画布 WebGL2 壳层** — 全站 `GlassCard` 统一注册到一个 `LiquidGlassCanvas`，经 `bgPass → blurPass → mainPass` 管线渲染折射、Fresnel、色散与 glare，不為每张卡片单独建 GL 上下文
-- **清透镜片材质** — 玻璃内部采样的背景比页面遮罩更干净（veil 强度低于 DOM 层），亮色模式是透亮镜片、暗色模式是深色镜片，材质感由 saturation / exposure / tint / sceneCoverage 精确控制
+- **共享单画布 WebGL2 壳层** — 全站 `GlassCard` 统一注册到一个 `LiquidGlassCanvas`，经 `bgPass → blurPass → mainPass` 管线渲染折射、Fresnel、色散与 glare，不为每张卡片单独建 GL 上下文
+- **iOS 27 Liquid Glass 材质** — 边缘折射带把卡片边界之外的背景弯折挤入 rim（外折位移场，即 displacement-map 行为），中心 1.03-1.05×"压在玻璃下"放大与色彩透传、最外缘镜像翻转边；受光方向的细亮线与紧凑接触阴影由合成器同步的 CSS 绘制，滚动零错帧
+- **清透镜片材质** — 玻璃内部采样的背景比页面遮罩更干净（veil 强度低于 DOM 层），亮色模式是透亮镜片、暗色模式是深色镜片 + 发光边缘，材质感由 saturation / exposure / tint / sceneCoverage 精确控制
 - **对称降采样 blur** — 先 bilinear 降采样再执行分离高斯，模糊半径以 CSS px 锚定、按质量档位换算，任何设备上两轴强度一致且无稀疏核鬼影
 - **明暗材质 profile** — 每个 variant（`hero` / `panel` / `media` / `dense` / `immersive`）同时维护 light / dark 两套光学材质，暗色保持透明但更亮，亮色增加暗 counter-rim 提升边缘折射可见度
 - **参考式边缘 displacement** — 借鉴 `liquid-glass-react` 的边缘位移贴图思路：向中心压缩的厚边缘折射、RGB 分通道色散、方向性 glare，位移与色散在最外 2 CSS px 平滑归零

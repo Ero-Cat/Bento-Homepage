@@ -44,8 +44,16 @@ test("shared liquid glass variants centralize layered optics and interaction tok
     );
     assert.ok(variant.magnification >= 0, `Expected ${name} to define magnification`);
     assert.ok(
-      variant.surfaceRefraction > 0,
-      `Expected ${name} to refract the scene across the full glass surface`,
+      variant.lensMagnification >= 1.03 && variant.lensMagnification <= 1.06,
+      `Expected ${name} to keep a subtle "under glass" center magnification`,
+    );
+    assert.ok(
+      variant.edgeLensRange >= 40 && variant.edgeLensRange <= 66,
+      `Expected ${name} to keep the Apple-style long-range lens falloff bounded`,
+    );
+    assert.ok(
+      variant.rimMirror > 0 && variant.rimMirror <= 1,
+      `Expected ${name} to define a bounded mirrored-rim strength`,
     );
     assert.ok(
       variant.surfaceBlurMix >= 0.16,
@@ -86,10 +94,7 @@ test("shared liquid glass variants expose light and dark material profiles", () 
     for (const scheme of ["light", "dark"] as const) {
       const material = resolveGlassMaterial(variant, scheme);
 
-      assert.ok(
-        material.sceneCoverage >= 0.88,
-        `Expected ${name}/${scheme} to reconstruct the page scene instead of leaving a transparent card center`,
-      );
+      assert.ok(material.sceneCoverage >= 0.88, `Expected ${name}/${scheme} to reconstruct the page scene instead of leaving a transparent card center`);
       assert.ok(material.tintAlpha <= 0.09, `Expected ${name}/${scheme} to avoid a milky opaque fill`);
       assert.ok(material.saturation >= 1, `Expected ${name}/${scheme} to keep refracted imagery vivid`);
       assert.ok(material.edgeHighlightGain > 0, `Expected ${name}/${scheme} to expose a bright rim gain`);

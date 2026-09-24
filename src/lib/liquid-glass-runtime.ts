@@ -494,11 +494,14 @@ export function resolveCardRenderGeometry({
     rightCss > -scissorPaddingPx &&
     leftCss < viewport.cssWidth + scissorPaddingPx;
 
+  // Snap to device pixels so the shell edge lands on the same subpixel as
+  // the composited DOM border every frame — fractional scroll offsets must
+  // not make the edge coverage shimmer.
   const shaderRectPx = [
-    leftCss * dpr,
-    topCss * dpr,
-    rect.width * dpr,
-    rect.height * dpr,
+    Math.round(leftCss * dpr),
+    Math.round(topCss * dpr),
+    Math.round(rect.width * dpr),
+    Math.round(rect.height * dpr),
   ] as const;
 
   const scissorRect = expandScissorRect(

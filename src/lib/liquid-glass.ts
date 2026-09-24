@@ -18,17 +18,20 @@ export interface GlassVariantConfig {
   refThickness: number;
   refFactor: number;
   refDispersion: number;
+  /** Rim line strength: crisp directional edge specular + counter rim. */
   fresnelFactor: number;
-  fresnelHardness: number;
+  /** Bottom counter-rim (secondary bright line) strength. */
   glareFactor: number;
-  glareAngle: number;
-  glareConvergence: number;
-  glareRange: number;
-  glareHardness: number;
+  /** Interior top-left glow strength (internal reflection). */
   glareOppositeFactor: number;
+  /** Long-range lens falloff (CSS px): how deep edge refraction bends the scene. */
+  edgeLensRange: number;
+  /** Center magnification factor ("under glass" zoom, e.g. 1.04 = 4%). */
+  lensMagnification: number;
+  /** Mirrored-rim strength: content flip at the outermost silhouette pixels. */
+  rimMirror: number;
   bevelWidth: number;
   magnification: number;
-  surfaceRefraction: number;
   surfaceBlurMix: number;
   counterRimFactor: number;
   pointerRefraction: number;
@@ -49,7 +52,7 @@ export const STANDARD_ROUNDED_RECT_SHAPE = 2;
 export const LIQUID_GLASS_CANVAS = {
   /** Target softening of the blurred scene layer, anchored in CSS px so every
    *  quality tier renders the same visual blur regardless of buffer scale. */
-  sceneBlurRadiusCss: 9,
+  sceneBlurRadiusCss: 12,
   /** Scene buffer renders at min(dpr, this) × CSS size to bound fill cost on
    *  high-DPR screens; refraction rims still shade at full canvas resolution. */
   sceneBufferMaxScale: 1.5,
@@ -57,14 +60,16 @@ export const LIQUID_GLASS_CANVAS = {
    *  background texture is ready, in ms. */
   bgReadyRampMs: 450,
   maxDpr: 2,
-  scissorPaddingPx: 10,
+  /** Padding around each card's scissor rect; covers the shader's contact
+   *  shadow plus the refraction silhouette margin. */
+  scissorPaddingPx: 12,
   measureWarmupFrames: 8,
   rootDatasetKey: "liquidGlass",
   activeBackgroundDatasetKey: "liquidGlassBg",
   nextBackgroundDatasetKey: "liquidGlassBgNext",
   previousBackgroundDatasetKey: "liquidGlassBgPrev",
   backgroundTransitionStartedAtDatasetKey: "liquidGlassBgTransitionStartedAt",
-  backgroundTransitionDurationDatasetKey: "liquidGlassBgTransitionDuration",
+  backgroundTransitionDurationDatasetKey: "liquidGlassBgDuration",
   registryChangeEventName: "liquid-glass:registry-change",
   backgroundTransitionMs: 2000,
   spring: {
@@ -86,16 +91,13 @@ export const GLASS_VARIANTS: Record<GlassVariant, GlassVariantConfig> = {
     refFactor: 2.18,
     refDispersion: 2.16,
     fresnelFactor: 0.18,
-    fresnelHardness: -0.08,
     glareFactor: 0.145,
-    glareAngle: -0.16,
-    glareConvergence: 0.66,
-    glareRange: 90,
-    glareHardness: -0.40,
     glareOppositeFactor: 0.92,
+    edgeLensRange: 58,
+    lensMagnification: 1.048,
+    rimMirror: 0.85,
     bevelWidth: 16,
     magnification: 0.12,
-    surfaceRefraction: 4.2,
     surfaceBlurMix: 0.24,
     counterRimFactor: 0.15,
     pointerRefraction: 0.86,
@@ -114,7 +116,7 @@ export const GLASS_VARIANTS: Record<GlassVariant, GlassVariantConfig> = {
     },
     dark: {
       tint: [0.82, 0.9, 1.0],
-      tintAlpha: 0.056,
+      tintAlpha: 0.05,
       sceneCoverage: 0.93,
       saturation: 1.26,
       exposure: 1.08,
@@ -131,17 +133,14 @@ export const GLASS_VARIANTS: Record<GlassVariant, GlassVariantConfig> = {
     refFactor: 2.06,
     refDispersion: 1.82,
     fresnelFactor: 0.155,
-    fresnelHardness: -0.09,
     glareFactor: 0.122,
-    glareAngle: -0.10,
-    glareConvergence: 0.60,
-    glareRange: 92,
-    glareHardness: -0.36,
     glareOppositeFactor: 0.88,
+    edgeLensRange: 54,
+    lensMagnification: 1.04,
+    rimMirror: 0.75,
     bevelWidth: 15,
     magnification: 0.09,
-    surfaceRefraction: 3.6,
-    surfaceBlurMix: 0.30,
+    surfaceBlurMix: 0.3,
     counterRimFactor: 0.13,
     pointerRefraction: 0.66,
     pointerGlare: 0.62,
@@ -159,7 +158,7 @@ export const GLASS_VARIANTS: Record<GlassVariant, GlassVariantConfig> = {
     },
     dark: {
       tint: [0.82, 0.9, 1.0],
-      tintAlpha: 0.052,
+      tintAlpha: 0.046,
       sceneCoverage: 0.92,
       saturation: 1.24,
       exposure: 1.07,
@@ -176,16 +175,13 @@ export const GLASS_VARIANTS: Record<GlassVariant, GlassVariantConfig> = {
     refFactor: 1.94,
     refDispersion: 1.54,
     fresnelFactor: 0.125,
-    fresnelHardness: -0.10,
     glareFactor: 0.095,
-    glareAngle: 0.06,
-    glareConvergence: 0.52,
-    glareRange: 88,
-    glareHardness: -0.34,
     glareOppositeFactor: 0.82,
+    edgeLensRange: 46,
+    lensMagnification: 1.036,
+    rimMirror: 0.7,
     bevelWidth: 14,
     magnification: 0.05,
-    surfaceRefraction: 2.8,
     surfaceBlurMix: 0.18,
     counterRimFactor: 0.09,
     pointerRefraction: 0.34,
@@ -204,7 +200,7 @@ export const GLASS_VARIANTS: Record<GlassVariant, GlassVariantConfig> = {
     },
     dark: {
       tint: [0.84, 0.91, 1.0],
-      tintAlpha: 0.048,
+      tintAlpha: 0.042,
       sceneCoverage: 0.9,
       saturation: 1.21,
       exposure: 1.06,
@@ -219,18 +215,15 @@ export const GLASS_VARIANTS: Record<GlassVariant, GlassVariantConfig> = {
     shapeRoundness: STANDARD_ROUNDED_RECT_SHAPE,
     refThickness: 44,
     refFactor: 1.84,
-    refDispersion: 1.30,
+    refDispersion: 1.3,
     fresnelFactor: 0.11,
-    fresnelHardness: -0.11,
     glareFactor: 0.085,
-    glareAngle: 0.0,
-    glareConvergence: 0.48,
-    glareRange: 86,
-    glareHardness: -0.32,
     glareOppositeFactor: 0.78,
+    edgeLensRange: 40,
+    lensMagnification: 1.032,
+    rimMirror: 0.6,
     bevelWidth: 12,
     magnification: 0.035,
-    surfaceRefraction: 2.2,
     surfaceBlurMix: 0.25,
     counterRimFactor: 0.07,
     pointerRefraction: 0.22,
@@ -249,7 +242,7 @@ export const GLASS_VARIANTS: Record<GlassVariant, GlassVariantConfig> = {
     },
     dark: {
       tint: [0.86, 0.92, 1.0],
-      tintAlpha: 0.044,
+      tintAlpha: 0.038,
       sceneCoverage: 0.89,
       saturation: 1.2,
       exposure: 1.05,
@@ -266,16 +259,13 @@ export const GLASS_VARIANTS: Record<GlassVariant, GlassVariantConfig> = {
     refFactor: 2.34,
     refDispersion: 2.34,
     fresnelFactor: 0.22,
-    fresnelHardness: -0.05,
     glareFactor: 0.17,
-    glareAngle: -0.22,
-    glareConvergence: 0.68,
-    glareRange: 92,
-    glareHardness: -0.44,
     glareOppositeFactor: 0.96,
+    edgeLensRange: 66,
+    lensMagnification: 1.05,
+    rimMirror: 0.9,
     bevelWidth: 17,
     magnification: 0.14,
-    surfaceRefraction: 4.8,
     surfaceBlurMix: 0.26,
     counterRimFactor: 0.17,
     pointerRefraction: 0.98,
@@ -294,7 +284,7 @@ export const GLASS_VARIANTS: Record<GlassVariant, GlassVariantConfig> = {
     },
     dark: {
       tint: [0.8, 0.89, 1.0],
-      tintAlpha: 0.06,
+      tintAlpha: 0.054,
       sceneCoverage: 0.94,
       saturation: 1.28,
       exposure: 1.09,
