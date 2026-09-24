@@ -51,7 +51,12 @@ test("light mode background veil stays clear enough for liquid refraction", () =
   assert.equal(getToken("light", "bg-overlay"), "rgba(244, 247, 251, 0.18)");
   assert.equal(getToken("light", "bg-overlay-gradient-top"), "rgba(248, 250, 252, 0.42)");
   assert.equal(getToken("light", "bg-overlay-gradient-bottom"), "rgba(241, 245, 249, 0.34)");
-  assert.equal(getToken("light", "glass-scene-veil-strength"), "0.88");
+  // Glass samples a cleaner scene than the veiled page (clear-lens material).
+  assert.equal(getToken("light", "glass-scene-veil-strength"), "0.6");
+  assert.ok(
+    Number.parseFloat(getToken("dark", "glass-scene-veil-strength")) < 1,
+    "Expected dark glass to sample a cleaner scene than the veiled page",
+  );
 });
 
 test("legacy prism inner-control systems are removed from global styling", () => {

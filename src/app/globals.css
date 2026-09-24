@@ -29,7 +29,9 @@
   --glass-divider: rgba(0, 0, 0, 0.06);
   --glass-floating-bg: rgba(255, 255, 255, 0.18);
   --glass-floating-border: rgba(0, 0, 0, 0.07);
-  --glass-scene-veil-strength: 0.88;
+  /* Glass samples a cleaner scene than the veiled page so the material reads
+     as a clear lens instead of a washed-out slab. */
+  --glass-scene-veil-strength: 0.6;
   /* iOS media card material — Apple Music frosted glass */
   --ios-material-bg: rgba(255, 255, 255, 0.24);
   --ios-material-border: rgba(0, 0, 0, 0.07);
@@ -107,7 +109,9 @@
     --glass-divider: rgba(255, 255, 255, 0.07);
     --glass-floating-bg: rgba(28, 28, 30, 0.80);
     --glass-floating-border: rgba(255, 255, 255, 0.09);
-    --glass-scene-veil-strength: 1.06;
+    /* Below the DOM overlay (1.0) so dark glass stays a deep lens with visible
+       background instead of a muddier copy of the page. */
+    --glass-scene-veil-strength: 0.8;
     /* iOS media card material — Apple Music dark */
     --ios-material-bg: rgba(28, 28, 30, 0.68);
     --ios-material-border: rgba(255, 255, 255, 0.10);

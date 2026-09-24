@@ -21,10 +21,6 @@ export interface FrameBuffer {
   type: GLenum;
 }
 
-interface FrameBufferOptions {
-  preferHalfFloat?: boolean;
-}
-
 /* ── Vertex shader shared across all passes ── */
 const VERTEX_SRC = `#version 300 es
 in vec2 a_position;
@@ -98,12 +94,13 @@ export function createShaderProgram(
   return { program, uniforms, vao, buf };
 }
 
-/** Create a colour-only FBO at the given size. */
+/** Create a colour-only FBO at the given size. The glass pipeline is fully
+ *  LDR (photo + veil), so RGBA8 keeps framebuffer bandwidth at half the cost
+ *  of RGBA16F on every quality tier. */
 export function createFrameBuffer(
   gl: WebGL2RenderingContext,
   w: number,
   h: number,
-  options: FrameBufferOptions = {},
 ): FrameBuffer {
   const texture = gl.createTexture()!;
   gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -114,32 +111,13 @@ export function createFrameBuffer(
 
   const fbo = gl.createFramebuffer()!;
   gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
-  const supportsFloat =
-    options.preferHalfFloat !== false && Boolean(gl.getExtension("EXT_color_buffer_float"));
 
-  let internalFormat: GLenum = gl.RGBA8;
-  let format: GLenum = gl.RGBA;
-  let type: GLenum = gl.UNSIGNED_BYTE;
+  const internalFormat: GLenum = gl.RGBA8;
+  const format: GLenum = gl.RGBA;
+  const type: GLenum = gl.UNSIGNED_BYTE;
 
-  if (supportsFloat) {
-    internalFormat = gl.RGBA16F;
-    type = gl.HALF_FLOAT;
-  }
-
-  const allocate = (nextInternalFormat: GLenum, nextFormat: GLenum, nextType: GLenum) => {
-    gl.bindTexture(gl.TEXTURE_2D, texture);
-    gl.texImage2D(gl.TEXTURE_2D, 0, nextInternalFormat, w, h, 0, nextFormat, nextType, null);
-    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
-  };
-
-  allocate(internalFormat, format, type);
-
-  if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
-    internalFormat = gl.RGBA8;
-    format = gl.RGBA;
-    type = gl.UNSIGNED_BYTE;
-    allocate(internalFormat, format, type);
-  }
+  gl.texImage2D(gl.TEXTURE_2D, 0, internalFormat, w, h, 0, format, type, null);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
 
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 

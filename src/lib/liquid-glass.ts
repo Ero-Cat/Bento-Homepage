@@ -18,7 +18,6 @@ export interface GlassVariantConfig {
   refThickness: number;
   refFactor: number;
   refDispersion: number;
-  fresnelRange: number;
   fresnelFactor: number;
   fresnelHardness: number;
   glareFactor: number;
@@ -48,7 +47,15 @@ export const SHARED_GLASS_RADIUS_CSS = `${SHARED_GLASS_RADIUS_PX}px`;
 export const STANDARD_ROUNDED_RECT_SHAPE = 2;
 
 export const LIQUID_GLASS_CANVAS = {
-  sceneBlurRadius: 18,
+  /** Target softening of the blurred scene layer, anchored in CSS px so every
+   *  quality tier renders the same visual blur regardless of buffer scale. */
+  sceneBlurRadiusCss: 9,
+  /** Scene buffer renders at min(dpr, this) × CSS size to bound fill cost on
+   *  high-DPR screens; refraction rims still shade at full canvas resolution. */
+  sceneBufferMaxScale: 1.5,
+  /** Ease-out duration for revealing scene coverage once the first real
+   *  background texture is ready, in ms. */
+  bgReadyRampMs: 450,
   maxDpr: 2,
   scissorPaddingPx: 10,
   measureWarmupFrames: 8,
@@ -78,7 +85,6 @@ export const GLASS_VARIANTS: Record<GlassVariant, GlassVariantConfig> = {
     refThickness: 70,
     refFactor: 2.18,
     refDispersion: 2.16,
-    fresnelRange: 158,
     fresnelFactor: 0.18,
     fresnelHardness: -0.08,
     glareFactor: 0.145,
@@ -99,21 +105,21 @@ export const GLASS_VARIANTS: Record<GlassVariant, GlassVariantConfig> = {
     tintAlpha: 0.036,
     light: {
       tint: [1.0, 1.0, 1.0],
-      tintAlpha: 0.018,
-      sceneCoverage: 0.96,
-      saturation: 1.08,
-      exposure: 1.02,
-      edgeHighlightGain: 1.1,
-      edgeShadowGain: 0.72,
+      tintAlpha: 0.02,
+      sceneCoverage: 0.93,
+      saturation: 1.22,
+      exposure: 1.04,
+      edgeHighlightGain: 1.5,
+      edgeShadowGain: 1.08,
     },
     dark: {
       tint: [0.82, 0.9, 1.0],
-      tintAlpha: 0.048,
-      sceneCoverage: 0.98,
-      saturation: 1.18,
+      tintAlpha: 0.056,
+      sceneCoverage: 0.93,
+      saturation: 1.26,
       exposure: 1.08,
-      edgeHighlightGain: 1.54,
-      edgeShadowGain: 1.14,
+      edgeHighlightGain: 1.66,
+      edgeShadowGain: 1.18,
     },
     fallbackBlurPx: 12,
   },
@@ -124,7 +130,6 @@ export const GLASS_VARIANTS: Record<GlassVariant, GlassVariantConfig> = {
     refThickness: 70,
     refFactor: 2.06,
     refDispersion: 1.82,
-    fresnelRange: 152,
     fresnelFactor: 0.155,
     fresnelHardness: -0.09,
     glareFactor: 0.122,
@@ -145,20 +150,20 @@ export const GLASS_VARIANTS: Record<GlassVariant, GlassVariantConfig> = {
     tintAlpha: 0.03,
     light: {
       tint: [1.0, 1.0, 1.0],
-      tintAlpha: 0.016,
-      sceneCoverage: 0.95,
-      saturation: 1.07,
-      exposure: 1.02,
-      edgeHighlightGain: 1.05,
-      edgeShadowGain: 0.68,
+      tintAlpha: 0.018,
+      sceneCoverage: 0.92,
+      saturation: 1.2,
+      exposure: 1.03,
+      edgeHighlightGain: 1.42,
+      edgeShadowGain: 1.0,
     },
     dark: {
       tint: [0.82, 0.9, 1.0],
-      tintAlpha: 0.044,
-      sceneCoverage: 0.97,
-      saturation: 1.16,
+      tintAlpha: 0.052,
+      sceneCoverage: 0.92,
+      saturation: 1.24,
       exposure: 1.07,
-      edgeHighlightGain: 1.46,
+      edgeHighlightGain: 1.56,
       edgeShadowGain: 1.12,
     },
     fallbackBlurPx: 10,
@@ -170,7 +175,6 @@ export const GLASS_VARIANTS: Record<GlassVariant, GlassVariantConfig> = {
     refThickness: 54,
     refFactor: 1.94,
     refDispersion: 1.54,
-    fresnelRange: 146,
     fresnelFactor: 0.125,
     fresnelHardness: -0.10,
     glareFactor: 0.095,
@@ -191,21 +195,21 @@ export const GLASS_VARIANTS: Record<GlassVariant, GlassVariantConfig> = {
     tintAlpha: 0.028,
     light: {
       tint: [1.0, 1.0, 1.0],
-      tintAlpha: 0.014,
-      sceneCoverage: 0.92,
-      saturation: 1.05,
-      exposure: 1.02,
-      edgeHighlightGain: 1.0,
-      edgeShadowGain: 0.62,
+      tintAlpha: 0.016,
+      sceneCoverage: 0.9,
+      saturation: 1.17,
+      exposure: 1.03,
+      edgeHighlightGain: 1.36,
+      edgeShadowGain: 0.96,
     },
     dark: {
       tint: [0.84, 0.91, 1.0],
-      tintAlpha: 0.04,
-      sceneCoverage: 0.95,
-      saturation: 1.12,
+      tintAlpha: 0.048,
+      sceneCoverage: 0.9,
+      saturation: 1.21,
       exposure: 1.06,
-      edgeHighlightGain: 1.34,
-      edgeShadowGain: 1.04,
+      edgeHighlightGain: 1.48,
+      edgeShadowGain: 1.06,
     },
     fallbackBlurPx: 10,
   },
@@ -216,7 +220,6 @@ export const GLASS_VARIANTS: Record<GlassVariant, GlassVariantConfig> = {
     refThickness: 44,
     refFactor: 1.84,
     refDispersion: 1.30,
-    fresnelRange: 144,
     fresnelFactor: 0.11,
     fresnelHardness: -0.11,
     glareFactor: 0.085,
@@ -237,21 +240,21 @@ export const GLASS_VARIANTS: Record<GlassVariant, GlassVariantConfig> = {
     tintAlpha: 0.024,
     light: {
       tint: [1.0, 1.0, 1.0],
-      tintAlpha: 0.012,
-      sceneCoverage: 0.9,
-      saturation: 1.04,
-      exposure: 1.02,
-      edgeHighlightGain: 0.96,
-      edgeShadowGain: 0.58,
+      tintAlpha: 0.014,
+      sceneCoverage: 0.88,
+      saturation: 1.16,
+      exposure: 1.03,
+      edgeHighlightGain: 1.32,
+      edgeShadowGain: 0.94,
     },
     dark: {
       tint: [0.86, 0.92, 1.0],
-      tintAlpha: 0.036,
-      sceneCoverage: 0.93,
-      saturation: 1.1,
+      tintAlpha: 0.044,
+      sceneCoverage: 0.89,
+      saturation: 1.2,
       exposure: 1.05,
-      edgeHighlightGain: 1.25,
-      edgeShadowGain: 0.98,
+      edgeHighlightGain: 1.42,
+      edgeShadowGain: 1.04,
     },
     fallbackBlurPx: 8,
   },
@@ -262,7 +265,6 @@ export const GLASS_VARIANTS: Record<GlassVariant, GlassVariantConfig> = {
     refThickness: 84,
     refFactor: 2.34,
     refDispersion: 2.34,
-    fresnelRange: 162,
     fresnelFactor: 0.22,
     fresnelHardness: -0.05,
     glareFactor: 0.17,
@@ -283,21 +285,21 @@ export const GLASS_VARIANTS: Record<GlassVariant, GlassVariantConfig> = {
     tintAlpha: 0.04,
     light: {
       tint: [1.0, 1.0, 1.0],
-      tintAlpha: 0.02,
-      sceneCoverage: 0.97,
-      saturation: 1.1,
-      exposure: 1.03,
-      edgeHighlightGain: 1.16,
-      edgeShadowGain: 0.78,
+      tintAlpha: 0.022,
+      sceneCoverage: 0.94,
+      saturation: 1.24,
+      exposure: 1.05,
+      edgeHighlightGain: 1.55,
+      edgeShadowGain: 1.15,
     },
     dark: {
       tint: [0.8, 0.89, 1.0],
-      tintAlpha: 0.052,
-      sceneCoverage: 0.99,
-      saturation: 1.2,
+      tintAlpha: 0.06,
+      sceneCoverage: 0.94,
+      saturation: 1.28,
       exposure: 1.09,
-      edgeHighlightGain: 1.62,
-      edgeShadowGain: 1.18,
+      edgeHighlightGain: 1.7,
+      edgeShadowGain: 1.22,
     },
     fallbackBlurPx: 14,
   },
@@ -318,4 +320,19 @@ export function resolveGlassVariant(value?: string): GlassVariant {
   return value in GLASS_VARIANTS
     ? (value as GlassVariant)
     : DEFAULT_GLASS_VARIANT;
+}
+
+/**
+ * Convert the CSS-anchored scene blur target into a per-pass texel radius for
+ * the downscaled blur buffer. Two separable passes compose to ~sqrt(2)× the
+ * per-pass softening, so each pass carries ~0.707 of the target; the radius
+ * scales with dpr × blurBufferScale so every quality tier renders the same
+ * visual blur in CSS pixels.
+ */
+export function resolveSceneBlurTexelRadius(
+  sceneBlurRadiusCss: number,
+  dpr: number,
+  blurBufferScale: number,
+): number {
+  return Math.max(1, Math.round(sceneBlurRadiusCss * Math.SQRT1_2 * dpr * blurBufferScale));
 }

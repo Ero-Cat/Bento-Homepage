@@ -1,5 +1,4 @@
 export interface LiquidGlassQualityInput {
-  cardCount: number;
   devicePixelRatio: number;
   hasCoarsePointer: boolean;
   deviceMemory?: number;
@@ -11,7 +10,6 @@ export interface LiquidGlassQualityInput {
 export interface LiquidGlassQualityProfile {
   blurBufferScale: number;
   dprCap: number;
-  preferHalfFloat: boolean;
 }
 
 export interface VisualViewportLike {
@@ -192,7 +190,6 @@ export function resolveBackgroundCrossfadeProgress(
 }
 
 export function resolveLiquidGlassQuality({
-  cardCount,
   devicePixelRatio,
   hasCoarsePointer,
   deviceMemory,
@@ -204,34 +201,33 @@ export function resolveLiquidGlassQuality({
   const lowCoreCount =
     typeof hardwareConcurrency === "number" && hardwareConcurrency > 0 && hardwareConcurrency <= 4;
 
+  // Card passes are scissored to card bounds, so their cost scales with
+  // viewport area rather than registry size — card count must not downgrade
+  // DPR. Only capability signals gate quality here.
   if (saveData || veryLowMemory || (hasCoarsePointer && lowCoreCount && devicePixelRatio >= 2)) {
     return {
-      blurBufferScale: 0.38,
+      blurBufferScale: 0.22,
       dprCap: 1.1,
-      preferHalfFloat: false,
     };
   }
 
-  if (hasCoarsePointer || lowMemory || cardCount >= 10 || devicePixelRatio >= 3) {
+  if (hasCoarsePointer || lowMemory || devicePixelRatio >= 3) {
     return {
-      blurBufferScale: 0.5,
+      blurBufferScale: 0.3,
       dprCap: 1.35,
-      preferHalfFloat: false,
     };
   }
 
-  if (cardCount >= 8 || devicePixelRatio > 2) {
+  if (lowCoreCount) {
     return {
-      blurBufferScale: 0.67,
-      dprCap: 1.6,
-      preferHalfFloat: false,
+      blurBufferScale: 0.3,
+      dprCap: 1.5,
     };
   }
 
   return {
-    blurBufferScale: 1,
+    blurBufferScale: 0.4,
     dprCap: 2,
-    preferHalfFloat: true,
   };
 }
 

@@ -21,39 +21,49 @@ import {
 } from "./liquid-glass-runtime.ts";
 import { GLASS_VARIANTS } from "./liquid-glass.ts";
 
-test("resolveLiquidGlassQuality lowers quality for coarse pointer devices with many cards", () => {
+test("resolveLiquidGlassQuality lowers quality for coarse pointer devices", () => {
   const profile = resolveLiquidGlassQuality({
-    cardCount: 12,
     devicePixelRatio: 3,
     hasCoarsePointer: true,
     deviceMemory: 4,
   });
 
   assert.deepEqual(profile, {
-    blurBufferScale: 0.5,
+    blurBufferScale: 0.3,
     dprCap: 1.35,
-    preferHalfFloat: false,
   });
 });
 
-test("resolveLiquidGlassQuality keeps high quality on capable desktop devices", () => {
+test("resolveLiquidGlassQuality keeps high quality on capable desktop devices regardless of card count", () => {
   const profile = resolveLiquidGlassQuality({
-    cardCount: 6,
     devicePixelRatio: 2,
     hasCoarsePointer: false,
     deviceMemory: 8,
+    hardwareConcurrency: 10,
   });
 
   assert.deepEqual(profile, {
-    blurBufferScale: 1,
+    blurBufferScale: 0.4,
     dprCap: 2,
-    preferHalfFloat: true,
+  });
+});
+
+test("resolveLiquidGlassQuality caps DPR for low-core desktops without dropping to mobile tier", () => {
+  const profile = resolveLiquidGlassQuality({
+    devicePixelRatio: 2,
+    hasCoarsePointer: false,
+    deviceMemory: 8,
+    hardwareConcurrency: 4,
+  });
+
+  assert.deepEqual(profile, {
+    blurBufferScale: 0.3,
+    dprCap: 1.5,
   });
 });
 
 test("resolveLiquidGlassQuality keeps liquid glass enabled with an ultra-low profile on constrained hardware", () => {
   const profile = resolveLiquidGlassQuality({
-    cardCount: 14,
     devicePixelRatio: 3,
     hasCoarsePointer: true,
     deviceMemory: 2,
@@ -61,9 +71,8 @@ test("resolveLiquidGlassQuality keeps liquid glass enabled with an ultra-low pro
   });
 
   assert.deepEqual(profile, {
-    blurBufferScale: 0.38,
+    blurBufferScale: 0.22,
     dprCap: 1.1,
-    preferHalfFloat: false,
   });
 });
 

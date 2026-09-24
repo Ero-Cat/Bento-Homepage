@@ -3,9 +3,9 @@ precision highp float;
 
 #define PI 3.14159265359
 
-const float N_R = 1.0 - 0.018;
+const float N_R = 1.0 - 0.026;
 const float N_G = 1.0;
-const float N_B = 1.0 + 0.018;
+const float N_B = 1.0 + 0.026;
 
 in vec2 v_uv;
 uniform sampler2D u_bg;
@@ -18,7 +18,6 @@ uniform float u_shapeRoundness;
 uniform float u_refThickness;
 uniform float u_refFactor;
 uniform float u_refDispersion;
-uniform float u_fresnelRange;
 uniform float u_fresnelFactor;
 uniform float u_fresnelHardness;
 uniform float u_glareFactor;
@@ -168,7 +167,7 @@ void main() {
   magnifyPixels *= outerEdgeContinuity;
   vec2 refractOffset = (refractPixels * (0.82 + edgeEnergy * 0.18) + magnifyPixels) / u_resolution;
   vec2 dispersionAxis = normalize(normalDir + pointerDirection * pointerField * 0.35 + vec2(0.0001));
-  float chroma = u_refDispersion * edgeField * (0.54 + bevelBody * 0.14) * outerEdgeContinuity;
+  float chroma = u_refDispersion * edgeField * (0.85 + bevelBody * 0.22) * outerEdgeContinuity;
   vec2 chromaOffset = dispersionAxis * chroma * u_dpr / u_resolution;
   vec2 redOffset = refractOffset * (1.0 + (1.0 - N_R) * chroma) + chromaOffset;
   vec2 greenOffset = refractOffset * (1.0 + (1.0 - N_G) * chroma);
@@ -217,14 +216,14 @@ void main() {
   float counterRimBand = smoothstep(1.5, 2.5, edgeDistanceCssPx)
     * (1.0 - smoothstep(3.5, 5.0, edgeDistanceCssPx));
   float innerShadow = counterRimBand
-    * (0.010 + edgeEnergy * u_counterRimFactor * 0.20)
+    * (0.020 + edgeEnergy * u_counterRimFactor * 0.20)
     * u_edgeShadowGain;
   float farRim = clamp(-dot(normalDir, pointerDirection), 0.0, 1.0) * pointerField * u_counterRimFactor;
   float luminance = dot(outRgb, vec3(0.299, 0.587, 0.114));
   float brightBackground = smoothstep(0.56, 0.82, luminance);
   float darkBackground = 1.0 - smoothstep(0.24, 0.52, luminance);
   vec3 highlightTint = mix(outRgb, vec3(1.0), 0.34 + darkBackground * 0.22);
-  outRgb = mix(outRgb, highlightTint, clamp(shellHighlight * (0.42 + darkBackground * 0.58), 0.0, 0.72));
+  outRgb = mix(outRgb, highlightTint, clamp(shellHighlight * (0.58 + darkBackground * 0.42), 0.0, 0.72));
   outRgb = mix(outRgb, vec3(0.0), clamp((innerShadow + farRim * 0.06) * (0.46 + brightBackground * 0.46), 0.0, 0.32));
 
   float readySceneCoverage = mix(0.075, u_sceneCoverage, clamp(u_bgReady, 0.0, 1.0));

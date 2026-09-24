@@ -7,7 +7,6 @@ uniform sampler2D u_bg;
 uniform sampler2D u_bgPrev;
 uniform vec4 u_bgCover;
 uniform vec4 u_bgPrevCover;
-uniform vec2 u_resolution;
 uniform vec4 u_veilTop;
 uniform vec4 u_veilMid;
 uniform vec4 u_veilBottom;

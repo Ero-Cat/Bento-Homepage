@@ -50,16 +50,20 @@ export const metadata: Metadata = {
 };
 
 /**
- * Inject siteConfig.theme values as CSS custom properties on <html>,
- * so the design tokens in globals.css can be overridden from config.
+ * Inject siteConfig.theme values as CSS custom properties scoped to dark
+ * mode only — the config tokens are dark-designed, and an unconditional
+ * override used to clobber the designed light-mode tokens in globals.css.
+ * :root:root keeps the rule above the stylesheet regardless of link order.
  */
-const themeVars: React.CSSProperties = {
-  "--tint-color": siteConfig.theme.tintColor,
-  "--tint-rgb": siteConfig.theme.tintColorRGB,
-  "--bg-gradient-from": siteConfig.theme.gradientFrom,
-  "--bg-gradient-via": siteConfig.theme.gradientVia,
-  "--bg-gradient-to": siteConfig.theme.gradientTo,
-} as React.CSSProperties;
+const themeStyle = `@media (prefers-color-scheme: dark) {
+  :root:root {
+    --tint-color: ${siteConfig.theme.tintColor};
+    --tint-rgb: ${siteConfig.theme.tintColorRGB};
+    --bg-gradient-from: ${siteConfig.theme.gradientFrom};
+    --bg-gradient-via: ${siteConfig.theme.gradientVia};
+    --bg-gradient-to: ${siteConfig.theme.gradientTo};
+  }
+}`;
 
 export default function RootLayout({
   children,
@@ -69,8 +73,9 @@ export default function RootLayout({
   const bgImages = getBgImages();
 
   return (
-    <html lang="en" data-liquid-glass="loading" suppressHydrationWarning style={themeVars}>
+    <html lang="en" data-liquid-glass="loading" suppressHydrationWarning>
       <body className={`${quicksand.variable} antialiased`}>
+        <style id="site-theme-tokens" dangerouslySetInnerHTML={{ __html: themeStyle }} />
         <BackgroundLayer images={bgImages} />
         <LiquidGlassProvider>
           {children}

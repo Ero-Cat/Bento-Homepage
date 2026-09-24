@@ -180,7 +180,7 @@ Bento-Homepage/
 - **三段式壳层**：`mainPass` 必须保持外缘色散、厚 bevel 折射和清晰中心三段模型；真实背景纹理 ready 后，中心必须通过非零全表面镜片位移、可见扩散与 variant 的完整 `sceneCoverage` 重建同一页面场景，文本型 `panel` / `dense` 必须保留约 8px 等效的最低全表面柔化档以压低复杂背景细节，禁止直接重画未偏移背景、叠加第二层 CSS blur 或对已折射场景二次降低覆盖导致中心材质消失；边缘折射必须使用类似 `liquid-glass-react` 位移贴图的非线性 displacement field，禁止退回几像素弱法线偏移；强色散与 glare 不得覆盖文字密集中心区域
 - **圆角光学约束**：折射位移强度与 bevel 宽度必须分离；bevel 宽度不得超过圆角半径的 55%，必须为玻璃内轮廓保留至少 45% 的宽圆角；shader 圆角必须按运行时 DPR 换算，位移与色散必须在最外 2 CSS px 平滑归零；outer-rim 与 bevel 必须用有界、无加法饱和平台的连续包络合成，最大采样位移必须受统一预算限制，counter-rim 必须保持为独立窄带，避免角部产生紧缩 U 形槽、彩色厚边、灰黑胶圈、中轴楔形或直角折线
 - **稳定背景源**：`BackgroundLayer` 将当前背景图 URL 发布到根节点 dataset，Canvas 不再通过脆弱 DOM 查询推断背景
-- **非阻塞首帧纹理**：`LiquidGlassCanvas` 启动时必须先创建 1×1 fallback GPU background texture；`GLState.bgTex` 保持非空，真实背景异步加载完成后替换，禁止重新引入 `if (!state.bgTex) return` 这类 loading 死锁
+- **非阻塞首帧纹理**：`LiquidGlassCanvas` 启动时必须先创建 1×1 fallback GPU background texture（颜色跟随 colorScheme）；`GLState.bgTex` 保持非空，真实背景异步加载完成后替换并通过 bgReady ramp 渐入，禁止重新引入 `if (!state.bgTex) return` 这类 loading 死锁
 - **背景 cover 对齐**：`bgPass` 必须用 `resolveCoverUvTransform` 复现页面背景的 `object-fit: cover; object-position: center` 裁剪；禁止直接用裸 `v_uv` 采样背景图导致卡片内部和页面背景错位
 - **材质模式**：light/dark 模式必须通过 `GlassMaterialProfile` 集中控制 tint、sceneCoverage、saturation、exposure、edgeHighlightGain 与 edgeShadowGain；业务组件禁止根据主题复制光学参数
 - **真实纹理门控**：真实背景未 ready 时只允许低覆盖 startup shell，禁止让 1×1 fallback 纹理以高 sceneCoverage 绘制不透明白卡；真实纹理 ready 后再提高 sceneCoverage
@@ -191,10 +191,13 @@ Bento-Homepage/
 - **全屏与 resize 重绘**：resize、fullscreenchange、visibility 恢复必须统一走 viewport/FBO 更新、全卡片几何标脏、requestRender 的重绘路径，避免 PC 全屏切换后 canvas 清空但 glass 壳层不重新提交
 - **移动端视口同步**：Canvas 使用 `visualViewport` 解析动态视口尺寸和 offset，配合文档坐标投影保持 mobile 与滚动场景下 glass shell 和 DOM 内容同步
 - **按卡片范围绘制**：`mainPass` 通过 scissor 限定到每张卡片的实际屏幕区域，避免“每张卡都绘制一次全屏 quad”的 GPU 浪费
-- **降采样 blur**：背景 blur pass 根据运行时质量档位使用降采样 FBO，在移动端/高 DPR/高卡片密度下自动降低填充成本
+- **对称降采样 blur**：blur 管线为先 bilinear 降采样到 blur buffer，再执行垂直/水平分离高斯；两轴必须在同一 blur-buffer 分辨率下采样，模糊半径以 CSS px 锚定（`sceneBlurRadiusCss`）并按 `dpr × blurBufferScale` 换算成 texel 半径（`resolveSceneBlurTexelRadius`），保证任何档位两轴强度一致且无稀疏核鬼影；禁止恢复"vblur 用全屏分辨率、hblur 用降采样分辨率"的不对称采样
+- **场景缓冲上限**：场景 FBO（fbo0）按 `min(dpr, sceneBufferMaxScale)` × CSS 尺寸渲染（默认上限 1.5×），mainPass 以 LINEAR 上采样、rim 仍按全画布分辨率着色；所有 FBO 使用 RGBA8（管线全程 LDR），禁止恢复 RGBA16F 或无上限的场景缓冲
 - **纯光学壳层**：WebGL2 就绪后，`GlassCard` 的旧 DOM 玻璃外观必须静音，只保留结构与命中区域，光学效果完全由 Canvas 负责
 - **CSS fallback**：WebGL2 不可用时退回 CSS blur/border/shadow 玻璃壳层，保证内容可读
-- **低端质量分级**：在省流量、低内存、低核心数、移动高 DPR 或高卡片密度场景下，仍保留 WebGL Liquid Glass，只降低 DPR、FBO 精度和 blur buffer 成本；禁止用静态壳层替代正常 liquid shell
+- **低端质量分级**：在省流量、低内存、低核心数或移动高 DPR 场景下，仍保留 WebGL Liquid Glass，只降低 DPR 与 blur buffer 成本；卡片绘制被 scissor 限定，成本随视口而非注册卡片数缩放，禁止用 cardCount 触发 DPR 降档；禁止用静态壳层替代正常 liquid shell
+- **清透镜片 veil 策略**：玻璃场景内的 veil 强度必须低于页面 DOM 遮罩（light 0.6 / dark 0.8，见 `--glass-scene-veil-strength`），玻璃采样要比页面更干净；可读性与材质感由 `GlassMaterialProfile` 的 saturation/exposure/tintAlpha/sceneCoverage 负责，禁止靠加重 veil 洗白/压黑玻璃再反打饱和度
+- **bgReady 渐入**：首张真实背景纹理激活时，scene coverage 必须经 ~450ms ease-out ramp（`bgReadyRampMs`）从 startup shell 渐入到完整材质，禁止 0/1 硬切换；1×1 fallback 纹理颜色必须跟随 colorScheme（light 白 / dark 深灰），避免暗色模式加载期白闪
 - **指针交互边界**：桌面端一次只允许一个可见卡片获得指针 spring；状态只能存在于 canvas runtime ref/闭包，禁止用 React state 或 pointer 热路径布局读取。`pointercancel`、window `blur`、页面 hidden、卡片注销和粗指针/减少动态效果切换必须清除或回弹状态。
 
 ### Asset & Lazy Runtime 优化

@@ -21,6 +21,7 @@ import {
   LIQUID_GLASS_CANVAS,
   resolveGlassMaterial,
   resolveGlassVariant,
+  resolveSceneBlurTexelRadius,
   toDataAttributeName,
 } from "@/lib/liquid-glass";
 import {
@@ -78,6 +79,9 @@ interface GLState {
   bgCover: CoverUvTransform;
   prevBgCover: CoverUvTransform;
   bgTextureReady: boolean;
+  /** Eased 0→1 reveal of scene coverage after the first real background
+   *  texture lands, replacing the hard coverage jump. */
+  bgReady: number;
   colorScheme: GlassColorScheme;
   sceneVeil: {
     top: [number, number, number, number];
@@ -104,6 +108,11 @@ interface GLState {
   dpr: number;
   viewportOffsetLeft: number;
   viewportOffsetTop: number;
+  /** Scene buffer (fbo0) runs at min(dpr, sceneBufferMaxScale) × CSS size to
+   *  bound fill cost; the main pass upsamples it while shading rims at full
+   *  canvas resolution. */
+  sceneWidth: number;
+  sceneHeight: number;
   blurWidth: number;
   blurHeight: number;
   quality: LiquidGlassQualityProfile;
@@ -185,12 +194,17 @@ function deleteTextureCache(gl: WebGL2RenderingContext, state: GLState) {
   state.textureCache.clear();
 }
 
-function createFallbackBackgroundTexture(gl: WebGL2RenderingContext): WebGLTexture {
+function createFallbackBackgroundTexture(
+  gl: WebGL2RenderingContext,
+  colorScheme: GlassColorScheme,
+): WebGLTexture {
   const texture = gl.createTexture();
   if (!texture) {
     throw new Error("[LiquidGlass] Failed to allocate fallback background texture");
   }
 
+  // Theme-aware neutral so the pre-photo shell never flashes white in dark mode.
+  const pixel = colorScheme === "dark" ? [10, 10, 15] : [255, 255, 255];
   gl.bindTexture(gl.TEXTURE_2D, texture);
   gl.texImage2D(
     gl.TEXTURE_2D,
@@ -201,7 +215,7 @@ function createFallbackBackgroundTexture(gl: WebGL2RenderingContext): WebGLTextu
     0,
     gl.RGBA,
     gl.UNSIGNED_BYTE,
-    new Uint8Array([255, 255, 255, 255]),
+    new Uint8Array([...pixel, 255]),
   );
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
@@ -256,7 +270,6 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
         "u_bgPrev",
         "u_bgCover",
         "u_bgPrevCover",
-        "u_resolution",
         "u_veilTop",
         "u_veilMid",
         "u_veilBottom",
@@ -276,7 +289,6 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
         "u_refThickness",
         "u_refFactor",
         "u_refDispersion",
-        "u_fresnelRange",
         "u_fresnelFactor",
         "u_fresnelHardness",
         "u_glareFactor",
@@ -324,7 +336,6 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
 
     const resolveQuality = () =>
       resolveLiquidGlassQuality({
-        cardCount: cardsRef.current.size,
         devicePixelRatio: window.devicePixelRatio || 1,
         hasCoarsePointer: coarsePointerMedia.matches,
         deviceMemory: getDeviceMemory(),
@@ -364,9 +375,12 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
     const initialViewport = resolveViewportState(initialQuality.dprCap);
     const initialWidth = initialViewport.width;
     const initialHeight = initialViewport.height;
+    const initialSceneScale = Math.min(initialViewport.dpr, LIQUID_GLASS_CANVAS.sceneBufferMaxScale);
+    const initialSceneWidth = Math.max(1, Math.round(initialViewport.cssWidth * initialSceneScale));
+    const initialSceneHeight = Math.max(1, Math.round(initialViewport.cssHeight * initialSceneScale));
     const initialBlurWidth = Math.max(1, Math.round(initialWidth * initialQuality.blurBufferScale));
     const initialBlurHeight = Math.max(1, Math.round(initialHeight * initialQuality.blurBufferScale));
-    const fallbackBgTex = createFallbackBackgroundTexture(gl);
+    const fallbackBgTex = createFallbackBackgroundTexture(gl, readColorScheme());
 
     canvas.width = initialWidth;
     canvas.height = initialHeight;
@@ -378,15 +392,9 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
       vblurProg,
       hblurProg,
       mainProg,
-      fbo0: createFrameBuffer(gl, initialWidth, initialHeight, {
-        preferHalfFloat: initialQuality.preferHalfFloat,
-      }),
-      fbo1: createFrameBuffer(gl, initialBlurWidth, initialBlurHeight, {
-        preferHalfFloat: initialQuality.preferHalfFloat,
-      }),
-      fbo2: createFrameBuffer(gl, initialBlurWidth, initialBlurHeight, {
-        preferHalfFloat: initialQuality.preferHalfFloat,
-      }),
+      fbo0: createFrameBuffer(gl, initialSceneWidth, initialSceneHeight),
+      fbo1: createFrameBuffer(gl, initialBlurWidth, initialBlurHeight),
+      fbo2: createFrameBuffer(gl, initialBlurWidth, initialBlurHeight),
       bgTex: fallbackBgTex,
       prevBgTex: null,
       bgImage: null,
@@ -396,6 +404,7 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
       bgCover: identityCoverUvTransform(),
       prevBgCover: identityCoverUvTransform(),
       bgTextureReady: false,
+      bgReady: 0,
       colorScheme: readColorScheme(),
       sceneVeil: readSceneVeil(),
       bgTransitionStartedAt: 0,
@@ -410,6 +419,8 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
       dpr: initialViewport.dpr,
       viewportOffsetLeft: initialViewport.offsetLeft,
       viewportOffsetTop: initialViewport.offsetTop,
+      sceneWidth: initialSceneWidth,
+      sceneHeight: initialSceneHeight,
       blurWidth: initialBlurWidth,
       blurHeight: initialBlurHeight,
       quality: initialQuality,
@@ -442,7 +453,13 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
       rafRef.current = window.requestAnimationFrame(render);
     };
 
-    const recreateBuffers = (nextQuality: LiquidGlassQualityProfile, width: number, height: number) => {
+    const recreateBuffers = (
+      nextQuality: LiquidGlassQualityProfile,
+      sceneWidth: number,
+      sceneHeight: number,
+      width: number,
+      height: number,
+    ) => {
       const blurWidth = Math.max(1, Math.round(width * nextQuality.blurBufferScale));
       const blurHeight = Math.max(1, Math.round(height * nextQuality.blurBufferScale));
 
@@ -450,15 +467,11 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
       destroyFrameBuffer(gl, state.fbo1);
       destroyFrameBuffer(gl, state.fbo2);
 
-      state.fbo0 = createFrameBuffer(gl, width, height, {
-        preferHalfFloat: nextQuality.preferHalfFloat,
-      });
-      state.fbo1 = createFrameBuffer(gl, blurWidth, blurHeight, {
-        preferHalfFloat: nextQuality.preferHalfFloat,
-      });
-      state.fbo2 = createFrameBuffer(gl, blurWidth, blurHeight, {
-        preferHalfFloat: nextQuality.preferHalfFloat,
-      });
+      state.fbo0 = createFrameBuffer(gl, sceneWidth, sceneHeight);
+      state.fbo1 = createFrameBuffer(gl, blurWidth, blurHeight);
+      state.fbo2 = createFrameBuffer(gl, blurWidth, blurHeight);
+      state.sceneWidth = sceneWidth;
+      state.sceneHeight = sceneHeight;
       state.blurWidth = blurWidth;
       state.blurHeight = blurHeight;
       state.quality = nextQuality;
@@ -487,12 +500,14 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
       const nextQuality = resolveQuality();
       const viewport = resolveViewportState(nextQuality.dprCap);
       const { width, height } = viewport;
+      const sceneScale = Math.min(viewport.dpr, LIQUID_GLASS_CANVAS.sceneBufferMaxScale);
+      const sceneWidth = Math.max(1, Math.round(viewport.cssWidth * sceneScale));
+      const sceneHeight = Math.max(1, Math.round(viewport.cssHeight * sceneScale));
       const blurWidth = Math.max(1, Math.round(width * nextQuality.blurBufferScale));
       const blurHeight = Math.max(1, Math.round(height * nextQuality.blurBufferScale));
       const qualityChanged =
         nextQuality.dprCap !== state.quality.dprCap ||
-        nextQuality.blurBufferScale !== state.quality.blurBufferScale ||
-        nextQuality.preferHalfFloat !== state.quality.preferHalfFloat;
+        nextQuality.blurBufferScale !== state.quality.blurBufferScale;
       const sizeChanged = width !== state.width || height !== state.height;
       const viewportChanged =
         viewport.cssWidth !== state.cssWidth ||
@@ -501,7 +516,13 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
         viewport.offsetTop !== state.viewportOffsetTop ||
         viewport.dpr !== state.dpr;
 
-      if (!qualityChanged && !sizeChanged && !viewportChanged) {
+      if (
+        !qualityChanged &&
+        !sizeChanged &&
+        !viewportChanged &&
+        sceneWidth === state.sceneWidth &&
+        sceneHeight === state.sceneHeight
+      ) {
         return;
       }
 
@@ -523,11 +544,13 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
       state.height = height;
 
       if (qualityChanged) {
-        recreateBuffers(nextQuality, width, height);
+        recreateBuffers(nextQuality, sceneWidth, sceneHeight, width, height);
       } else {
-        resizeFrameBuffer(gl, state.fbo0, width, height);
+        resizeFrameBuffer(gl, state.fbo0, sceneWidth, sceneHeight);
         resizeFrameBuffer(gl, state.fbo1, blurWidth, blurHeight);
         resizeFrameBuffer(gl, state.fbo2, blurWidth, blurHeight);
+        state.sceneWidth = sceneWidth;
+        state.sceneHeight = sceneHeight;
         state.blurWidth = blurWidth;
         state.blurHeight = blurHeight;
       }
@@ -961,6 +984,15 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
 
       const backgroundTransitionActive = Boolean(state.prevBgTex && state.bgTransitionStartedAt > 0);
       const needsScenePass = sceneDirty || backgroundTransitionActive;
+
+      // Ease the scene coverage in once instead of hard-switching alpha when
+      // the first real background texture lands.
+      const bgReadyAnimating = state.bgTextureReady && state.bgReady < 1;
+      if (bgReadyAnimating) {
+        state.bgReady = Math.min(1, state.bgReady + deltaMs / LIQUID_GLASS_CANVAS.bgReadyRampMs);
+      }
+      const bgReadyEased = 1 - Math.pow(1 - state.bgReady, 3);
+
       const cardsToDraw: CardRenderState[] = [];
       let hasDynamicCards = false;
 
@@ -984,7 +1016,7 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
 
       if (needsScenePass) {
         gl.bindFramebuffer(gl.FRAMEBUFFER, state.fbo0.fbo);
-        gl.viewport(0, 0, state.width, state.height);
+        gl.viewport(0, 0, state.sceneWidth, state.sceneHeight);
         gl.clear(gl.COLOR_BUFFER_BIT);
         gl.useProgram(state.bgProg.program);
         bindTexture(gl, state.bgProg, "u_bg", state.bgTex, 0);
@@ -1003,7 +1035,6 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
           state.prevBgTex ? state.prevBgCover.offsetX : state.bgCover.offsetX,
           state.prevBgTex ? state.prevBgCover.offsetY : state.bgCover.offsetY,
         );
-        gl.uniform2f(state.bgProg.uniforms["u_resolution"]!, state.width, state.height);
         gl.uniform4f(state.bgProg.uniforms["u_veilTop"]!, ...state.sceneVeil.top);
         gl.uniform4f(state.bgProg.uniforms["u_veilMid"]!, ...state.sceneVeil.mid);
         gl.uniform4f(state.bgProg.uniforms["u_veilBottom"]!, ...state.sceneVeil.bottom);
@@ -1019,22 +1050,42 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
         gl.uniform1f(state.bgProg.uniforms["u_crossfadeMix"]!, crossfadeMix);
         drawQuad(gl, state.bgProg);
 
+        // Blur chain: bilinear downsample into the blur grid first, then a
+        // symmetric separable gaussian anchored in CSS px. Both blur passes
+        // run at blur-buffer resolution so horizontal and vertical kernels
+        // always match, and the small texel radius keeps the 5-tap kernel
+        // dense enough to avoid ghost echoes.
+        const blurRadiusTexels = resolveSceneBlurTexelRadius(
+          LIQUID_GLASS_CANVAS.sceneBlurRadiusCss,
+          state.dpr,
+          state.quality.blurBufferScale,
+        );
+
         gl.bindFramebuffer(gl.FRAMEBUFFER, state.fbo1.fbo);
         gl.viewport(0, 0, state.blurWidth, state.blurHeight);
         gl.clear(gl.COLOR_BUFFER_BIT);
         gl.useProgram(state.vblurProg.program);
         bindTexture(gl, state.vblurProg, "u_tex", state.fbo0.texture, 0);
-        gl.uniform2f(state.vblurProg.uniforms["u_resolution"]!, state.width, state.height);
-        gl.uniform1f(state.vblurProg.uniforms["u_blurRadius"]!, LIQUID_GLASS_CANVAS.sceneBlurRadius);
+        gl.uniform2f(state.vblurProg.uniforms["u_resolution"]!, state.blurWidth, state.blurHeight);
+        gl.uniform1f(state.vblurProg.uniforms["u_blurRadius"]!, 0);
         drawQuad(gl, state.vblurProg);
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, state.fbo2.fbo);
         gl.viewport(0, 0, state.blurWidth, state.blurHeight);
         gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.useProgram(state.vblurProg.program);
+        bindTexture(gl, state.vblurProg, "u_tex", state.fbo1.texture, 0);
+        gl.uniform2f(state.vblurProg.uniforms["u_resolution"]!, state.blurWidth, state.blurHeight);
+        gl.uniform1f(state.vblurProg.uniforms["u_blurRadius"]!, blurRadiusTexels);
+        drawQuad(gl, state.vblurProg);
+
+        gl.bindFramebuffer(gl.FRAMEBUFFER, state.fbo1.fbo);
+        gl.viewport(0, 0, state.blurWidth, state.blurHeight);
+        gl.clear(gl.COLOR_BUFFER_BIT);
         gl.useProgram(state.hblurProg.program);
-        bindTexture(gl, state.hblurProg, "u_tex", state.fbo1.texture, 0);
+        bindTexture(gl, state.hblurProg, "u_tex", state.fbo2.texture, 0);
         gl.uniform2f(state.hblurProg.uniforms["u_resolution"]!, state.blurWidth, state.blurHeight);
-        gl.uniform1f(state.hblurProg.uniforms["u_blurRadius"]!, LIQUID_GLASS_CANVAS.sceneBlurRadius);
+        gl.uniform1f(state.hblurProg.uniforms["u_blurRadius"]!, blurRadiusTexels);
         drawQuad(gl, state.hblurProg);
 
         if (crossfadeMix >= 1 && backgroundTransitionActive) {
@@ -1045,14 +1096,14 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
         }
       }
 
-      if (needsScenePass || cardsDirty || hasDynamicCards) {
+      if (needsScenePass || cardsDirty || hasDynamicCards || bgReadyAnimating) {
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         gl.viewport(0, 0, state.width, state.height);
         gl.clear(gl.COLOR_BUFFER_BIT);
         gl.useProgram(state.mainProg.program);
 
         bindTexture(gl, state.mainProg, "u_bg", state.fbo0.texture, 0);
-        bindTexture(gl, state.mainProg, "u_blurredBg", state.fbo2.texture, 1);
+        bindTexture(gl, state.mainProg, "u_blurredBg", state.fbo1.texture, 1);
         gl.uniform2f(state.mainProg.uniforms["u_resolution"]!, state.width, state.height);
         gl.uniform1f(state.mainProg.uniforms["u_dpr"]!, state.dpr);
 
@@ -1072,7 +1123,6 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
           gl.uniform1f(state.mainProg.uniforms["u_refThickness"]!, config.refThickness);
           gl.uniform1f(state.mainProg.uniforms["u_refFactor"]!, config.refFactor);
           gl.uniform1f(state.mainProg.uniforms["u_refDispersion"]!, config.refDispersion);
-          gl.uniform1f(state.mainProg.uniforms["u_fresnelRange"]!, config.fresnelRange);
           gl.uniform1f(state.mainProg.uniforms["u_fresnelFactor"]!, config.fresnelFactor);
           gl.uniform1f(state.mainProg.uniforms["u_fresnelHardness"]!, config.fresnelHardness);
           gl.uniform1f(state.mainProg.uniforms["u_glareFactor"]!, config.glareFactor);
@@ -1095,7 +1145,10 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
           gl.uniform1f(state.mainProg.uniforms["u_exposure"]!, material.exposure);
           gl.uniform1f(state.mainProg.uniforms["u_edgeHighlightGain"]!, material.edgeHighlightGain);
           gl.uniform1f(state.mainProg.uniforms["u_edgeShadowGain"]!, material.edgeShadowGain);
-          gl.uniform1f(state.mainProg.uniforms["u_bgReady"]!, state.bgTextureReady ? 1 : 0);
+          gl.uniform1f(
+            state.mainProg.uniforms["u_bgReady"]!,
+            state.bgTextureReady ? bgReadyEased : 0,
+          );
           const pointerIsActive = entry.id === pointerRenderCardId;
           gl.uniform2f(
             state.mainProg.uniforms["u_pointer"]!,
@@ -1126,7 +1179,7 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
       sceneDirty = false;
       cardsDirty = false;
 
-      if (state.prevBgTex || hasDynamicCards || pointerRenderCardId !== null) {
+      if (state.prevBgTex || hasDynamicCards || pointerRenderCardId !== null || bgReadyAnimating) {
         requestRender();
       }
     };
