@@ -19,6 +19,14 @@ vec2 coverUv(vec2 uv, vec4 transform) {
   return clamp(uv * transform.xy + transform.zw, vec2(0.001), vec2(0.999));
 }
 
+// Triangle-congruent dither: the veil gradients over smooth photo regions
+// band visibly in 8-bit buffers without it.
+float ditherNoise(vec2 p) {
+  float a = fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
+  float b = fract(sin(dot(p + vec2(1.0, 0.0), vec2(12.9898, 78.233))) * 43758.5453);
+  return (a + b) * 0.5 - 0.5;
+}
+
 void main() {
   vec4 prevBase = texture(u_bgPrev, coverUv(v_uv, u_bgPrevCover));
   vec4 nextBase = texture(u_bg, coverUv(v_uv, u_bgCover));
@@ -29,5 +37,7 @@ void main() {
   vec4 veil = mix(u_veilTop, u_veilMid, topMix);
   veil = mix(veil, u_veilBottom, bottomMix);
   float veilAlpha = clamp(veil.a * u_veilStrength, 0.0, 1.0);
-  fragColor = vec4(mix(base.rgb, veil.rgb, veilAlpha), 1.0);
+  vec3 scene = mix(base.rgb, veil.rgb, veilAlpha);
+  scene += ditherNoise(gl_FragCoord.xy) * (1.2 / 255.0);
+  fragColor = vec4(scene, 1.0);
 }

@@ -562,8 +562,13 @@ test("liquid glass center refracts and diffuses the scene instead of repainting 
   );
   assert.match(
     shaderSource,
-    /centerSceneCoverage\s*=\s*mix\([^,]+,\s*readySceneCoverage,\s*cleanCenter\)/,
-    "Expected the clean center to use the full material scene coverage instead of blending back toward the unchanged page background",
+    /centerSceneCoverage\s*=\s*readySceneCoverage\s*;/,
+    "Expected the liquid frost to fill the entire card with flat coverage — no recessed, unfilled rim ring",
+  );
+  assert.match(
+    shaderSource,
+    /clamp\(u_surfaceBlurMix \* \(0\.95 - mirrorBand \* 0\.35\), 0\.0, 0\.62\)/,
+    "Expected the rim band to keep the same frost level as the center so the material never truncates near the edge",
   );
 });
 
@@ -605,8 +610,13 @@ test("liquid glass shader uses reference-style edge displacement instead of a we
 
   assert.match(
     shaderSource,
-    /KEY_LIGHT[\s\S]*u_glareFactor[\s\S]*u_glareOppositeFactor/,
-    "Expected a single directional key light to drive rim specular and interior glow instead of a broad face glare",
+    /pointerShoulder[\s\S]*u_pointerGlare[\s\S]*interiorGlow[\s\S]*u_glareFactor[\s\S]*u_glareOppositeFactor/,
+    "Expected the only lit response to be pointer-driven light plus a whisper interior sheen",
+  );
+  assert.doesNotMatch(
+    shaderSource,
+    /edgeShoulder/,
+    "Expected no static painted edge shoulder — the edge must be optical (refraction) only",
   );
 });
 
@@ -666,7 +676,7 @@ test("liquid glass refraction uses a bounded non-saturating envelope instead of 
   );
   assert.match(
     shaderSource,
-    /min\(\s*u_refThickness[\s\S]*min\(safeHalfSize\.x,\s*safeHalfSize\.y\)\s*\*\s*0\.17/,
+    /min\(\s*u_refThickness[\s\S]*min\(safeHalfSize\.x,\s*safeHalfSize\.y\)\s*\*\s*0\.12/,
     "Expected the long-range lens pull to stay bounded relative to card size",
   );
   assert.match(

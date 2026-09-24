@@ -52,7 +52,7 @@ test("light mode background veil stays clear enough for liquid refraction", () =
   assert.equal(getToken("light", "bg-overlay-gradient-top"), "rgba(248, 250, 252, 0.42)");
   assert.equal(getToken("light", "bg-overlay-gradient-bottom"), "rgba(241, 245, 249, 0.34)");
   // Glass samples a cleaner scene than the veiled page (clear-lens material).
-  assert.equal(getToken("light", "glass-scene-veil-strength"), "0.6");
+  assert.equal(getToken("light", "glass-scene-veil-strength"), "0.18");
   assert.ok(
     Number.parseFloat(getToken("dark", "glass-scene-veil-strength")) < 1,
     "Expected dark glass to sample a cleaner scene than the veiled page",
@@ -113,20 +113,22 @@ test("ios media card shell stays borderless", () => {
   );
 });
 
-test("ios media card highlight stays inside the shell edge", () => {
+test("ios media card material fills the shell edge-to-edge with no inset layer", () => {
   const iosMediaCardHighlightRule = globalsCss.match(/(?:^|\n)\.ios-media-card::before\s*\{([\s\S]*?)\n\}/);
   assert.ok(iosMediaCardHighlightRule, "Expected globals.css to define the .ios-media-card::before rule");
 
   assert.match(
     iosMediaCardHighlightRule[1],
-    /inset:\s*1px;/,
-    "Expected the highlight layer to be inset so it does not read as an outer border",
+    /content:\s*none;/,
+    "Expected the painted highlight pseudo-layer to stay removed — an inset gradient leaves a blank rim where the fill stops short of the edge",
   );
 
+  const iosMediaCardRule = globalsCss.match(/(?:^|\n)\.ios-media-card\s*\{([\s\S]*?)\n\}/);
+  assert.ok(iosMediaCardRule, "Expected the .ios-media-card base rule");
   assert.match(
-    iosMediaCardHighlightRule[1],
-    /border-radius:\s*calc\(var\(--glass-radius\)\s*-\s*1px\);/,
-    "Expected the inset highlight to keep a matching inner radius",
+    iosMediaCardRule[1],
+    /background:\s*var\(--ios-material-bg\);/,
+    "Expected a single continuous material that fills 100% of the card",
   );
 });
 

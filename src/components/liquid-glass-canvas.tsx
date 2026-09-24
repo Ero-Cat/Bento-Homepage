@@ -321,10 +321,13 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
 
     const readSceneVeil = () => {
       const styles = getComputedStyle(document.documentElement);
+      // Flatten to a single mid tone: iOS liquid glass carries no vertical
+      // white/black gradient inside the material — only a whisper-flat veil.
+      const mid = parseCssColor(styles.getPropertyValue("--bg-overlay"), [0.97, 0.98, 0.99, 0.18]);
       return {
-        top: parseCssColor(styles.getPropertyValue("--bg-overlay-gradient-top"), [0.95, 0.96, 0.98, 0.54]),
-        mid: parseCssColor(styles.getPropertyValue("--bg-overlay"), [0.97, 0.98, 0.99, 0.18]),
-        bottom: parseCssColor(styles.getPropertyValue("--bg-overlay-gradient-bottom"), [0.96, 0.97, 0.98, 0.46]),
+        top: mid,
+        mid,
+        bottom: mid,
         strength: Number.parseFloat(styles.getPropertyValue("--glass-scene-veil-strength")) || 1,
       };
     };
@@ -389,7 +392,7 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
       vblurProg,
       hblurProg,
       mainProg,
-      fbo0: createFrameBuffer(gl, initialSceneWidth, initialSceneHeight),
+      fbo0: createFrameBuffer(gl, initialSceneWidth, initialSceneHeight, { mipmapped: true }),
       fbo1: createFrameBuffer(gl, initialBlurWidth, initialBlurHeight),
       fbo2: createFrameBuffer(gl, initialBlurWidth, initialBlurHeight),
       bgTex: fallbackBgTex,
@@ -464,7 +467,7 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
       destroyFrameBuffer(gl, state.fbo1);
       destroyFrameBuffer(gl, state.fbo2);
 
-      state.fbo0 = createFrameBuffer(gl, sceneWidth, sceneHeight);
+      state.fbo0 = createFrameBuffer(gl, sceneWidth, sceneHeight, { mipmapped: true });
       state.fbo1 = createFrameBuffer(gl, blurWidth, blurHeight);
       state.fbo2 = createFrameBuffer(gl, blurWidth, blurHeight);
       state.sceneWidth = sceneWidth;
@@ -1046,6 +1049,16 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
           : 1;
         gl.uniform1f(state.bgProg.uniforms["u_crossfadeMix"]!, crossfadeMix);
         drawQuad(gl, state.bgProg);
+
+        // Regenerate the scene mipmap chain right after the scene render (and
+        // before anything samples fbo0): the refraction rim minifies this
+        // texture heavily and aliases without trilinear filtering. This runs
+        // only when the scene pass ran — scroll reuses the cached chain.
+        // Unbind fbo0 first: generating mips of a texture attached to the
+        // bound framebuffer is a feedback loop and undefined by spec.
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.bindTexture(gl.TEXTURE_2D, state.fbo0.texture);
+        gl.generateMipmap(gl.TEXTURE_2D);
 
         // Blur chain: bilinear downsample into the blur grid first, then a
         // symmetric separable gaussian anchored in CSS px. Both blur passes

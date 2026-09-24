@@ -48,7 +48,7 @@ test("shared liquid glass variants centralize layered optics and interaction tok
       `Expected ${name} to keep a subtle "under glass" center magnification`,
     );
     assert.ok(
-      variant.edgeLensRange >= 40 && variant.edgeLensRange <= 66,
+      variant.edgeLensRange >= 14 && variant.edgeLensRange <= 24,
       `Expected ${name} to keep the Apple-style long-range lens falloff bounded`,
     );
     assert.ok(

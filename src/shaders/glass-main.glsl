@@ -7,12 +7,6 @@ const float N_R = 1.0 - 0.026;
 const float N_G = 1.0;
 const float N_B = 1.0 + 0.026;
 
-// Single key light from the top-left, in card-local space (y is up).
-// Drives the soft directional edge light only; the crisp hairline stroke
-// and the contact shadow are compositor-synced CSS on .glass-card so they
-// never desync from DOM content during scrolling.
-const vec2 KEY_LIGHT = vec2(-0.62, 0.78);
-
 in vec2 v_uv;
 uniform sampler2D u_bg;
 uniform sampler2D u_blurredBg;
@@ -76,6 +70,14 @@ vec2 safeUv(vec2 offset) {
   return clamp(v_uv + offset, vec2(0.001), vec2(0.999));
 }
 
+// Triangle-congruent dither: breaks up 8-bit gradient banding in the veil
+// ramps and edge luminance envelopes.
+float ditherNoise(vec2 p) {
+  float a = fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
+  float b = fract(sin(dot(p + vec2(1.0, 0.0), vec2(12.9898, 78.233))) * 43758.5453);
+  return (a + b) * 0.5 - 0.5;
+}
+
 // Apple-style edge lens: a long-range falloff field that keeps bending the
 // background well past the bevel band (falloff over u_edgeLensRange CSS px),
 // plus a mirrored pull right at the silhouette so the outermost pixels show
@@ -96,7 +98,7 @@ vec2 referenceEdgeDisplacement(
   // Pull budget scales with card size (like a real lens) but stays bounded.
   float maxPullPx = min(
     u_refThickness * (0.55 + bevelBody * 0.10),
-    min(safeHalfSize.x, safeHalfSize.y) * 0.17
+    min(safeHalfSize.x, safeHalfSize.y) * 0.12
   );
   vec2 centerPull = -localCssPx * max(wideField, edgeField) * (0.045 + u_refFactor * 0.015);
   centerPull *= min(1.0, maxPullPx * 0.55 / max(length(centerPull), 0.0001));
@@ -108,9 +110,9 @@ vec2 referenceEdgeDisplacement(
   // card boundary, so the rim band shows the outside world bent/squeezed
   // inward — the signature thick-glass edge (displacement-map behavior).
   vec2 lensNormal = normalDir * wideField * maxPullPx * (0.55 + centerDistance * 0.16);
-  // Mirrored rim: the outermost pixels flip to content from progressively
-  // further outside, like light bouncing inside a slab edge.
-  vec2 mirrorPull = normalDir * mirrorBand * u_rimMirror * 10.0;
+  // Mirrored rim: a wide, gentle ramp so the sampled source moves
+  // monotonically — hard jumps here alias into blotchy edge patches.
+  vec2 mirrorPull = normalDir * mirrorBand * u_rimMirror * 4.0;
   return (centerPull + lensNormal + mirrorPull) * pressCompression;
 }
 
@@ -120,7 +122,16 @@ vec3 sampleDispersedGlass(vec2 redOffset, vec2 greenOffset, vec2 blueOffset, flo
   vec2 blueUv = safeUv(blueOffset);
   vec3 sharp = vec3(texture(u_bg, redUv).r, texture(u_bg, greenUv).g, texture(u_bg, blueUv).b);
   vec3 soft = vec3(texture(u_blurredBg, redUv).r, texture(u_blurredBg, greenUv).g, texture(u_blurredBg, blueUv).b);
-  return mix(sharp, soft, blurMix);
+  // Compression-adaptive diffusion: where the displacement squeezes more than
+  // one texture texel into a screen pixel, blend in the pre-filtered sample —
+  // a thick glass edge physically diffuses, and this guarantees the rim band
+  // stays smooth whatever the photo detail behind it.
+  float compression = max(
+    fwidth(greenUv.x) * u_resolution.x,
+    fwidth(greenUv.y) * u_resolution.y
+  );
+  float adaptiveDiffusion = clamp((compression - 1.0) * 0.45, 0.0, 0.5);
+  return mix(sharp, soft, clamp(blurMix + adaptiveDiffusion, 0.0, 0.55));
 }
 
 vec3 adjustMaterialScene(vec3 color) {
@@ -132,7 +143,7 @@ vec3 adjustMaterialScene(vec3 color) {
 void main() {
   vec2 cardMin = u_cardRect.xy;
   vec2 cardMax = u_cardRect.xy + u_cardRect.zw;
-  float margin = 2.0 / u_resolution.y;
+  float margin = 4.0 / u_resolution.y;
   if (
     v_uv.x < cardMin.x - margin || v_uv.x > cardMax.x + margin ||
     v_uv.y < cardMin.y - margin || v_uv.y > cardMax.y + margin
@@ -146,7 +157,8 @@ void main() {
   vec2 halfSizeCssPx = halfSizePx / max(u_dpr, 0.001);
   float cornerRadius = min(u_radius * u_dpr, min(halfSizePx.x, halfSizePx.y));
   float d = roundedRectSDF(localPx, halfSizePx, cornerRadius, u_shapeRoundness);
-  float shapeAlpha = 1.0 - smoothstep(-1.8, 1.8, d);
+  // Wider AA ramp keeps rounded corners free of stair-stepping at dpr ≥ 2.
+  float shapeAlpha = 1.0 - smoothstep(-2.6, 2.6, d);
   if (shapeAlpha < 0.001) discard;
 
   float edgeDistancePx = max(-d, 0.0);
@@ -177,12 +189,12 @@ void main() {
   // field drives the long-range Apple-style refraction falloff.
   float edgeField = pow(max(outerRim * 0.72, bevelBody * 0.52), 1.22);
   float lensFalloff = 1.0 - smoothstep(0.0, u_edgeLensRange, edgeDistanceCssPx);
-  float wideField = pow(max(lensFalloff, edgeField * 0.9), 1.3);
-  float mirrorBand = (1.0 - smoothstep(1.2, 4.0, edgeDistanceCssPx)) * outerEdgeContinuity;
+  float wideField = pow(max(lensFalloff, edgeField * 0.9), 1.1);
+  float mirrorBand = (1.0 - smoothstep(1.2, 9.0, edgeDistanceCssPx)) * outerEdgeContinuity;
 
   // The refracted rim band replaces the clean center almost completely at
   // the silhouette, so the bent surroundings read as solid glass thickness.
-  float opticalDepth = clamp(wideField * 1.1 + silhouetteBand * 0.1, 0.0, 0.95);
+  float opticalDepth = clamp(wideField * 0.9, 0.0, 0.78);
   float pressCompression = 1.0 - u_pointerPress * 0.30;
   vec2 refractPixels = referenceEdgeDisplacement(
     localCssPx,
@@ -200,77 +212,85 @@ void main() {
   magnifyPixels *= outerEdgeContinuity;
   vec2 refractOffset = (refractPixels * (0.82 + edgeEnergy * 0.18) + magnifyPixels) / u_resolution;
   vec2 dispersionAxis = normalize(normalDir + pointerDirection * pointerField * 0.35 + vec2(0.0001));
-  // Chromatic aberration concentrates on the INNER shoulder of the refraction
-  // band, not the silhouette itself.
-  float chroma = u_refDispersion * wideField * (1.0 - silhouetteBand * 0.6) * (0.85 + bevelBody * 0.22) * outerEdgeContinuity;
+  // Chromatic aberration lives on the INNER shoulder of the refraction band
+  // only: the outermost pixels have the steepest displacement gradient, and
+  // splitting RGB channels there mixes unrelated content into color patches.
+  float chroma = u_refDispersion * 0.75 * wideField
+    * (0.35 + 0.65 * smoothstep(2.0, 10.0, edgeDistanceCssPx))
+    * (0.85 + bevelBody * 0.22) * outerEdgeContinuity;
   vec2 chromaOffset = dispersionAxis * chroma * u_dpr / u_resolution;
   vec2 redOffset = refractOffset * (1.0 + (1.0 - N_R) * chroma) + chromaOffset;
   vec2 greenOffset = refractOffset * (1.0 + (1.0 - N_G) * chroma);
   vec2 blueOffset = refractOffset * (1.0 + (1.0 - N_B) * chroma) - chromaOffset;
 
-  // Center magnification: uniform "under glass" zoom toward the card center.
-  vec2 normalizedLocal = clamp(
-    localCssPx / max(halfSizeCssPx, vec2(1.0)),
-    vec2(-1.0),
-    vec2(1.0)
-  );
-  vec2 surfaceLensOffset = -localPx * (u_lensMagnification - 1.0) * (0.55 + cleanCenter * 0.45) / u_resolution;
+  // Liquid frost fills the ENTIRE card to the very edge — no unfilled rim
+  // ring. The frost level is continuous (slightly deeper toward the rim),
+  // and the refraction displacement bends the FROSTED backdrop, which is
+  // exactly Apple's "liquid blur" treatment.
+  vec2 surfaceLensOffset = -localPx * (u_lensMagnification - 1.0) * (1.0 - wideField * 0.5) / u_resolution;
   vec3 sharpBase = adjustMaterialScene(texture(u_bg, safeUv(surfaceLensOffset)).rgb);
   vec3 softBase = adjustMaterialScene(texture(u_blurredBg, safeUv(surfaceLensOffset)).rgb);
-  float centerDiffusion = clamp(u_surfaceBlurMix * (0.72 + cleanCenter * 0.48), 0.0, 0.52);
+  float centerDiffusion = clamp(u_surfaceBlurMix * (0.92 + wideField * 0.18), 0.0, 0.62);
   vec3 cleanGlass = mix(sharpBase, softBase, centerDiffusion);
+  // The rim band keeps the same frost level (minus a touch only inside the
+  // thin mirrored strip) so the material never changes abruptly at the edge.
   vec3 bevelGlass = adjustMaterialScene(sampleDispersedGlass(
     redOffset,
     greenOffset,
     blueOffset,
-    clamp(0.04 + bevelBody * 0.16 + outerRim * 0.04, 0.0, 0.24)
+    clamp(u_surfaceBlurMix * (0.95 - mirrorBand * 0.35), 0.0, 0.62)
   ));
   vec3 outRgb = mix(cleanGlass, bevelGlass, opticalDepth);
   outRgb = mix(outRgb, u_tint, u_tintAlpha * (0.34 + cleanCenter * 0.22 + opticalDepth * 0.40));
-  // ---- Edge-lit slab lighting -------------------------------------------
-  // One key light from the top-left drives a SOFT directional edge light;
-  // the crisp hairline stroke lives in compositor-synced CSS on the card,
-  // so the GL rim stays a gentle luminance gradient instead of a thick border.
-  float rimFacing = clamp(dot(normalDir, KEY_LIGHT), 0.0, 1.0);
-  float rimAway = clamp(dot(normalDir, -KEY_LIGHT), 0.0, 1.0);
-  float rimLine = silhouetteBand;
-  float rimLineLight = 0.22 + 0.78 * pow(rimFacing, 1.25);
-  float rimSoft = outerRim * pow(rimFacing, 2.0);
+  // ---- Edge optics: nothing painted --------------------------------------
+  // The card edge is defined by OPTICS alone: the refraction band bending
+  // the background at the silhouette, the mirrored rim, dispersion, and the
+  // CSS contact shadow outside. Any static painted line/gradient here reads
+  // as a decorative border style (constant-brightness strokes look fake);
+  // only the POINTER-driven light responds like real light and may stay.
   float pointerLight = clamp(dot(normalDir, pointerDirection), 0.0, 1.0) * pointerField;
-  float shellHighlight = (
-    rimLine * rimLineLight * 2.2 +
-    rimSoft * 0.55 +
-    rimLine * pow(rimAway, 1.5) * u_glareFactor * 0.9 +
-    rimLine * pointerLight * u_pointerGlare * 0.6
-  ) * u_fresnelFactor * u_edgeHighlightGain;
+  float pointerShoulder = (1.0 - smoothstep(0.5, 9.0, edgeDistanceCssPx)) * pointerLight;
+  float shellHighlight = pointerShoulder * u_pointerGlare * (0.6 + u_fresnelFactor * 2.0)
+    * u_edgeHighlightGain;
 
-  // Glass thickness shading just inside the silhouette: a wide, gentle
-  // gradient (no hard band) so the edge reads as depth, not a border.
-  float counterRimBand = smoothstep(1.5, 3.0, edgeDistanceCssPx)
-    * (1.0 - smoothstep(4.0, 8.0, edgeDistanceCssPx));
+  // Thickness shading exists only as an epsilon so the silhouette keeps a
+  // whisper of depth on flat backgrounds — never enough to read as paint.
+  float counterRimBand = smoothstep(1.0, 4.0, edgeDistanceCssPx)
+    * (1.0 - smoothstep(5.0, 16.0, edgeDistanceCssPx));
   float innerShadow = counterRimBand
-    * (0.03 + edgeEnergy * u_counterRimFactor * 0.22) * (0.55 + 0.45 * rimAway)
-    * u_edgeShadowGain;
+    * edgeEnergy * u_counterRimFactor * 0.05 * u_edgeShadowGain;
   float farRim = clamp(-dot(normalDir, pointerDirection), 0.0, 1.0) * pointerField * u_counterRimFactor;
 
-  // Soft interior glow near the top-lit corner (internal reflection).
+  // Soft interior sheen near the top-lit corner (internal reflection);
+  // scaled by the variant's glare tokens and kept whisper-level so it never
+  // reads as a painted highlight.
   vec2 tlCorner = vec2(-halfSizeCssPx.x, halfSizeCssPx.y);
   float tlDist = length(localCssPx - tlCorner) / length(halfSizeCssPx);
-  float interiorGlow = cleanCenter * (1.0 - smoothstep(0.25, 0.95, tlDist)) * u_glareOppositeFactor;
+  float interiorGlow = cleanCenter * (1.0 - smoothstep(0.25, 0.95, tlDist))
+    * (0.5 + u_glareFactor * 3.0) * u_glareOppositeFactor;
 
   float luminance = dot(outRgb, vec3(0.299, 0.587, 0.114));
   float brightBackground = smoothstep(0.56, 0.82, luminance);
   float darkBackground = 1.0 - smoothstep(0.24, 0.52, luminance);
-  outRgb = mix(outRgb, vec3(1.0), clamp(interiorGlow * (0.08 + darkBackground * 0.06), 0.0, 0.3));
+  // No white wash: the lit-corner response is a gentle exposure lift that
+  // reads as light falloff through the slab, never a painted gradient.
+  outRgb *= 1.0 + interiorGlow * 0.06;
   vec3 highlightTint = mix(outRgb, vec3(1.0), 0.58 + darkBackground * 0.20);
   outRgb = mix(outRgb, highlightTint, clamp(shellHighlight * (0.85 + darkBackground * 0.15), 0.0, 0.94));
   outRgb = mix(outRgb, vec3(0.0), clamp((innerShadow + farRim * 0.06) * (0.46 + brightBackground * 0.46), 0.0, 0.34));
 
   float readySceneCoverage = mix(0.075, u_sceneCoverage, clamp(u_bgReady, 0.0, 1.0));
-  float centerSceneCoverage = mix(readySceneCoverage * 0.72, readySceneCoverage, cleanCenter);
-  float edgeAlpha = silhouetteBand * 0.02 + bevelBody * 0.03 + outerRim * 0.06
-    + shellHighlight * 0.04 + edgeEnergy * 0.02;
-  float alpha = clamp(centerSceneCoverage + edgeAlpha, 0.0, 0.995) * shapeAlpha;
+  // Flat coverage to the edge: the material owns the whole card, no ×0.72
+  // rim recession that reads as an unfilled blank border.
+  float centerSceneCoverage = readySceneCoverage;
+  float edgeAlpha = counterRimBand * 0.02 + bevelBody * 0.03 + outerRim * 0.04
+    + shellHighlight * 0.03 + edgeEnergy * 0.02;
+  // The refraction band must be (nearly) opaque: any DOM background bleeding
+  // through at the rim mixes with the displaced sample and reads as uneven
+  // color patches along the edge.
+  float refractiveBandOpacity = wideField * 0.30;
+  float alpha = clamp(centerSceneCoverage + edgeAlpha + refractiveBandOpacity, 0.0, 0.995) * shapeAlpha;
+  outRgb += ditherNoise(gl_FragCoord.xy) * (1.2 / 255.0);
   vec4 outColor = vec4(outRgb, alpha);
   fragColor = vec4(outColor.rgb * outColor.a, outColor.a);
 }
