@@ -279,7 +279,8 @@ void main() {
   outRgb = mix(outRgb, highlightTint, clamp(shellHighlight * (0.85 + darkBackground * 0.15), 0.0, 0.94));
   outRgb = mix(outRgb, vec3(0.0), clamp((innerShadow + farRim * 0.06) * (0.46 + brightBackground * 0.46), 0.0, 0.34));
 
-  float readySceneCoverage = mix(0.075, u_sceneCoverage, clamp(u_bgReady, 0.0, 1.0));
+  float bgReadyClamped = clamp(u_bgReady, 0.0, 1.0);
+  float readySceneCoverage = mix(0.075, u_sceneCoverage, bgReadyClamped);
   // Flat coverage to the edge: the material owns the whole card, no ×0.72
   // rim recession that reads as an unfilled blank border.
   float centerSceneCoverage = readySceneCoverage;
@@ -287,9 +288,16 @@ void main() {
     + shellHighlight * 0.03 + edgeEnergy * 0.02;
   // The refraction band must be (nearly) opaque: any DOM background bleeding
   // through at the rim mixes with the displaced sample and reads as uneven
-  // color patches along the edge.
-  float refractiveBandOpacity = wideField * 0.30;
-  float alpha = clamp(centerSceneCoverage + edgeAlpha + refractiveBandOpacity, 0.0, 0.995) * shapeAlpha;
+  // color patches along the edge. It must also follow the bgReady ramp —
+  // before the first real texture lands it would otherwise paint a
+  // semi-opaque rim of the 1×1 fallback color (a white edge flash while
+  // the page loads).
+  float refractiveBandOpacity = wideField * 0.30 * bgReadyClamped;
+  float alpha = clamp(
+    centerSceneCoverage + edgeAlpha * mix(0.5, 1.0, bgReadyClamped) + refractiveBandOpacity,
+    0.0,
+    0.995
+  ) * shapeAlpha;
   outRgb += ditherNoise(gl_FragCoord.xy) * (1.2 / 255.0);
   vec4 outColor = vec4(outRgb, alpha);
   fragColor = vec4(outColor.rgb * outColor.a, outColor.a);
