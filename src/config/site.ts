@@ -215,8 +215,8 @@ export const siteConfig: SiteConfig = {
         },
         {
             name: "荟荟",
-            avatar: "https://nhui.top/content/uploadfile/202503/ad7b1741690461.jpg",
-            url: "https://nhui.top/",
+            avatar: "https://blog.nhui.top/content/uploadfile/202504/ad7b1745254714.jpg",
+            url: "https://blog.nhui.top/",
             description: "男科大叫受荟荟",
         },
         {
