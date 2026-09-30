@@ -14,6 +14,7 @@ import {
   resizeFrameBuffer,
 } from "@/lib/gl-utils";
 import {
+  AMBIENT_LIGHT,
   DEFAULT_GLASS_VARIANT,
   GLASS_VARIANTS,
   type GlassColorScheme,
@@ -312,6 +313,7 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
         "u_edgeHighlightGain",
         "u_edgeShadowGain",
         "u_bgReady",
+        "u_lightDir",
       ]);
     } catch (error) {
       console.error("[LiquidGlass] Shader compile failed:", error);
@@ -330,6 +332,17 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
         bottom: mid,
         strength: Number.parseFloat(styles.getPropertyValue("--glass-scene-veil-strength")) || 1,
       };
+    };
+
+    // Single ambient light source (ambientcss philosophy): the shader's
+    // lit-corner glow reads the same tokens the CSS cast shadows derive from.
+    const readAmbientLight = () => {
+      const styles = getComputedStyle(document.documentElement);
+      const x = Number.parseFloat(styles.getPropertyValue("--amb-light-x"));
+      const y = Number.parseFloat(styles.getPropertyValue("--amb-light-y"));
+      return Number.isFinite(x) && Number.isFinite(y)
+        ? { x, y }
+        : { x: AMBIENT_LIGHT.x, y: AMBIENT_LIGHT.y };
     };
 
     const readColorScheme = (): GlassColorScheme => (themeMedia.matches ? "dark" : "light");
@@ -372,6 +385,7 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
     };
 
     const initialQuality = resolveQuality();
+    const ambientLight = readAmbientLight();
     const initialViewport = resolveViewportState(initialQuality.dprCap);
     const initialWidth = initialViewport.width;
     const initialHeight = initialViewport.height;
@@ -1116,6 +1130,7 @@ export function LiquidGlassCanvas({ cardsRef }: LiquidGlassCanvasProps) {
         bindTexture(gl, state.mainProg, "u_blurredBg", state.fbo1.texture, 1);
         gl.uniform2f(state.mainProg.uniforms["u_resolution"]!, state.width, state.height);
         gl.uniform1f(state.mainProg.uniforms["u_dpr"]!, state.dpr);
+        gl.uniform2f(state.mainProg.uniforms["u_lightDir"]!, ambientLight.x, ambientLight.y);
 
         gl.enable(gl.SCISSOR_TEST);
 

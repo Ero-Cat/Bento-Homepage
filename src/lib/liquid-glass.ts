@@ -49,6 +49,11 @@ export const SHARED_GLASS_RADIUS_PX = 32;
 export const SHARED_GLASS_RADIUS_CSS = `${SHARED_GLASS_RADIUS_PX}px`;
 export const STANDARD_ROUNDED_RECT_SHAPE = 2;
 
+/** Ambient light direction — the GL mirror of the `--amb-light-x/y` CSS
+ *  tokens (same 45° diagonal). One physical light drives both the shader's
+ *  lit-corner interior glow and every CSS cast shadow; never fork them. */
+export const AMBIENT_LIGHT = { x: -0.7071, y: -0.7071 } as const;
+
 export const LIQUID_GLASS_CANVAS = {
   /** Target softening of the blurred scene layer, anchored in CSS px so every
    *  quality tier renders the same visual blur regardless of buffer scale. */
@@ -98,7 +103,7 @@ export const GLASS_VARIANTS: Record<GlassVariant, GlassVariantConfig> = {
     rimMirror: 0.85,
     bevelWidth: 16,
     magnification: 0.12,
-    surfaceBlurMix: 0.24,
+    surfaceBlurMix: 0.21,
     counterRimFactor: 0.15,
     pointerRefraction: 0.86,
     pointerGlare: 0.78,
@@ -110,7 +115,7 @@ export const GLASS_VARIANTS: Record<GlassVariant, GlassVariantConfig> = {
       tintAlpha: 0.02,
       sceneCoverage: 0.93,
       saturation: 1.22,
-      exposure: 1.04,
+      exposure: 1.06,
       edgeHighlightGain: 1.5,
       edgeShadowGain: 1.08,
     },
@@ -152,7 +157,7 @@ export const GLASS_VARIANTS: Record<GlassVariant, GlassVariantConfig> = {
       tintAlpha: 0.018,
       sceneCoverage: 0.92,
       saturation: 1.2,
-      exposure: 1.03,
+      exposure: 1.05,
       edgeHighlightGain: 1.42,
       edgeShadowGain: 1.0,
     },

@@ -27,7 +27,7 @@ test("light mode uses clear glass controls and deeper text tokens", () => {
   assert.equal(getToken("light", "glass-floating-bg"), "rgba(255, 255, 255, 0.18)");
   assert.equal(getToken("light", "ios-material-bg"), "rgba(255, 255, 255, 0.24)");
   assert.equal(getToken("light", "text-secondary"), "#1e293b");
-  assert.equal(getToken("light", "text-tertiary"), "#475569");
+  assert.equal(getToken("light", "text-tertiary"), "#3d4a5c");
 });
 
 test("Apple system accent tokens adapt between light and dark appearances", () => {

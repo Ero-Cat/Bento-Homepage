@@ -5,18 +5,28 @@
    Apple HIG: clarity, deference, depth
    ============================================================ */
 :root {
+  /* Ambient light source (ambientcss philosophy): ONE physical light; every
+     directional shadow, cast offset and lit highlight derives from this
+     vector. It points TOWARD the light (up-left); shadows are cast opposite.
+     Rule: room-cast layers (blur >= 24px) offset by -light * distance; tight
+     contact layers (blur < 24px) stay vertical under the object.
+     The GL main pass reads the same values via u_lightDir — do not fork. */
+  --amb-light-x: -0.7071;
+  --amb-light-y: -0.7071;
+
   /* Background gradient — Light (Apple.com whites) */
   --bg-gradient-from: #ffffff;
   --bg-gradient-via: #f5f5f7;
   --bg-gradient-to: #fbfbfd;
-  --glow-color: rgba(194, 0, 101, 0.05);
 
   /* Glass shape token — used by card border-radius */
   --glass-radius: 28px;
   /* Fallback glass — luminous frosted white */
   --glass-fallback-bg: rgba(255, 255, 255, 0.18);
   --glass-fallback-border: rgba(0, 0, 0, 0.08);
-  --glass-fallback-shadow: 0 10px 34px rgba(0, 0, 0, 0.10), 0 2px 10px rgba(0, 0, 0, 0.06);
+  --glass-fallback-shadow:
+    calc(var(--amb-light-x) * -14.1px) calc(var(--amb-light-y) * -14.1px) 34px rgba(0, 0, 0, 0.10),
+    0 2px 10px rgba(0, 0, 0, 0.06);
   --glass-fallback-highlight: rgba(255, 255, 255, 0.42);
   /* Shell (WebGL backing) */
   --glass-shell-fill: rgba(255, 255, 255, 0.16);
@@ -32,7 +42,10 @@
   /* Compositor-synced edge treatment (ready mode): a faint lit top line and
      the tight contact shadow never desync from DOM content while scrolling;
      the bent-refraction rim is painted by the GL canvas. */
-  --glass-edge-shadow: 0 1px 1px rgba(0, 0, 0, 0.05), 0 4px 10px rgba(0, 0, 0, 0.06), 0 14px 30px rgba(0, 0, 0, 0.12);
+  --glass-edge-shadow:
+    0 1px 1px rgba(0, 0, 0, 0.05),
+    0 4px 10px rgba(0, 0, 0, 0.06),
+    calc(var(--amb-light-x) * -19.8px) calc(var(--amb-light-y) * -19.8px) 30px rgba(0, 0, 0, 0.12);
   /* iOS liquid glass: no white gradient wash inside the glass — only a
      whisper-flat veil for legibility. The scene veil is flattened to the
      mid tone by the canvas (top/bottom stops ignored). */
@@ -40,7 +53,9 @@
   /* iOS media card material — Apple Music frosted glass */
   --ios-material-bg: rgba(255, 255, 255, 0.24);
   --ios-material-border: rgba(0, 0, 0, 0.07);
-  --ios-material-shadow: 0 16px 48px rgba(0, 0, 0, 0.10), 0 4px 12px rgba(0, 0, 0, 0.06);
+  --ios-material-shadow:
+    calc(var(--amb-light-x) * -22.6px) calc(var(--amb-light-y) * -22.6px) 48px rgba(0, 0, 0, 0.10),
+    0 4px 12px rgba(0, 0, 0, 0.06);
   --ios-material-highlight: rgba(255, 255, 255, 0.58);
   --ios-control-bg: rgba(255, 255, 255, 0.24);
   --ios-control-border: rgba(0, 0, 0, 0.07);
@@ -62,7 +77,9 @@
   /* Typography — Apple canonical label colors */
   --text-primary: #1d1d1f;
   --text-secondary: #1e293b;
-  --text-tertiary: #475569;
+  /* Tertiary carries 11-13px metadata over translucent glass — it needs
+     enough weight to stay legible on bright photo backgrounds. */
+  --text-tertiary: #3d4a5c;
 
   /* Background overlay for bg image — Light */
   --bg-overlay: rgba(244, 247, 251, 0.18);
@@ -87,7 +104,6 @@
     --bg-gradient-from: #000000;
     --bg-gradient-via: #0a0a0f;
     --bg-gradient-to: #111116;
-    --glow-color: rgba(255, 55, 95, 0.12);
 
     /* Theme tint — Apple Vibrant Rose */
     --tint-color: #ff375f;
@@ -101,7 +117,9 @@
     /* Fallback glass — deep space frosted */
     --glass-fallback-bg: rgba(0, 0, 0, 0.56);
     --glass-fallback-border: rgba(255, 255, 255, 0.10);
-    --glass-fallback-shadow: 0 8px 40px rgba(0, 0, 0, 0.56), 0 2px 10px rgba(0, 0, 0, 0.36);
+    --glass-fallback-shadow:
+      calc(var(--amb-light-x) * -11.3px) calc(var(--amb-light-y) * -11.3px) 40px rgba(0, 0, 0, 0.56),
+      0 2px 10px rgba(0, 0, 0, 0.36);
     --glass-fallback-highlight: rgba(255, 255, 255, 0.18);
     /* Shell */
     --glass-shell-fill: rgba(255, 255, 255, 0.08);
@@ -114,12 +132,16 @@
     --glass-divider: rgba(255, 255, 255, 0.07);
     --glass-floating-bg: rgba(28, 28, 30, 0.80);
     --glass-floating-border: rgba(255, 255, 255, 0.09);
-    --glass-edge-shadow: 0 1px 1px rgba(0, 0, 0, 0.24), 0 16px 36px rgba(0, 0, 0, 0.5);
+    --glass-edge-shadow:
+      0 1px 1px rgba(0, 0, 0, 0.24),
+      calc(var(--amb-light-x) * -22.6px) calc(var(--amb-light-y) * -22.6px) 36px rgba(0, 0, 0, 0.5);
     --glass-scene-veil-strength: 0.35;
     /* iOS media card material — Apple Music dark */
     --ios-material-bg: rgba(28, 28, 30, 0.68);
     --ios-material-border: rgba(255, 255, 255, 0.10);
-    --ios-material-shadow: 0 16px 48px rgba(0, 0, 0, 0.60), 0 4px 12px rgba(0, 0, 0, 0.44);
+    --ios-material-shadow:
+      calc(var(--amb-light-x) * -22.6px) calc(var(--amb-light-y) * -22.6px) 48px rgba(0, 0, 0, 0.60),
+      0 4px 12px rgba(0, 0, 0, 0.44);
     --ios-material-highlight: rgba(255, 255, 255, 0.11);
     --ios-control-bg: rgba(255, 255, 255, 0.08);
     --ios-control-border: rgba(255, 255, 255, 0.10);
@@ -307,7 +329,8 @@ body {
       transparent 54%,
       rgba(255, 255, 255, 0.03) 100%
     );
-  box-shadow: 0 18px 36px var(--glass-shell-shadow);
+  box-shadow:
+    calc(var(--amb-light-x) * -25.5px) calc(var(--amb-light-y) * -25.5px) 36px var(--glass-shell-shadow);
 }
 
 .glass-card::after {
@@ -339,12 +362,20 @@ body {
 :root[data-liquid-glass="fallback"] .glass-card::before {
   opacity: 0.42;
   background:
-    radial-gradient(circle at 22% 6%, var(--glass-fallback-highlight), transparent 34%),
+    radial-gradient(
+      circle at calc(50% + var(--amb-light-x) * 40%) calc(50% + var(--amb-light-y) * 40%),
+      var(--glass-fallback-highlight),
+      transparent 34%
+    ),
     linear-gradient(145deg, rgba(255, 255, 255, 0.10), transparent 40%, rgba(0, 0, 0, 0.06));
+  /* Composite edge treatment derived from the ambient light (ambientcss
+     layering): lit-edge fillet highlight, shade-edge fillet shadow, broad
+     ambient occlusion, then the directional room-cast drop shadow. */
   box-shadow:
-    inset 0 1px 0 var(--glass-fallback-highlight),
-    inset 0 -18px 30px rgba(0, 0, 0, 0.05),
-    0 18px 36px var(--glass-shell-shadow);
+    inset calc(var(--amb-light-x) * -1.4px) calc(var(--amb-light-y) * -1.4px) 0 var(--glass-fallback-highlight),
+    inset calc(var(--amb-light-x) * 25px) calc(var(--amb-light-y) * 25px) 30px rgba(0, 0, 0, 0.05),
+    inset 0 0 18px rgba(0, 0, 0, 0.05),
+    calc(var(--amb-light-x) * -25.5px) calc(var(--amb-light-y) * -25.5px) 36px var(--glass-shell-shadow);
 }
 
 :root[data-liquid-glass="fallback"] .glass-card::after {
@@ -360,6 +391,43 @@ body {
   box-shadow: var(--glass-edge-shadow);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
+}
+
+/* Elevation scale (Apple Depth): each variant sits at its own height above
+   the page — hero/immersive float deepest, dense/media hug the surface.
+   Every offset derives from the ambient light vector; tight contact layers
+   stay vertical. */
+.glass-card[data-glass-variant="hero"],
+.glass-card[data-glass-variant="immersive"] {
+  --glass-edge-shadow:
+    0 1px 1px rgba(0, 0, 0, 0.05),
+    0 4px 12px rgba(0, 0, 0, 0.07),
+    calc(var(--amb-light-x) * -26px) calc(var(--amb-light-y) * -26px) 44px rgba(0, 0, 0, 0.14),
+    calc(var(--amb-light-x) * -9px) calc(var(--amb-light-y) * -9px) 18px rgba(0, 0, 0, 0.08);
+}
+
+.glass-card[data-glass-variant="media"],
+.glass-card[data-glass-variant="dense"] {
+  --glass-edge-shadow:
+    0 1px 1px rgba(0, 0, 0, 0.04),
+    calc(var(--amb-light-x) * -13px) calc(var(--amb-light-y) * -13px) 24px rgba(0, 0, 0, 0.10);
+}
+
+@media (prefers-color-scheme: dark) {
+  .glass-card[data-glass-variant="hero"],
+  .glass-card[data-glass-variant="immersive"] {
+    --glass-edge-shadow:
+      0 1px 1px rgba(0, 0, 0, 0.28),
+      calc(var(--amb-light-x) * -26px) calc(var(--amb-light-y) * -26px) 44px rgba(0, 0, 0, 0.52),
+      calc(var(--amb-light-x) * -9px) calc(var(--amb-light-y) * -9px) 18px rgba(0, 0, 0, 0.3);
+  }
+
+  .glass-card[data-glass-variant="media"],
+  .glass-card[data-glass-variant="dense"] {
+    --glass-edge-shadow:
+      0 1px 1px rgba(0, 0, 0, 0.24),
+      calc(var(--amb-light-x) * -13px) calc(var(--amb-light-y) * -13px) 24px rgba(0, 0, 0, 0.4);
+  }
 }
 
 :root[data-liquid-glass="ready"] .glass-card::before {
@@ -404,7 +472,7 @@ body {
   box-shadow:
     inset 0 1px 0 color-mix(in srgb, var(--glass-shell-highlight) 44%, transparent),
     inset 0 -1px 0 rgba(0, 0, 0, 0.04),
-    0 12px 32px color-mix(in srgb, var(--glass-shell-shadow) 80%, transparent);
+    calc(var(--amb-light-x) * -17px) calc(var(--amb-light-y) * -17px) 32px color-mix(in srgb, var(--glass-shell-shadow) 80%, transparent);
   backdrop-filter: blur(20px) saturate(1.6);
   -webkit-backdrop-filter: blur(20px) saturate(1.6);
 }
@@ -413,6 +481,28 @@ body {
   border-radius: inherit;
   overflow: hidden;
 }
+
+/* ============================================================
+   Media Ambient Glow — content as an area light (ambientcss
+   emissive philosophy). The dominant color of the media a card
+   displays spills around it as a soft bloom. The rgb() fallback
+   is neutral black, so a missing extraction degrades to a plain
+   shadow instead of invalidating the whole gradient.
+   ============================================================ */
+.media-ambient-glow {
+  position: absolute;
+  inset: -26px;
+  border-radius: calc(var(--glass-radius) + 26px);
+  background: radial-gradient(
+    circle at 50% 44%,
+    rgba(var(--media-ambient-rgb, 0, 0, 0), 0.34) 0%,
+    rgba(var(--media-ambient-rgb, 0, 0, 0), 0.15) 46%,
+    transparent 72%
+  );
+  filter: blur(26px) saturate(1.5);
+  pointer-events: none;
+}
+
 .ios-media-card {
   position: relative;
   isolation: isolate;
@@ -442,7 +532,11 @@ body {
 .ios-media-card__album {
   background: rgba(255, 255, 255, 0.10);
   border: 1px solid rgba(255, 255, 255, 0.13);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28), 0 4px 10px rgba(0, 0, 0, 0.14);
+  box-shadow:
+    calc(var(--amb-light-x) * -11.3px) calc(var(--amb-light-y) * -11.3px) 32px rgba(0, 0, 0, 0.35),
+    0 2px 8px rgba(0, 0, 0, 0.2),
+    /* The artwork tints its own cast shadow at low luminance. */
+    0 6px 22px rgba(var(--media-ambient-rgb, 0, 0, 0), 0.26);
 }
 
 .ios-media-card__button {
@@ -500,86 +594,6 @@ body {
 
   50% {
     opacity: 0;
-  }
-}
-
-/* ============================================================
-   Liquid Glass — Light Sweep Animation
-   Moves the diagonal gloss stripe across the card shell
-   ============================================================ */
-@keyframes liquid-shine {
-  0% {
-    background-position: 0 0, -100% 0;
-    opacity: 0.6;
-  }
-
-  30% {
-    opacity: 1;
-  }
-
-  50% {
-    background-position: 0 0, 0% 0;
-    opacity: 1;
-  }
-
-  80% {
-    opacity: 0.8;
-  }
-
-  100% {
-    background-position: 0 0, 100% 0;
-    opacity: 0.6;
-  }
-}
-
-/* ============================================================
-   Floating Color Orbs (Background Liquid Motion)
-   ============================================================ */
-@keyframes float-orb-1 {
-
-  0%,
-  100% {
-    transform: translate(0, 0) scale(1);
-  }
-
-  33% {
-    transform: translate(80px, -60px) scale(1.1);
-  }
-
-  66% {
-    transform: translate(-40px, 40px) scale(0.95);
-  }
-}
-
-@keyframes float-orb-2 {
-
-  0%,
-  100% {
-    transform: translate(0, 0) scale(1);
-  }
-
-  33% {
-    transform: translate(-70px, 50px) scale(1.05);
-  }
-
-  66% {
-    transform: translate(60px, -30px) scale(0.9);
-  }
-}
-
-@keyframes float-orb-3 {
-
-  0%,
-  100% {
-    transform: translate(0, 0) scale(1);
-  }
-
-  33% {
-    transform: translate(50px, 70px) scale(0.95);
-  }
-
-  66% {
-    transform: translate(-80px, -40px) scale(1.1);
   }
 }
 

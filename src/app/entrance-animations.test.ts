@@ -562,13 +562,13 @@ test("liquid glass center refracts and diffuses the scene instead of repainting 
   );
   assert.match(
     shaderSource,
-    /centerSceneCoverage\s*=\s*readySceneCoverage\s*;/,
-    "Expected the liquid frost to fill the entire card with flat coverage — no recessed, unfilled rim ring",
+    /centerSceneCoverage\s*=\s*readySceneCoverage\s*\+\s*brightBackground\s*\*\s*cleanCenter\s*\*\s*0\.045\s*;/,
+    "Expected the liquid frost to fill the entire card with flat coverage plus only a luminance-adaptive interior lift — no recessed, unfilled rim ring",
   );
   assert.match(
     shaderSource,
-    /clamp\(u_surfaceBlurMix \* \(0\.95 - mirrorBand \* 0\.35\), 0\.0, 0\.62\)/,
-    "Expected the rim band to keep the same frost level as the center so the material never truncates near the edge",
+    /clamp\(u_surfaceBlurMix \* \(0\.62 - mirrorBand \* 0\.30\), 0\.0, 0\.62\)/,
+    "Expected the rim band to keep a continuous (slightly lighter) frost ramp so the bent content stays legible and the material never truncates near the edge",
   );
 });
 
@@ -676,7 +676,7 @@ test("liquid glass refraction uses a bounded non-saturating envelope instead of 
   );
   assert.match(
     shaderSource,
-    /min\(\s*u_refThickness[\s\S]*min\(safeHalfSize\.x,\s*safeHalfSize\.y\)\s*\*\s*0\.12/,
+    /min\(\s*u_refThickness[\s\S]*min\(safeHalfSize\.x,\s*safeHalfSize\.y\)\s*\*\s*0\.16/,
     "Expected the long-range lens pull to stay bounded relative to card size",
   );
   assert.match(

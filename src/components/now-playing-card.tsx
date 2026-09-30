@@ -1,9 +1,14 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo, type CSSProperties } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Music, SkipBack, Play, Pause, SkipForward, Volume2, VolumeX } from "lucide-react";
 import { siteConfig } from "@/config/site";
+import {
+    extractDominantColor,
+    toRgbTriple,
+    type DominantColor,
+} from "@/lib/palette";
 
 /* ============================================================
    Types
@@ -91,6 +96,20 @@ export function NowPlayingCard() {
     }, [currentIdx, tracks]);
 
     const track = tracks[currentIdx] ?? null;
+
+    /* ── Content ambient light — the album art acts as an area light ── */
+    const [ambient, setAmbient] = useState<DominantColor | null>(null);
+
+    useEffect(() => {
+        let cancelled = false;
+        // 缓存命中与真实提取统一走异步链，避免 effect 内同步 setState 级联渲染
+        extractDominantColor(track?.albumCover ?? "").then((color) => {
+            if (!cancelled) setAmbient(color);
+        });
+        return () => {
+            cancelled = true;
+        };
+    }, [track?.albumCover]);
 
     /* ── rAF-based progress — reads from audio element ── */
     /* ── rAF-based progress — reads from audio element ── */
@@ -239,9 +258,28 @@ export function NowPlayingCard() {
     }
 
     const totalTime = audioDuration > 0 ? formatTime(audioDuration * 1000) : "--:--";
+    const ambientTriple = ambient ? toRgbTriple(ambient) : null;
 
     return (
-        <div className="ios-media-card h-full min-h-[200px]">
+        <div
+            className="relative h-full min-h-[200px]"
+            style={ambientTriple ? ({ "--media-ambient-rgb": ambientTriple } as CSSProperties) : undefined}
+        >
+            {/* ── Layer 0: Ambient light spill — the artwork emits light ── */}
+            <AnimatePresence>
+                {ambient && (
+                    <motion.div
+                        key={ambientTriple ?? "ambient"}
+                        className="media-ambient-glow"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ type: "spring", stiffness: 90, damping: 24 }}
+                    />
+                )}
+            </AnimatePresence>
+
+            <div className="ios-media-card h-full min-h-[200px]">
             {/* Hidden audio element */}
             <audio ref={audioRef} preload="none" />
 
@@ -272,17 +310,23 @@ export function NowPlayingCard() {
                     }}
                 />
 
+                {/* ── Layer 2.5: Ambient tint — the artwork colors its own card ── */}
+                {ambient && (
+                    <div
+                        className="absolute inset-0 pointer-events-none"
+                        style={{
+                            background:
+                                "linear-gradient(180deg, rgba(var(--media-ambient-rgb), 0.13) 0%, rgba(var(--media-ambient-rgb), 0.05) 55%, transparent 100%)",
+                        }}
+                    />
+                )}
+
                 {/* ── Layer 3: Content ── */}
                 <div className="relative z-10 flex h-full flex-col justify-between gap-3 p-5 md:p-6">
                     {/* ── Top: Album + Info ── */}
                     <div className="flex items-center gap-4">
-                        {/* Album Cover */}
-                        <div
-                            className="ios-media-card__album glass-media-mask h-[72px] w-[72px] shrink-0 rounded-[24px]"
-                            style={{
-                                boxShadow: "0 8px 32px rgba(0,0,0,0.35), 0 2px 8px rgba(0,0,0,0.2)",
-                            }}
-                        >
+                        {/* Album Cover — shadow partly carries the artwork's own color */}
+                        <div className="ios-media-card__album glass-media-mask h-[72px] w-[72px] shrink-0 rounded-[24px]">
                             <AnimatePresence>
                                 <motion.img
                                     key={track.songId}
@@ -376,6 +420,7 @@ export function NowPlayingCard() {
                         </motion.button>
                     </div>
                 </div>
+            </div>
             </div>
         </div>
     );

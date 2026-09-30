@@ -79,6 +79,8 @@ https://github.com/Ero-Cat/Bento-Homepage/raw/main/assets/demo.webm
 - **参考式边缘 displacement** — 借鉴 `liquid-glass-react` 的边缘位移贴图思路：向中心压缩的厚边缘折射、RGB 分通道色散、方向性 glare，位移与色散在最外 2 CSS px 平滑归零
 - **iOS 式场景重建** — 背景纹理按页面相同的居中 `cover` 裁剪采样；真实纹理 ready 后卡片中心以轻微镜片位移与扩散完整重建同一场景，文本型卡片保留约 8px 等效最低柔化档保证可读性
 - **弹性指针响应** — 桌面端仅为当前卡片平滑更新折射与 glare；内容层不位移，粗指针与减少动态效果下自动回退为静态玻璃
+- **单一物理光源（ambientcss 理念）** — 全站由一个光源 token（`--amb-light-x/y`，45° 左上）统一派生：CSS 房间级投影层沿光源反向偏移、shader 受光角（`u_lightDir`）投影到卡片边界，GL 与 DOM 永远对"光从哪来"达成一致；WebGL2 不可用时的 CSS fallback 使用受光 fillet 高光 + 背光 fillet 阴影 + 广域 AO + 定向投影的复合分层逼近液态玻璃
+- **内容环境光** — 正在播放卡片从专辑封面实时提取主色（`src/lib/palette.ts`，饱和度加权分桶），作为柔和彩色光晕溢出到卡片外并微染内部渐变与封面投影（"发光体照亮周围"）；封面加载或跨域失败时优雅降级为中性外观
 - **渐进增强 fallback** — WebGL2 不可用时自动退回 CSS blur / border / shadow 玻璃壳层，内容始终可读
 
 ### ⚡ 性能
@@ -94,7 +96,7 @@ https://github.com/Ero-Cat/Bento-Homepage/raw/main/assets/demo.webm
 
 | 卡片 | 亮点 |
 |---|---|
-| 🎵 网易云播放器 | 真实音频播放 / 切歌 / 进度拖拽，独立 iOS media card 材质 |
+| 🎵 网易云播放器 | 真实音频播放 / 切歌 / 进度拖拽，独立 iOS media card 材质 + 专辑主色环境光晕 |
 | 🎮 VRChat 状态 | VRCX-Cloud API 15 秒轮询，在线状态 / 头像 / 信任等级 / 徽章 |
 | 📊 GitHub 热力图 | 无需 Token，过去一年贡献 + 🐍 Snake 巡游动效 |
 | 📝 博客 | Halo 2.x API 编辑式文章列表，spring 材质反馈 |

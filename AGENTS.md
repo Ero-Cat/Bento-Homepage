@@ -154,6 +154,7 @@ Bento-Homepage/
 │   └── lib/
 │       ├── liquid-glass.ts       # Liquid Glass variant / optical token SSoT
 │       ├── gl-utils.ts           # WebGL2 shader/FBO/texture helper
+│       ├── palette.ts            # 图片主色提取（内容环境光，按 URL 缓存）
 │       ├── motion.ts             # 弹簧物理预设 & 动画变体
 │       └── utils.ts              # cn() 类名合并工具
 ├── src/shaders/
@@ -178,14 +179,14 @@ Bento-Homepage/
 - **失效驱动渲染**：共享画布不再常驻 60fps 全量重绘；仅在背景切换、resize、scroll、卡片几何变化、活动指针 spring 和首屏入场稳定阶段才重新调度渲染
 - **变体化参数**：`hero` / `panel` / `media` / `dense` / `immersive` 通过 `src/lib/liquid-glass.ts` 集中管理半径、bevel、参考式 displacement 折射、长程折射场（`edgeLensRange`）、中心放大（`lensMagnification`）、镜像边（`rimMirror`）、中心扩散、色散、Fresnel、glare、指针响应与 light/dark 材质 profile、fallback blur
 - **iOS 风边缘点光**：`mainPass` 使用单一 `KEY_LIGHT`（左上主光）驱动柔和的方向性边缘亮度与左上内部辉光；禁止整面 glare 扫光，禁止把 GL 边缘做成近实心厚边框——清晰描边由 CSS 发丝线负责，GL 只保留亮度渐变
-- **外折式边缘折射**：边缘位移必须沿法线**向外**采样（`lensNormal = +normalDir * wideField * maxPullPx`），让 rim 带显示卡片边界**之外**被弯折挤入的背景内容（displacement-map 行为）；中心放大拉力（`centerPull`）在边缘带必须衰减（`× (0.15 + 0.85 × (1 - wideField))`），禁止两个场互相抵消把净位移归零；位移预算为短边的 12%，`edgeLensRange` 收窄在 14-24px（Apple 视觉重量），`opticalDepth` 上限 0.78 且与内部霜面连续混合——宽折射场会在内外内容不同时形成平坦『搁板带』，读作空白边框环
+- **外折式边缘折射**：边缘位移必须沿法线**向外**采样（`lensNormal = +normalDir * wideField * maxPullPx`），让 rim 带显示卡片边界**之外**被弯折挤入的背景内容（displacement-map 行为）；中心放大拉力（`centerPull`）在边缘带必须衰减（`× (0.15 + 0.85 × (1 - wideField))`），禁止两个场互相抵消把净位移归零；位移预算为短边的 16%（角部法向按对角分量加成 ≤30% 补偿带的对角展宽，保持圆角处带宽一致），`edgeLensRange` 收窄在 14-24px（Apple 视觉重量），`opticalDepth` 上限 0.88 且与内部霜面连续混合——宽折射场会在内外内容不同时形成平坦『搁板带』，读作空白边框环
 - **边缘均匀性约束**：折射带必须近似不透明（`refractiveBandOpacity = wideField × 0.30`），禁止让未折射的 DOM 背景在 rim 处渗入与位移采样混合成斑驳色块；mirror rim 必须是连续渐变（外 9px、≤4px 强度），禁止采样源跳变；色散只允许出现在折射带内肩（`smoothstep(2.0, 10.0, edgeDistance)` 门控），禁止在最外陡峭位移区做 RGB 通道分离；`glass-bg` 与 `glass-main` 输出必须加 ±0.6/255 三角抖动消除 8-bit 渐变 banding；SDF AA 过渡带为 ±2.6 设备像素，保证圆角无阶梯
 - **纹理压缩采样必须带限（反混叠根约束）**：背景照片纹理（`loadTexture`）与场景 FBO（fbo0）必须使用 `LINEAR_MIPMAP_LINEAR` + `generateMipmap`——边缘折射把多个纹理像素压缩进单个屏幕像素，无 mipmap 时必然混叠成边缘条纹/斑块；场景 mipmap 链在每次 scene pass 后、任何采样前重建（先解绑 fbo0 framebuffer 避免 feedback loop；resize 后靠 sceneDirty 保证下帧先跑 bgPass 再生成）；`sampleDispersedGlass` 必须用 `fwidth` 计算局部压缩率并按 `(compression - 1) × 0.45` 渐进混入预过滤模糊采样；验证边缘均匀性必须使用真实照片背景（平滑合成背景测不出混叠）
 - **边缘零颜料铁律**：卡片边缘**禁止任何静态"画上去"的线或渐变**——CSS 不画描边/inset 线（只保留形状外接触阴影 `--glass-edge-shadow`），GL 不画静态亮度肩部/厚度暗带（`edgeShoulder` 已删除）；边缘的唯一定义是**光学本身**：外折折射带弯折背景、镜像 rim、色散、中心放大与下方软阴影——恒定亮度的 painted 描边在任何背景上都会读成"装饰性样式"而非玻璃；唯一允许的"光"是指针驱动的动态响应（`pointerShoulder`）与 whisper 级内部辉光（`interiorGlow` ≤0.1 mix）；垂直剖面必须无画线峰（亮暗跟随背景内容）
 - **设备像素对齐**：卡片投影 `shaderRectPx` 必须取整到设备像素（`Math.round(left*dpr)`），分数滚动偏移不得让边缘覆盖率逐帧振荡（shimmer）
 - **长程折射场与中心放大**：边缘折射由 `edgeLensRange` 的长程衰减场驱动（超出 bevel 带向内延续），位移预算按卡片尺寸封顶（短边的 17%）；中心以 `lensMagnification`（1.03-1.05）做全局"压在玻璃下"放大；最外 1.2-4px 由 `rimMirror` 提供镜像翻转边
-- **接触阴影**：由 `.glass-card` 的 CSS `box-shadow`（`--glass-edge-shadow`，下方偏置、紧凑模糊）在合成器上绘制，随内容同步滚动；禁止在 WebGL 画布内绘制形状外阴影（rAF 错帧 + 相邻卡片阴影在间隙中双重叠加）
-- **液态霜面铁律（整卡填充）**：霜面材料必须覆盖 **100% 卡片面积直到边缘**——`centerSceneCoverage = readySceneCoverage` 平铺（禁止 ×0.72 之类的边缘带覆盖率凹陷）、`centerDiffusion` 与 rim 带的 blurMix 必须同材质连续（仅薄镜像条允许略微清晰），禁止任何材料在距边 8-15px 处截断形成"空白边"；折射位移作用于**已模糊**的背景（液态模糊 = 弯折的霜面），不是清晰折射带；放大系数用 `wideField` 平滑过渡，禁止 `cleanCenter` 阶跃
+- **接触阴影**：由 `.glass-card` 的 CSS `box-shadow`（`--glass-edge-shadow`）在合成器上绘制，随内容同步滚动；紧凑接触层垂直向下，广域投影层从 `--amb-light-x/y` 派生（见 Ambient Light 小节）；高度按 variant 分层（Apple Depth：hero/immersive 悬浮最深、media/dense 贴近页面，均由 `--amb-light-*` 派生且明暗两模式各自调校）；禁止在 WebGL 画布内绘制形状外阴影（rAF 错帧 + 相邻卡片阴影在间隙中双重叠加）
+- **液态霜面铁律（整卡填充）**：霜面材料必须覆盖 **100% 卡片面积直到边缘**——`centerSceneCoverage = readySceneCoverage` 平铺 + 仅允许亮度自适应的内部微调（`+ brightBackground × cleanCenter × 0.045`，亮内容上略增材质保文字对比；禁止 ×0.72 之类的边缘带覆盖率凹陷）、`centerDiffusion` 与 rim 带的 blurMix 必须同材质**连续**（rim 带系数更轻 `0.62 - mirrorBand × 0.30`：弯折内容需保持可辨才读作厚玻璃而非平面模糊；仅薄镜像条允许更清晰），禁止任何材料在距边 8-15px 处截断形成"空白边"；折射位移作用于**已模糊**的背景（液态模糊 = 弯折的霜面），不是清晰折射带；放大系数用 `wideField` 平滑过渡，禁止 `cleanCenter` 阶跃
 - **圆角光学约束**：折射位移强度与 bevel 宽度必须分离；bevel 宽度不得超过圆角半径的 55%，必须为玻璃内轮廓保留至少 45% 的宽圆角；shader 圆角必须按运行时 DPR 换算，位移与色散必须在最外 2 CSS px 平滑归零；outer-rim 与 bevel 必须用有界、无加法饱和平台的连续包络合成，最大采样位移必须受统一预算限制，counter-rim 必须保持为独立窄带，避免角部产生紧缩 U 形槽、彩色厚边、灰黑胶圈、中轴楔形或直角折线
 - **稳定背景源**：`BackgroundLayer` 将当前背景图 URL 发布到根节点 dataset，Canvas 不再通过脆弱 DOM 查询推断背景
 - **非阻塞首帧纹理**：`LiquidGlassCanvas` 启动时必须先创建 1×1 fallback GPU background texture（颜色跟随 colorScheme）；`GLState.bgTex` 保持非空，真实背景异步加载完成后替换并通过 bgReady ramp 渐入，禁止重新引入 `if (!state.bgTex) return` 这类 loading 死锁
@@ -204,7 +205,7 @@ Bento-Homepage/
 - **壳层与边缘分工**：WebGL2 就绪后，`GlassCard` 的旧 DOM 玻璃"底色/模糊"外观必须静音（背景透明、无 backdrop-filter），内部光学完全由 Canvas 负责；但 CSS 发丝描边与接触阴影属于例外——它们是位置锚点，必须留在 DOM 上随合成器滚动
 - **CSS fallback**：WebGL2 不可用时退回 CSS blur/border/shadow 玻璃壳层，保证内容可读
 - **低端质量分级**：在省流量、低内存、低核心数或移动高 DPR 场景下，仍保留 WebGL Liquid Glass，只降低 DPR 与 blur buffer 成本；卡片绘制被 scissor 限定，成本随视口而非注册卡片数缩放，禁止用 cardCount 触发 DPR 降档；禁止用静态壳层替代正常 liquid shell
-- **iOS 零白渐变 veil 策略**：玻璃场景内禁止垂直白/黑渐变晕染——veil 必须扁平化为单一 mid 色（canvas `readSceneVeil` 忽略 top/bottom 渐变色），强度 light 0.18 / dark 0.35（`--glass-scene-veil-strength`）；材质观感由霜面模糊、折射、`GlassMaterialProfile` 的 saturation/exposure/tint 负责，受光角响应只能是 ≤6% 的曝光提升（读作光衰减），禁止向白色 mix 的 painted 辉光
+- **iOS 零白渐变 veil 策略**：玻璃场景内禁止垂直白/黑渐变晕染——veil 必须扁平化为单一 mid 色（canvas `readSceneVeil` 忽略 top/bottom 渐变色），强度 light 0.18 / dark 0.35（`--glass-scene-veil-strength`）；材质观感由霜面模糊、折射、`GlassMaterialProfile` 的 saturation/exposure/tint 负责，受光角响应只能是 ≤7% 的曝光提升 + 暗内容上 `darkBackground × cleanCenter × 0.035` 的背光微升（合计 ≤0.1，读作光衰减/微背光），禁止向白色 mix 的 painted 辉光
 - **bgReady 渐入**：首张真实背景纹理激活时，scene coverage 必须经 ~450ms ease-out ramp（`bgReadyRampMs`）从 startup shell 渐入到完整材质，禁止 0/1 硬切换；1×1 fallback 纹理颜色必须跟随 colorScheme（light 白 / dark 深灰），避免暗色模式加载期白闪
 - **指针交互边界**：桌面端一次只允许一个可见卡片获得指针 spring；状态只能存在于 canvas runtime ref/闭包，禁止用 React state 或 pointer 热路径布局读取。`pointercancel`、window `blur`、页面 hidden、卡片注销和粗指针/减少动态效果切换必须清除或回弹状态。
 
@@ -223,6 +224,12 @@ Bento-Homepage/
 - **独立材质系统**：`NowPlayingCard` 不注册到 `LiquidGlassCanvas`，改用独立 iOS media card 材质，避免和 refractive bento 壳层混用
 - **rAF 进度条**：`requestAnimationFrame` + `ref` 直写 DOM，播放期间零 React 重渲染
 - **媒体控件层级**：封面、按钮、进度条使用专用 media-card token，不复用 Bento glass 壳层样式
+- **内容环境光**：当前曲目封面经 `src/lib/palette.ts` 提取主色（32×32 离屏 canvas + 饱和度加权量化分桶，按 URL 缓存），注入 wrapper 的 `--media-ambient-rgb`；`.media-ambient-glow` 以 radial 渐变 + blur 把专辑主色作为环境光溢出到卡片外（AnimatePresence + spring 切歌过渡），内部渐变遮罩与专辑封面投影用 `color-mix`/低透明度混入同色。CORS 污染或加载失败必须降级为 `null`（无光晕、中性阴影），rgb() 引用处一律带 `(0, 0, 0)` 回退防止整条声明失效
+
+### Ambient Light（单一物理光源，ambientcss 理念）
+- **光源 SSoT**：`--amb-light-x/y`（globals.css `:root`，指向光源的单位向量，默认 45° 左上 `-0.7071`）是全站唯一光源；GL 侧 `AMBIENT_LIGHT`（`src/lib/liquid-glass.ts`）为镜像常量，`LiquidGlassCanvas` 初始化时读取 token 并经 `u_lightDir` 传入 mainPass——shader 受光角（`litCorner`）从该向量投影到卡片边界。禁止 CSS 与 GL 各自硬编码光源方向
+- **阴影派生规则**：房间级投影层（blur ≥ 24px）偏移必须写 `calc(var(--amb-light-x/y) * -Npx)`（沿光源反向）；紧凑接触层（blur < 24px）保持垂直向下（接触阴影物理上位于物体正下方）。`--glass-edge-shadow`、`--glass-fallback-shadow`、`--ios-material-shadow`、`.glass-floating-ui`、`.ios-media-card__album` 均已派生；新增任何方向性阴影必须从 `--amb-light-*` 派生，禁止手写偏移量
+- **fallback 复合阴影**（WebGL2 不可用路径）：`.glass-card::before` 使用 ambientcss 式分层——受光侧 fillet 高光（`inset -light×1.4px` 发丝线）+ 背光侧 fillet 阴影（`inset light×25px 30px`）+ 广域 AO（`inset 0 0 18px`）+ 定向投影；radial 高光锚点由光源向量定位。修改 fallback 视觉时保持分层结构与派生写法
 
 ### Inner Control Styling
 - 内层交互面与内容承载面使用组件局部 Tailwind 样式，并复用现有 `glass-*` / `tint` token。
