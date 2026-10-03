@@ -253,7 +253,7 @@ Bento-Homepage/
 - 天气动效（Rain / Snow / Cloud / Sun / Thunder）使用 Framer Motion，均为 spring/linear 物理曲线
 
 ### VRChatStatusCard 优化
-- 15 秒轮询 VRCX-Cloud API，`useRef` 防止竞态
+- 15 秒轮询 VRCX-Cloud 公开接口 `GET /api/public/profile`（免鉴权；业务错误为 HTTP 200 + `ok: false`，短暂失败/资料未水合时保留上一次数据）
 - 状态变化时 `AnimatePresence` 动画切换
 
 ---
@@ -266,7 +266,7 @@ Bento-Homepage/
 | NetEase Music CDN `music.163.com/song/media/outer/url` | `now-playing-card.tsx` | None | 运行时播放音频 |
 | GitHub REST API `/repos/{owner}/{repo}` | `projects-card.tsx` | None | 运行时获取 Stars/Forks |
 | `github-contributions-api.jogruber.de` | `github-heatmap-card.tsx` | None | 运行时获取贡献热力图 |
-| VRCX-Cloud API | `vrchat-status-card.tsx` | None | 运行时轮询 VRChat 在线状态 |
+| VRCX-Cloud API `/api/public/profile` | `vrchat-status-card.tsx` | None | 运行时轮询 VRChat 公开资料（在线状态、头像、信任等级、徽章） |
 | Halo 2.x Content API | `blog-card.tsx` | None | 运行时获取最近博文 |
 | Mapbox Tiles API | `map-card.tsx` | Public Token | 运行时加载地图瓦片与交互、显示 IP 距离 |
 | `ipapi.co` | `map-card.tsx` | None | 运行时获取浏览者 IP 经纬度，用于距离计算 |

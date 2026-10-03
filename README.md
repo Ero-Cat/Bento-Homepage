@@ -255,12 +255,11 @@ github: {
 ```typescript
 vrchat: {
     apiBase: "https://your-vrcx-cloud-api.com",
-    userId: "usr_xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
     bioLines: 5,
 }
 ```
 
-> 需要自行部署 [VRCX-Cloud](https://github.com/vrcx-cloud/vrcx-cloud) 服务提供状态 API。
+> 需要自行部署 [VRCX-Cloud](https://github.com/vrcx-cloud/vrcx-cloud) 服务提供状态 API（`GET /api/public/profile` 公开资料接口，免鉴权）。
 
 ### 📝 博客集成
 

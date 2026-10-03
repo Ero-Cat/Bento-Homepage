@@ -78,10 +78,8 @@ export interface SiteConfig {
         size?: number;
     };
     vrchat?: {
-        /** VRCX-Cloud API 地址 */
+        /** VRCX-Cloud 服务地址（公开接口 GET /api/public/profile，免鉴权） */
         apiBase: string;
-        /** VRChat User ID */
-        userId: string;
         /** Bio 展示行数，默认 3 */
         bioLines?: number;
     };
@@ -304,7 +302,6 @@ export const siteConfig: SiteConfig = {
 
     vrchat: {
         apiBase: "https://vrcx-cloud.iacg.moe",
-        userId: "usr_dcf7bc56-34d4-482a-b21f-fb2c05dcfb2f",
         bioLines: 5,
     },
 

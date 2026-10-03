@@ -7,28 +7,51 @@ import { siteConfig } from "@/config/site";
 
 /* ============================================================
    VRChat Status Card — VRCX-Cloud Public API
+   GET {apiBase}/api/public/profile
    ============================================================ */
 
-interface VRChatStatus {
-    vrchatUserId: string;
-    displayName: string;
-    status: string;
-    statusDescription: string;
-    currentAvatarThumbnailImageUrl: string;
-    profilePicOverride: string;
-    userIcon: string;
-    bio: string;
-    tags: string[];
-    lastLoginAt: string;
+/** /api/public/profile 返回的 profile 投影（见 VRCX-Cloud PUBLIC-API 文档） */
+interface VRCXProfile {
+    id: string;
+    displayName: string | null;
+    status: string | null;
+    statusDescription: string | null;
+    bio: string | null;
+    pronouns: string | null;
+    profilePicOverride: string | null;
+    userIcon?: string | null;
+    iconUrl?: string | null;
+    currentAvatarImageUrl: string | null;
+    currentAvatarThumbnailImageUrl: string | null;
+    lastPlatform: string | null;
+    friendsCount?: number | null;
+    tags: string[] | null;
 }
 
-/* ── Status color / label mapping ── */
+interface VRCXProfileResponse {
+    ok: boolean;
+    profile?: VRCXProfile;
+    error?: string;
+    message?: string;
+    generatedAt?: string;
+}
+
+/* ── Status color / label mapping（VRChat 状态枚举）── */
 const STATUS_MAP: Record<string, { color: string; label: string; pulse: boolean }> = {
     "join me": { color: "#42caff", label: "Join Me", pulse: true },
-    online: { color: "#55ff6e", label: "Online", pulse: true },
+    active: { color: "#55ff6e", label: "Online", pulse: true },
     "ask me": { color: "#e8a838", label: "Ask Me", pulse: true },
     busy: { color: "#5b0b0b", label: "Do Not Disturb", pulse: false },
     offline: { color: "#6b7280", label: "Offline", pulse: false },
+};
+
+/* ── lastPlatform → short label ── */
+const PLATFORM_LABELS: Record<string, string> = {
+    standalonewindows: "PC",
+    steam: "Steam",
+    android: "Quest",
+    ios: "iOS",
+    website: "Web",
 };
 
 /* ── Trust rank extraction from tags ── */
@@ -71,44 +94,35 @@ export function VRChatStatusCard() {
     const config = siteConfig.vrchat;
     const bioLines = config?.bioLines ?? 3;
 
-    const [data, setData] = useState<VRChatStatus | null>(null);
+    const [data, setData] = useState<VRCXProfile | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
 
-    /* ── Hydration-safe relative time ── */
-    const [lastLoginLabel, setLastLoginLabel] = useState<string>("");
-    const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-    const computeTimeAgo = useCallback((dateStr: string | undefined) => {
-        if (!dateStr) { setLastLoginLabel(""); return; }
-        const diff = Date.now() - new Date(dateStr).getTime();
-        const minutes = Math.floor(diff / 60000);
-        const hours = Math.floor(diff / 3600000);
-        const days = Math.floor(diff / 86400000);
-        if (days > 0) setLastLoginLabel(`${days}天前`);
-        else if (hours > 0) setLastLoginLabel(`${hours}小时前`);
-        else if (minutes > 0) setLastLoginLabel(`${minutes}分钟前`);
-        else setLastLoginLabel("刚刚");
-    }, []);
+    /* 轮询期间短暂失败（限流 / 未水合）时保留上一次数据，仅首次加载展示错误 */
+    const hasDataRef = useRef(false);
 
     const fetchStatus = useCallback(() => {
         if (!config) return;
-        fetch(`${config.apiBase}/api/v1/public/users/${config.userId}/status`)
+        fetch(`${config.apiBase}/api/public/profile`)
             .then((r) => {
                 if (!r.ok) throw new Error("fetch failed");
-                return r.json();
+                return r.json() as Promise<VRCXProfileResponse>;
             })
-            .then((d: VRChatStatus) => {
-                setData(d);
+            .then((d) => {
+                /* 业务错误（未登录 / 资料未水合）同样返回 HTTP 200 + ok: false */
+                if (!d.ok || !d.profile) throw new Error(d.error ?? "profile unavailable");
+                hasDataRef.current = true;
+                setData(d.profile);
                 setError(false);
                 setLoading(false);
-                computeTimeAgo(d.lastLoginAt);
             })
             .catch(() => {
-                setError(true);
-                setLoading(false);
+                if (!hasDataRef.current) {
+                    setError(true);
+                    setLoading(false);
+                }
             });
-    }, [config, computeTimeAgo]);
+    }, [config]);
 
     useEffect(() => {
         fetchStatus();
@@ -116,20 +130,18 @@ export function VRChatStatusCard() {
         return () => clearInterval(timer);
     }, [fetchStatus]);
 
-    /* Update relative time every minute */
-    useEffect(() => {
-        timerRef.current = setInterval(() => {
-            computeTimeAgo(data?.lastLoginAt);
-        }, 60_000);
-        return () => { if (timerRef.current) clearInterval(timerRef.current); };
-    }, [data?.lastLoginAt, computeTimeAgo]);
-
     if (!config) return null;
 
-    const statusInfo = data ? STATUS_MAP[data.status] ?? STATUS_MAP.offline : STATUS_MAP.offline;
-    const trustRank = data ? getTrustRank(data.tags) : null;
-    const badges = data ? getBadges(data.tags) : [];
+    const statusInfo = data
+        ? STATUS_MAP[data.status ?? "offline"] ?? STATUS_MAP.offline
+        : STATUS_MAP.offline;
+    const trustRank = data ? getTrustRank(data.tags ?? []) : null;
+    const badges = data ? getBadges(data.tags ?? []) : [];
     const avatarUrl = data?.profilePicOverride || data?.currentAvatarThumbnailImageUrl || "";
+    /* 新接口不再提供 lastLoginAt；底部元信息回退为 pronouns / 最近登录平台 */
+    const footerMeta =
+        data?.pronouns?.trim() ||
+        (data?.lastPlatform ? PLATFORM_LABELS[data.lastPlatform] ?? data.lastPlatform : "");
 
     return (
         <GlassCard variant="panel" className="flex flex-col gap-3 p-5 h-full">
@@ -153,7 +165,7 @@ export function VRChatStatusCard() {
             ) : data ? (
                 <AnimatePresence mode="wait">
                     <motion.div
-                        key={data.status}
+                        key={data.status ?? "offline"}
                         initial={{ opacity: 0, y: 6 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -6 }}
@@ -231,7 +243,7 @@ export function VRChatStatusCard() {
                             </p>
                         )}
 
-                        {/* ── Footer: Trust Rank + Age Verified + Last Login ── */}
+                        {/* ── Footer: Trust Rank + Age Verified + Meta ── */}
                         <div className="flex items-center justify-between text-[11px] text-text-tertiary">
                             <div className="flex items-center gap-1.5">
                                 {trustRank && (
@@ -245,7 +257,7 @@ export function VRChatStatusCard() {
                                         {trustRank.label}
                                     </span>
                                 )}
-                                {data.tags.some(t => t === "system_age_verified" || t === "system_feedback_access") && (
+                                {data.tags?.some(t => t === "system_age_verified" || t === "system_feedback_access") && (
                                     <span
                                         className="px-2 py-0.5 rounded-full font-medium"
                                         style={{
@@ -257,10 +269,8 @@ export function VRChatStatusCard() {
                                     </span>
                                 )}
                             </div>
-                            {lastLoginLabel && (
-                                <span className="flex items-center gap-1">
-                                    🕐 {lastLoginLabel}
-                                </span>
+                            {footerMeta && (
+                                <span className="truncate max-w-[50%] text-right">{footerMeta}</span>
                             )}
                         </div>
                     </motion.div>
