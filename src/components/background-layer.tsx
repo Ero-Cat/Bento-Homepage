@@ -3,6 +3,12 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import { LIQUID_GLASS_CANVAS } from "@/lib/liquid-glass";
+import {
+    analyzeImageLuminance,
+    classifyBackgroundAppearance,
+    getCachedImageLuminance,
+    type BackgroundAppearance,
+} from "@/lib/palette";
 
 
 
@@ -40,6 +46,30 @@ export function BackgroundLayer({ images }: BackgroundLayerProps) {
     const previousImageRef = useRef("");
     const pendingTransitionRef = useRef<PendingBackgroundTransition | null>(null);
     const [fadingImage, setFadingImage] = useState("");
+    const bgAppearanceRef = useRef<BackgroundAppearance>("auto");
+
+    /* ── Adaptive text appearance ─────────────────────────────
+       Rotating backdrops can drift toward the text color; the
+       token flip rides the SAME 2s crossfade (CSS transition on
+       the registered --text-* properties). Analysis runs ahead of
+       time during preload, so classification is a sync lookup at
+       the transition moment. */
+    const applyBgAppearance = useCallback((url: string) => {
+        const luminance = getCachedImageLuminance(url);
+        if (luminance === undefined) return;
+        const scheme = window.matchMedia("(prefers-color-scheme: dark)").matches
+            ? "dark"
+            : "light";
+        const next = classifyBackgroundAppearance(luminance, scheme);
+        if (next === bgAppearanceRef.current) return;
+        bgAppearanceRef.current = next;
+        const root = document.documentElement;
+        if (next === "auto") {
+            delete root.dataset.bgAppearance;
+        } else {
+            root.dataset.bgAppearance = next;
+        }
+    }, []);
 
     // Shuffle on mount (client only) to avoid hydration mismatch
     useEffect(() => {
@@ -57,12 +87,13 @@ export function BackgroundLayer({ images }: BackgroundLayerProps) {
         return () => clearInterval(timer);
     }, [advance, shuffled.length]);
 
-    // Preload next image
+    // Preload next image + pre-compute its tone for the text-appearance flip
     useEffect(() => {
         if (shuffled.length <= 1) return;
         const nextIdx = (index + 1) % shuffled.length;
         const img = new window.Image();
         img.src = optimizedBgUrl(shuffled[nextIdx]);
+        void analyzeImageLuminance(optimizedBgUrl(shuffled[nextIdx]));
     }, [index, shuffled]);
 
     const currentImage = shuffled.length > 0 ? shuffled[index] : images[0];
@@ -80,7 +111,8 @@ export function BackgroundLayer({ images }: BackgroundLayerProps) {
             `${performance.now()}`;
         root.dataset[LIQUID_GLASS_CANVAS.backgroundTransitionDurationDatasetKey] =
             `${LIQUID_GLASS_CANVAS.backgroundTransitionMs}`;
-    }, []);
+        applyBgAppearance(transition.activeUrl);
+    }, [applyBgAppearance]);
 
     const finishBackgroundTransition = useCallback(() => {
         const transition = pendingTransitionRef.current;
@@ -117,6 +149,7 @@ export function BackgroundLayer({ images }: BackgroundLayerProps) {
             setFadingImage("");
             if (activeUrl) {
                 root.dataset[LIQUID_GLASS_CANVAS.activeBackgroundDatasetKey] = activeUrl;
+                applyBgAppearance(activeUrl);
             } else {
                 delete root.dataset[LIQUID_GLASS_CANVAS.activeBackgroundDatasetKey];
             }
@@ -127,7 +160,29 @@ export function BackgroundLayer({ images }: BackgroundLayerProps) {
 
         previousUrlRef.current = activeUrl;
         previousImageRef.current = currentImage;
-    }, [currentImage, nextImage]);
+    }, [currentImage, nextImage, applyBgAppearance]);
+
+    // First image is never "next" — analyze it once loaded, then apply
+    useEffect(() => {
+        if (!currentImage) return;
+        const url = optimizedBgUrl(currentImage);
+        let cancelled = false;
+        void analyzeImageLuminance(url).then(() => {
+            if (!cancelled) applyBgAppearance(url);
+        });
+        return () => {
+            cancelled = true;
+        };
+    }, [currentImage, applyBgAppearance]);
+
+    // Scheme flips re-bias classification of the already-active backdrop
+    useEffect(() => {
+        if (!currentImage) return;
+        const media = window.matchMedia("(prefers-color-scheme: dark)");
+        const onChange = () => applyBgAppearance(optimizedBgUrl(currentImage));
+        media.addEventListener("change", onChange);
+        return () => media.removeEventListener("change", onChange);
+    }, [currentImage, applyBgAppearance]);
 
     useEffect(() => {
         const root = document.documentElement;
@@ -137,6 +192,7 @@ export function BackgroundLayer({ images }: BackgroundLayerProps) {
             delete root.dataset[LIQUID_GLASS_CANVAS.previousBackgroundDatasetKey];
             delete root.dataset[LIQUID_GLASS_CANVAS.backgroundTransitionStartedAtDatasetKey];
             delete root.dataset[LIQUID_GLASS_CANVAS.backgroundTransitionDurationDatasetKey];
+            delete root.dataset.bgAppearance;
         };
     }, []);
 

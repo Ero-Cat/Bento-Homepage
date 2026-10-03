@@ -107,7 +107,7 @@ https://github.com/Ero-Cat/Bento-Homepage/raw/main/assets/demo.webm
 
 - **配置驱动** — 所有个人信息集中在 `src/config/site.ts` 一个文件，无需改动任何组件
 - **多语言问候 & 简介** — 按浏览器语言自动切换（中 / 英 / 日等），`en` 兜底
-- **明暗自动切换** — 跟随系统 `prefers-color-scheme`，双套设计令牌，全自动无按钮
+- **明暗自动切换** — 跟随系统 `prefers-color-scheme`，双套设计令牌，全自动无按钮；文字颜色还会**跟随轮播背景自动适配**——预加载时分析每张背景图明度，过亮/过暗的背景自动翻转文字色并随 crossfade 同曲线 2s 渐变，杜绝「背景与文字融为一体」
 - **背景轮播** — 构建时扫描 `public/bg/`，10 秒间隔交叉淡入 + 预加载，DOM 与玻璃共享同一过渡时钟
 - **多头像 3D 轮播 / 照片堆叠 / 打字机** — 交错 spring 入场，全物理曲线动画
 - **SEO 就绪** — Open Graph / Twitter Card / meta 全部从配置生成

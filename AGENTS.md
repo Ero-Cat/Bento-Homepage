@@ -194,6 +194,7 @@ Bento-Homepage/
 - **材质模式**：light/dark 模式必须通过 `GlassMaterialProfile` 集中控制 tint、sceneCoverage、saturation、exposure、edgeHighlightGain 与 edgeShadowGain；业务组件禁止根据主题复制光学参数
 - **真实纹理门控**：真实背景未 ready 时只允许低覆盖 startup shell，禁止让 1×1 fallback 纹理以高 sceneCoverage 绘制不透明白卡；真实纹理 ready 后再提高 sceneCoverage
 - **背景切换同步**：`BackgroundLayer` 必须在旧 DOM 图层的 `animationstart` 事件中同步发布当前/上一张背景与过渡时间；Canvas 使用与 CSS 一致的 `cubic-bezier(0.22, 1, 0.36, 1)` 进度执行 crossfade，纹理迟到时按已发布时间追帧或直接同步当前帧，禁止重新启动过渡
+- **背景自适应文字（data-bg-appearance）**：轮播背景可能与文字色同侧导致「灰上灰」；`BackgroundLayer` 在预加载阶段经 `src/lib/palette.ts` 的 `analyzeImageLuminance`（32×32 离屏采样，按 URL 缓存）提前算好下一张图明度，切场瞬间分类并写入根节点 `data-bg-appearance`（`on-dark` / `on-light` / 移除=系统默认）。分类为**三点独立判定**（`classifyBackgroundAppearance`：≤0.36 翻亮文字、≥0.6 翻暗文字、中间带回归系统默认——浅色系统玻璃 veil 会提亮中间调背景，暗文字对比更佳；暗色系统 raw luma ×0.7 偏置后再判定）。CSS 侧 `--text-primary/secondary/tertiary` 经 `@property` 注册为 `<color>` 并带 2000ms `cubic-bezier(0.22, 1, 0.36, 1)` 过渡，与背景 crossfade 同曲线同步；只允许交叉覆盖块（浅色系统+on-dark / 暗色系统+on-light），禁止新增第三套文字 token 或在业务组件内读取该属性
 - **文档坐标几何缓存**：卡片 rect / radius 在显式布局变化时缓存为文档坐标，滚动热路径只做 scroll 投影，避免每帧对所有卡片执行布局读取
 - **固定视口画布**：共享 Canvas 必须使用 `position: fixed`，尺寸与 `left/top` 只跟随 `visualViewport`；禁止把 `window.scrollX/Y` 写入 Canvas DOM 位置，避免固定页面背景与玻璃位图落入不同滚动坐标系
 - **滚动与指针同步**：scroll 事件只投影浏览器已提交的卡片文档坐标并请求重绘，禁止移动 Canvas DOM 或预测 wheel 距离；有缓存指针位置时必须重新命中当前可见卡片，避免滚动后保留错误 hover 状态

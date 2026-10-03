@@ -108,3 +108,79 @@ export async function extractDominantColor(url: string): Promise<DominantColor |
 export function toRgbTriple(color: DominantColor): string {
   return `${color.r}, ${color.g}, ${color.b}`;
 }
+
+/* ============================================================
+   Background tone analysis — adaptive text appearance
+   The rotating background can drift close to the text color,
+   so text tokens must flip with the backdrop. Luminance is
+   sampled once per image (cached), classified with hysteresis,
+   and published as a root dataset attribute.
+   ============================================================ */
+
+export type BackgroundAppearance = "auto" | "on-light" | "on-dark";
+export type ToneColorScheme = "light" | "dark";
+
+/** Three-point classification. Only a backdrop that clearly sits on the SAME
+ *  side as the scheme's text color flips the tokens; mid backdrops return to
+ *  the scheme default (mid-gray glass needs the default set — e.g. light
+ *  scheme glass brightens mid photos via its veil, where dark text wins).
+ *  Each image classifies independently — the carousel never re-visits a
+ *  borderline luminance within one transition, so there is no flip-flop to
+ *  dampen. */
+export const BACKGROUND_TONE_THRESHOLDS = {
+  dark: 0.36,
+  light: 0.6,
+  /** Dark-scheme glass (veil + tint) dims the scene behind the text, so the
+   *  raw photo luminance is discounted before classification. */
+  darkSchemeBias: 0.7,
+} as const;
+
+const luminanceCache = new Map<string, number>();
+
+/** Cached lookup: `undefined` means "not analyzed yet". */
+export function getCachedImageLuminance(url: string): number | undefined {
+  return luminanceCache.get(url);
+}
+
+/** Perceptual average luminance (0-1) of an image, from a 32×32 downsample.
+ *  Resolves `null` when the image cannot be loaded or read. */
+export async function analyzeImageLuminance(url: string): Promise<number | null> {
+  const cached = luminanceCache.get(url);
+  if (cached !== undefined) return cached;
+
+  try {
+    const image = await loadImage(url);
+    const canvas = document.createElement("canvas");
+    canvas.width = SAMPLE_SIZE;
+    canvas.height = SAMPLE_SIZE;
+    const context = canvas.getContext("2d", { willReadFrequently: true });
+    if (!context) throw new Error("2D context unavailable");
+    context.drawImage(image, 0, 0, SAMPLE_SIZE, SAMPLE_SIZE);
+    // Throws SecurityError on a tainted canvas (CORS refused).
+    const { data } = context.getImageData(0, 0, SAMPLE_SIZE, SAMPLE_SIZE);
+    let sum = 0;
+    let count = 0;
+    for (let i = 0; i < data.length; i += 4) {
+      if (data[i + 3] < 128) continue;
+      sum += 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+      count += 1;
+    }
+    const luminance = count > 0 ? sum / (count * 255) : null;
+    if (luminance !== null) luminanceCache.set(url, luminance);
+    return luminance;
+  } catch {
+    return null;
+  }
+}
+
+/** Classify which text set reads best over this backdrop. */
+export function classifyBackgroundAppearance(
+  rawLuminance: number,
+  colorScheme: ToneColorScheme,
+): BackgroundAppearance {
+  const effective =
+    rawLuminance * (colorScheme === "dark" ? BACKGROUND_TONE_THRESHOLDS.darkSchemeBias : 1);
+  if (effective <= BACKGROUND_TONE_THRESHOLDS.dark) return "on-dark";
+  if (effective >= BACKGROUND_TONE_THRESHOLDS.light) return "on-light";
+  return "auto";
+}

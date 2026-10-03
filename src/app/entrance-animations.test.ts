@@ -91,7 +91,7 @@ test("background layer publishes the shared transition clock from the real CSS a
   );
 
   const transitionEffectStart = source.indexOf("useEffect(() =>", source.indexOf("const currentImage"));
-  const transitionEffectEnd = source.indexOf("}, [currentImage, nextImage]", transitionEffectStart);
+  const transitionEffectEnd = source.indexOf("}, [currentImage, nextImage", transitionEffectStart);
   assert.ok(transitionEffectStart >= 0 && transitionEffectEnd > transitionEffectStart);
   assert.doesNotMatch(
     source.slice(transitionEffectStart, transitionEffectEnd),
