@@ -197,7 +197,7 @@ Bento-Homepage/
 - **背景自适应文字（data-bg-appearance）**：轮播背景可能与文字色同侧导致「灰上灰」；`BackgroundLayer` 在预加载阶段经 `src/lib/palette.ts` 的 `analyzeImageLuminance`（32×32 离屏采样，按 URL 缓存）提前算好下一张图明度，切场瞬间分类并写入根节点 `data-bg-appearance`（`on-dark` / `on-light` / 移除=系统默认）。分类为**三点独立判定**（`classifyBackgroundAppearance`：≤0.36 翻亮文字、≥0.6 翻暗文字、中间带回归系统默认——浅色系统玻璃 veil 会提亮中间调背景，暗文字对比更佳；暗色系统 raw luma ×0.7 偏置后再判定）。CSS 侧 `--text-primary/secondary/tertiary` 经 `@property` 注册为 `<color>` 并带 2000ms `cubic-bezier(0.22, 1, 0.36, 1)` 过渡，与背景 crossfade 同曲线同步；只允许交叉覆盖块（浅色系统+on-dark / 暗色系统+on-light），禁止新增第三套文字 token 或在业务组件内读取该属性
 - **文档坐标几何缓存**：卡片 rect / radius 在显式布局变化时缓存为文档坐标，滚动热路径只做 scroll 投影，避免每帧对所有卡片执行布局读取
 - **固定视口画布**：共享 Canvas 必须使用 `position: fixed`，尺寸与 `left/top` 只跟随 `visualViewport`；禁止把 `window.scrollX/Y` 写入 Canvas DOM 位置，避免固定页面背景与玻璃位图落入不同滚动坐标系
-- **滚动与指针同步**：scroll 事件只投影浏览器已提交的卡片文档坐标并请求重绘，禁止移动 Canvas DOM 或预测 wheel 距离；有缓存指针位置时必须重新命中当前可见卡片，避免滚动后保留错误 hover 状态
+- **滚动与指针同步**：scroll 事件只投影浏览器已提交的卡片文档坐标并请求重绘，禁止移动 Canvas DOM 或预测 wheel 距离；有缓存指针位置时必须重新命中当前可见卡片，避免滚动后保留错误 hover 状态；`html` 必须保持 `overscroll-behavior: none`——WebKit 的橡皮筋滚动是纯视觉偏移（不触发 scroll 事件、不暴露 delta），fixed 壳层无法跟随，触顶/触底弹性滚动会造成卡片与玻璃壳层错位
 - **全屏与 resize 重绘**：resize、fullscreenchange、visibility 恢复必须统一走 viewport/FBO 更新、全卡片几何标脏、requestRender 的重绘路径，避免 PC 全屏切换后 canvas 清空但 glass 壳层不重新提交
 - **移动端视口同步**：Canvas 使用 `visualViewport` 解析动态视口尺寸和 offset，配合文档坐标投影保持 mobile 与滚动场景下 glass shell 和 DOM 内容同步
 - **按卡片范围绘制**：`mainPass` 通过 scissor 限定到每张卡片的实际屏幕区域，避免“每张卡都绘制一次全屏 quad”的 GPU 浪费

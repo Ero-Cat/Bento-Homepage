@@ -287,6 +287,15 @@
   }
 }
 
+/* Kill elastic overscroll (rubber-banding): WebKit's bounce is a purely
+   visual offset that never fires scroll events or exposes its delta, so
+   the fixed glass canvas cannot track it — cards would visibly detach
+   from their shells at the top/bottom scroll boundary. Disabling the
+   bounce keeps DOM content and GL shells locked together. */
+html {
+  overscroll-behavior: none;
+}
+
 /* ============================================================
    Global Body
    ============================================================ */

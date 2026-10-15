@@ -68,6 +68,14 @@ test("legacy prism inner-control systems are removed from global styling", () =>
   assert.doesNotMatch(globalsCss, /\.pill-tag/);
 });
 
+test("elastic overscroll is disabled so fixed glass shells cannot detach from content", () => {
+  assert.match(
+    globalsCss,
+    /html\s*\{[\s\S]*?overscroll-behavior:\s*none;/,
+    "Expected the viewport to disable rubber-banding — WebKit's bounce never fires scroll events, so the fixed glass canvas would visibly misalign with card content at the scroll boundaries",
+  );
+});
+
 test("glass-card fallback shell keeps the shared liquid glass radius", () => {
   const baseGlassCardRule = globalsCss.match(/(?:^|\n)\.glass-card\s*\{([\s\S]*?)\n\}/);
   assert.ok(baseGlassCardRule, "Expected globals.css to define the base .glass-card rule");
