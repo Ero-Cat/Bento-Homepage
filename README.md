@@ -128,7 +128,7 @@ https://github.com/Ero-Cat/Bento-Homepage/raw/main/assets/demo.webm
 | 🔗 社交链接 | `social-card.tsx` | GitHub / Telegram / Twitter / VRChat 等平台图标 |
 | ✨ 兴趣索引 | `skills-card.tsx` | 四列彩色图标索引，静态展示且无伪按钮 hover |
 | 🖥️ 硬件清单 | `hardware-card.tsx` | 双栏分类目录、系统色图标与纯文本设备列表 |
-| 🚀 项目展示 | `projects-card.tsx` | 编辑式项目列表、GitHub Stars / Forks 与 spring 材质 hover |
+| 🚀 项目展示 | `projects-card.tsx` | 编辑式项目列表，按 GitHub Stars 降序最多展示 3 个，含 Stars / Forks 与 spring 材质 hover |
 | 🤝 友链 | `friends-card.tsx` | 好友头像网格，轻微悬停反馈 |
 | 🗺️ 足迹地图 | `map-card.tsx` | Mapbox 互动地图，标记去过的城市，自动 i18n 地名，IP 距离显示 |
 | 🌤️ 实时天气 | `weather-card.tsx` | open-meteo 免费天气 API，Apple Weather 风格，动态天气动效 |

@@ -73,12 +73,16 @@ export function ProjectsCard() {
         fetchStats();
     }, [projects]);
 
-    // Sort projects by stars (descending), projects without stats go last
-    const sorted = [...projects].sort((a, b) => {
-        const starsA = stats[a.url]?.stars ?? -1;
-        const starsB = stats[b.url]?.stars ?? -1;
-        return starsB - starsA;
-    });
+    // Sort by stars (descending); projects without stats go last.
+    // Only the top 3 are displayed.
+    const MAX_VISIBLE_PROJECTS = 3;
+    const sorted = [...projects]
+        .sort((a, b) => {
+            const starsA = stats[a.url]?.stars ?? -1;
+            const starsB = stats[b.url]?.stars ?? -1;
+            return starsB - starsA;
+        })
+        .slice(0, MAX_VISIBLE_PROJECTS);
 
     return (
         <GlassCard variant="panel" className="flex h-full flex-col gap-3 p-5 md:p-6">
