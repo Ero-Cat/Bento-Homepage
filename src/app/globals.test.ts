@@ -212,8 +212,8 @@ test("content headers omit unexplained length counters", () => {
   assert.doesNotMatch(interestsSource, /\binterests\.length\b/);
   assert.doesNotMatch(hardwareSource, /\bhardware\.length\b|\bgroup\.items\.length\b/);
   assert.doesNotMatch(projectsSource, /\bprojects\.length\b/);
-  assert.match(projectsSource, /repoStats\.stars/);
-  assert.match(projectsSource, /repoStats\.forks/);
+  assert.match(projectsSource, /repo\.stars/);
+  assert.match(projectsSource, /repo\.forks/);
 });
 
 test("blog editorial refactor preserves Halo data behavior", () => {

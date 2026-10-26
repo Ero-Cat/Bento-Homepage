@@ -50,12 +50,6 @@ export interface SiteConfig {
         url: string;
         description?: string;
     }[];
-    projects: {
-        name: string;
-        description: string;
-        url: string;
-        tags?: string[];
-    }[];
     netease?: {
         /** 网易云曲目列表，包含完整元数据（无需运行时 API 请求） */
         tracks: {
@@ -68,7 +62,7 @@ export interface SiteConfig {
         }[];
     };
     github?: {
-        /** GitHub 用户名，用于贡献热力图 */
+        /** GitHub 用户名，用于贡献热力图与 Projects 卡片实时仓库列表 */
         username: string;
     };
     blog?: {
@@ -238,27 +232,6 @@ export const siteConfig: SiteConfig = {
             name: "Alumi",
             avatar: "https://lisek.cc/profile.png",
             url: "https://lisek.cc",
-        },
-    ],
-
-    projects: [
-        {
-            name: "心率推送",
-            description: "基于 Flutter 的跨平台 BLE 心率监控与推送工具，支持 HTTP/WS、OSC、MQTT 多协议实时推送，适用于 VRChat 模型联动。",
-            url: "https://github.com/Ero-Cat/hr_push",
-            tags: ["Flutter", "BLE", "OSC", "VRChat"],
-        },
-        {
-            name: "Bento Homepage",
-            description: "配置驱动的液态玻璃风格个人主页，集成网易云播放器、VRChat 实时状态、GitHub 热力图、3D Tilt 毛玻璃卡片、背景轮播、多头像轮播、多语言 i18n，支持 GitHub Pages 全静态部署。",
-            url: "https://github.com/Ero-Cat/bento-Homepage",
-            tags: ["Next.js", "React", "TypeScript", "Bento Grid"],
-        },
-        {
-            name: "ESXi UPS Automation",
-            description: "ESXi 服务器 UPS 断电自动化管理工具，支持 NUT 监控 UPS 状态并在断电时自动安全关闭虚拟机与宿主机，保障数据安全。",
-            url: "https://github.com/Ero-Cat/ESXi-UPS-Automation",
-            tags: ["ESXi", "UPS", "Automation", "Shell"],
         },
     ],
 

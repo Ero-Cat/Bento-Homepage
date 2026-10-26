@@ -143,7 +143,7 @@ Bento-Homepage/
 │   │   ├── social-card.tsx       # 社交图标链接
 │   │   ├── skills-card.tsx       # 兴趣标签
 │   │   ├── hardware-card.tsx     # 硬件清单（与 Interests 一致）
-│   │   ├── projects-card.tsx     # 项目展示（含 GitHub Stars/Forks API）
+│   │   ├── projects-card.tsx     # 项目展示（实时拉取 GitHub 仓库，按 Stars 取 Top 3）
 │   │   ├── friends-card.tsx      # 友情链接（轻量 hover 反馈）
 │   │   ├── map-card.tsx          # Mapbox 互动地图（城市标记 + 脉冲弹窗 + IP 距离显示）
 │   │   ├── weather-card.tsx      # 实时天气卡片（open-meteo API，Apple Weather 风格渐变）
@@ -239,7 +239,7 @@ Bento-Homepage/
 - **Apple 内容标题**：Interests / Hardware / Projects / Blog 使用配置化 `22px / 650` 标题；禁止添加无说明的数组长度计数、解释功能或装饰样式副标题。Projects 的 Stars/Forks 等具备明确语义的统计数据保留。
 - **Interests 图标索引**：桌面四列、移动端两列；每项由 28px Lucide 系统色图标底座与 13px 标签组成，保持原始配置顺序，禁止 hover、scale、glow、描边和胶囊样式。
 - **Hardware 双栏目录**：桌面两列三行、移动端单列；分类使用 32px 系统色图标与 14px 标题，设备使用 13px 纯文本列表和语义分隔线，禁止内嵌卡片、标签胶囊及 hover。
-- **Projects 编辑式列表**：项目名、描述、GitHub 数据与技术栈使用 16px / 13px / 11–12px 层级；hover 仅允许通过 Framer Motion spring 淡入 `--glass-inner-bg` 并提高外链图标透明度，禁止位移、缩放、hover 外框或整行主题色覆盖。列表按 GitHub Stars 从高到低排序并最多展示 3 个项目（stats 未加载或非 GitHub 项排最后）。
+- **Projects 编辑式列表**：项目名、描述、GitHub 数据与技术栈使用 16px / 13px / 11–12px 层级；hover 仅允许通过 Framer Motion spring 淡入 `--glass-inner-bg` 并提高外链图标透明度，禁止位移、缩放、hover 外框或整行主题色覆盖。列表实时拉取 GitHub 公开仓库（`/users/{username}/repos?type=owner`，排除 fork，Stars 降序取前 3，同 star 按 push 时间新者优先，仓库主语言作为技术栈标签），仓库清单不再由 `siteConfig.projects` 维护；API 失败或用户名缺失时显示语义占位文案。
 - **Blog 编辑式列表**：文章使用 15px 标题、12px 语义元数据与 `--glass-divider` 分隔线；分类为无边框、无背景的 tint 文字。链接 hover / focus 仅通过 spring 淡入 `--glass-inner-bg` 或提高图标强调，禁止位移、缩放、hover 外框和 CSS transition；所有链接触控目标至少 44×44px。
 - Blog 的时间、分隔符、阅读量与空状态直接使用语义文本 token，禁止叠加低 opacity；Interests / Hardware 的 accent 必须来自 light/dark Apple system-color RGB token，仅用于低透明度图标材质，禁止在业务组件中硬编码 HEX。
 
@@ -265,7 +265,7 @@ Bento-Homepage/
 |---|---|---|---|
 | NetEase Music `/api/song/detail/` | `now-playing-card.tsx` | None | 构建时获取歌曲元数据 |
 | NetEase Music CDN `music.163.com/song/media/outer/url` | `now-playing-card.tsx` | None | 运行时播放音频 |
-| GitHub REST API `/repos/{owner}/{repo}` | `projects-card.tsx` | None | 运行时获取 Stars/Forks |
+| GitHub REST API `/users/{username}/repos` | `projects-card.tsx` | None | 运行时拉取公开仓库（排除 fork），按 Stars 降序取 Top 3 |
 | `github-contributions-api.jogruber.de` | `github-heatmap-card.tsx` | None | 运行时获取贡献热力图 |
 | VRCX-Cloud API `/api/public/profile` | `vrchat-status-card.tsx` | None | 运行时轮询 VRChat 公开资料（在线状态、头像、信任等级、徽章） |
 | Halo 2.x Content API | `blog-card.tsx` | None | 运行时获取最近博文 |
