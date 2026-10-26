@@ -77,15 +77,15 @@ test("layered liquid glass variants reserve the strongest response for hero cont
 
 test("text-heavy glass variants keep a restrained readability diffusion floor", () => {
   assert.ok(
-    GLASS_VARIANTS.panel.surfaceBlurMix >= 0.3,
-    "Expected panel glass to reach the approved minimum full-surface softening",
+    GLASS_VARIANTS.panel.surfaceBlurMix >= 0.38,
+    "Expected panel glass to reach the approved readability frost floor",
   );
   assert.ok(
-    GLASS_VARIANTS.dense.surfaceBlurMix >= 0.25,
+    GLASS_VARIANTS.dense.surfaceBlurMix >= 0.32,
     "Expected dense glass to soften busy backgrounds behind compact text",
   );
-  assert.ok(GLASS_VARIANTS.panel.surfaceBlurMix <= 0.34);
-  assert.ok(GLASS_VARIANTS.dense.surfaceBlurMix <= 0.3);
+  assert.ok(GLASS_VARIANTS.panel.surfaceBlurMix <= 0.42);
+  assert.ok(GLASS_VARIANTS.dense.surfaceBlurMix <= 0.36);
   assert.ok(GLASS_VARIANTS.panel.surfaceBlurMix > GLASS_VARIANTS.dense.surfaceBlurMix);
 });
 

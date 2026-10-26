@@ -57,7 +57,7 @@ export const AMBIENT_LIGHT = { x: -0.7071, y: -0.7071 } as const;
 export const LIQUID_GLASS_CANVAS = {
   /** Target softening of the blurred scene layer, anchored in CSS px so every
    *  quality tier renders the same visual blur regardless of buffer scale. */
-  sceneBlurRadiusCss: 12,
+  sceneBlurRadiusCss: 14,
   /** Scene buffer renders at min(dpr, this) × CSS size to bound fill cost on
    *  high-DPR screens; refraction rims still shade at full canvas resolution. */
   sceneBufferMaxScale: 1.5,
@@ -103,7 +103,7 @@ export const GLASS_VARIANTS: Record<GlassVariant, GlassVariantConfig> = {
     rimMirror: 0.85,
     bevelWidth: 16,
     magnification: 0.12,
-    surfaceBlurMix: 0.21,
+    surfaceBlurMix: 0.26,
     counterRimFactor: 0.15,
     pointerRefraction: 0.86,
     pointerGlare: 0.78,
@@ -145,7 +145,7 @@ export const GLASS_VARIANTS: Record<GlassVariant, GlassVariantConfig> = {
     rimMirror: 0.75,
     bevelWidth: 15,
     magnification: 0.09,
-    surfaceBlurMix: 0.3,
+    surfaceBlurMix: 0.38,
     counterRimFactor: 0.13,
     pointerRefraction: 0.66,
     pointerGlare: 0.62,
@@ -187,7 +187,7 @@ export const GLASS_VARIANTS: Record<GlassVariant, GlassVariantConfig> = {
     rimMirror: 0.7,
     bevelWidth: 14,
     magnification: 0.05,
-    surfaceBlurMix: 0.18,
+    surfaceBlurMix: 0.22,
     counterRimFactor: 0.09,
     pointerRefraction: 0.34,
     pointerGlare: 0.34,
@@ -229,7 +229,7 @@ export const GLASS_VARIANTS: Record<GlassVariant, GlassVariantConfig> = {
     rimMirror: 0.6,
     bevelWidth: 12,
     magnification: 0.035,
-    surfaceBlurMix: 0.25,
+    surfaceBlurMix: 0.32,
     counterRimFactor: 0.07,
     pointerRefraction: 0.22,
     pointerGlare: 0.24,
@@ -271,7 +271,7 @@ export const GLASS_VARIANTS: Record<GlassVariant, GlassVariantConfig> = {
     rimMirror: 0.9,
     bevelWidth: 17,
     magnification: 0.14,
-    surfaceBlurMix: 0.26,
+    surfaceBlurMix: 0.3,
     counterRimFactor: 0.17,
     pointerRefraction: 0.98,
     pointerGlare: 0.94,
